@@ -1,0 +1,9 @@
+assets/brand/
+  nauxica_visual_board_v2.png
+  nauxica_visual_board_v2.pdf
+  nauxica_palette_reference.png
+  nauxica_palette.json
+  nauxica_color_tokens.css
+  nauxica_typography.json
+  nauxica_brand_quick_reference.md
+  README.md

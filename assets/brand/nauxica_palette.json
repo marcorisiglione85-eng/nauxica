@@ -1,0 +1,39 @@
+{
+  "brand": "Nauxica",
+  "version": "2.0",
+  "colors": [
+    {
+      "name": "Charcoal",
+      "hex": "#0F1720",
+      "usage": "Primary text, dark backgrounds, premium contrast"
+    },
+    {
+      "name": "Stone",
+      "hex": "#444A52",
+      "usage": "Secondary text, neutral UI labels"
+    },
+    {
+      "name": "Sand",
+      "hex": "#F2ECE4",
+      "usage": "Warm panels, cards, soft backgrounds"
+    },
+    {
+      "name": "Linen",
+      "hex": "#F7F5F1",
+      "usage": "Main page background, calm hospitality surfaces"
+    },
+    {
+      "name": "Terracotta",
+      "hex": "#C5683D",
+      "usage": "Primary accent, CTA highlights, logo X, active states"
+    }
+  ],
+  "typography": {
+    "display_brand": "Bodoni FLF",
+    "support_ui_payoff": "Avenir",
+    "web_fallback_display": "Bodoni 72, Didot, Georgia, serif",
+    "web_fallback_ui": "Avenir Next, Avenir, Inter, system-ui, sans-serif"
+  },
+  "tagline": "Hospitality, connected.",
+  "payoff": "HOSPITALITY, CONNECTED."
+}

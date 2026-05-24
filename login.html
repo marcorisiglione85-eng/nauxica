@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="Login to Nauxica to access homeowner and partner dashboards."
+  />
+
+  <title>Login | Nauxica</title>
+
+  <link rel="icon" href="assets/logo/favicon.ico" />
+  <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="nx-header">
+    <nav class="nx-nav">
+      <a href="index.html" class="site-logo" aria-label="Nauxica home">
+        <img
+          src="assets/logo/nauxica-logo-horizontal.svg"
+          alt="Nauxica, Hospitality connected"
+        />
+      </a>
+
+      <button
+        class="mobile-menu-toggle"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nx-links">
+        <li><a href="index.html#hero">Home</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="index.html#pricing">Pricing</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="register.html">Register</a></li>
+        <li><a class="btn" href="contacts.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="auth-hero">
+      <div class="auth-card">
+        <div class="eyebrow">Nauxica access</div>
+        <h1>Login to your dashboard.</h1>
+        <p>
+          Access your homeowner or partner workspace and manage hospitality operations in one connected place.
+        </p>
+
+        <form class="auth-form" id="loginForm">
+          <div class="field">
+            <label for="role">Account type</label>
+            <select id="role" name="role" required>
+              <option value="homeowner">Homeowner</option>
+              <option value="partner">Partner</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="email">Email address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="submit-btn">Login</button>
+        </form>
+
+        <p class="auth-note">
+          New to Nauxica?
+          <a href="register.html">Create an account</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <img
+        class="footer-logo"
+        src="assets/logo/nauxica-logo-horizontal-white.svg"
+        loading="lazy"
+        alt="Nauxica Hospitality connected logo"
+      />
+
+      <div>
+        <strong>nauxicahd.com</strong>
+        <br />
+        <a href="mailto:hello@nauxicahd.com">hello@nauxicahd.com</a>
+        <br />
+        Hospitality, connected.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+      const header = document.querySelector(".nx-header");
+      const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+      if (mobileMenuButton && header) {
+        mobileMenuButton.addEventListener("click", function () {
+          const isOpen = header.classList.toggle("nav-open");
+          mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        mobileMenuLinks.forEach(function (link) {
+          link.addEventListener("click", function () {
+            header.classList.remove("nav-open");
+            mobileMenuButton.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+
+      const form = document.getElementById("loginForm");
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const role = document.getElementById("role").value;
+
+        if (role === "partner") {
+          window.location.href = "dashboard-partner.html";
+        } else {
+          window.location.href = "dashboard-homeowner.html";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="Register with Nauxica as a homeowner or local hospitality partner."
+  />
+
+  <title>Register | Nauxica</title>
+
+  <link rel="icon" href="assets/logo/favicon.ico" />
+  <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="nx-header">
+    <nav class="nx-nav">
+      <a href="index.html" class="site-logo" aria-label="Nauxica home">
+        <img
+          src="assets/logo/nauxica-logo-horizontal.svg"
+          alt="Nauxica, Hospitality connected"
+        />
+      </a>
+
+      <button
+        class="mobile-menu-toggle"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nx-links">
+        <li><a href="index.html#hero">Home</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="index.html#pricing">Pricing</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="register.html">Register</a></li>
+        <li><a class="btn" href="contacts.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="registration-hero">
+      <div class="registration-shell">
+        <div class="registration-head">
+          <div class="eyebrow">Create your account</div>
+          <h1>Join Nauxica.</h1>
+          <p>
+            Register as a homeowner or local partner and start building a more connected hospitality operation.
+          </p>
+        </div>
+
+        <div class="registration-progress">
+          <div class="progress-step is-active" data-progress="1">Account</div>
+          <div class="progress-step" data-progress="2">Details</div>
+          <div class="progress-step" data-progress="3">Setup</div>
+          <div class="progress-step" data-progress="4">Plan</div>
+          <div class="progress-step" data-progress="5">Review</div>
+        </div>
+
+        <form class="registration-form" id="registrationForm">
+          <section class="reg-step is-active" data-step="1">
+            <h2>Choose your account type</h2>
+            <p>
+              Select how you want to use Nauxica. Your dashboard experience will be prepared around this choice.
+            </p>
+
+            <div class="role-grid">
+              <label class="role-card">
+                <input type="radio" name="accountType" value="homeowner" checked />
+                <span class="role-title">Homeowner</span>
+                <span class="role-copy">
+                  Manage properties, guests, operations, reporting and local partner services.
+                </span>
+              </label>
+
+              <label class="role-card">
+                <input type="radio" name="accountType" value="partner" />
+                <span class="role-title">Local partner</span>
+                <span class="role-copy">
+                  Receive service requests, manage availability and collaborate with hospitality operators.
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <section class="reg-step" data-step="2">
+            <h2>Personal details</h2>
+            <p>
+              These details will be used to create your Nauxica account.
+            </p>
+
+            <div class="form-grid two-columns">
+              <div class="field">
+                <label for="fullName">Full name</label>
+                <input type="text" id="fullName" name="fullName" placeholder="Your full name" required />
+              </div>
+
+              <div class="field">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required />
+              </div>
+
+              <div class="field">
+                <label for="phone">Phone number</label>
+                <input type="tel" id="phone" name="phone" placeholder="+39..." required />
+              </div>
+
+              <div class="field">
+                <label for="companyName">Company or property name</label>
+                <input type="text" id="companyName" name="companyName" placeholder="Company or property name" />
+              </div>
+
+              <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Create a password" required />
+              </div>
+
+              <div class="field">
+                <label for="confirmPassword">Confirm password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required />
+              </div>
+            </div>
+          </section>
+
+          <section class="reg-step" data-step="3">
+            <div class="homeowner-fields">
+              <h2>Portfolio details</h2>
+              <p>
+                This helps Nauxica prepare the right setup for your properties.
+              </p>
+
+              <div class="form-grid two-columns">
+                <div class="field">
+                  <label for="propertyCount">How many properties do you manage?</label>
+                  <select id="propertyCount" name="propertyCount">
+                    <option value="1 to 2">1 to 2 properties</option>
+                    <option value="3 to 5">3 to 5 properties</option>
+                    <option value="6 to 10">6 to 10 properties</option>
+                    <option value="More than 10">More than 10 properties</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="mainLocation">Main location</label>
+                  <input type="text" id="mainLocation" name="mainLocation" placeholder="Catania, Sicily..." />
+                </div>
+
+                <div class="field">
+                  <label for="propertyType">Main property type</label>
+                  <select id="propertyType" name="propertyType">
+                    <option value="Apartment">Apartment</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Guest house">Guest house</option>
+                    <option value="B&B">B&B</option>
+                    <option value="Boutique hotel">Boutique hotel</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="pms">Do you use a PMS or channel manager?</label>
+                  <select id="pms" name="pms">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                    <option value="Not sure">Not sure</option>
+                  </select>
+                </div>
+
+                <div class="field full-width">
+                  <label for="pmsName">Which PMS or channel manager?</label>
+                  <input type="text" id="pmsName" name="pmsName" placeholder="Guesty, Smoobu, Lodgify, Hostaway..." />
+                </div>
+              </div>
+
+              <div class="service-checks">
+                <h3>Operational needs</h3>
+
+                <label><input type="checkbox" name="needs" value="Guest messaging" /> Guest messaging</label>
+                <label><input type="checkbox" name="needs" value="Check in support" /> Check in support</label>
+                <label><input type="checkbox" name="needs" value="Cleaning coordination" /> Cleaning coordination</label>
+                <label><input type="checkbox" name="needs" value="Maintenance requests" /> Maintenance requests</label>
+                <label><input type="checkbox" name="needs" value="Owner reporting" /> Owner reporting</label>
+                <label><input type="checkbox" name="needs" value="Partner marketplace" /> Partner marketplace</label>
+                <label><input type="checkbox" name="needs" value="Transfers and tours" /> Transfers and tours</label>
+                <label><input type="checkbox" name="needs" value="Upsell opportunities" /> Upsell opportunities</label>
+              </div>
+
+              <div class="field">
+                <label for="ownerChallenge">What is your biggest operational challenge today?</label>
+                <textarea
+                  id="ownerChallenge"
+                  name="ownerChallenge"
+                  placeholder="Tell us what takes the most time or creates the most friction..."
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="partner-fields">
+              <h2>Partner business details</h2>
+              <p>
+                This helps us understand how your services can connect with homeowners and guests.
+              </p>
+
+              <div class="form-grid two-columns">
+                <div class="field">
+                  <label for="businessName">Business name</label>
+                  <input type="text" id="businessName" name="businessName" placeholder="Your business name" />
+                </div>
+
+                <div class="field">
+                  <label for="businessWebsite">Website or social profile</label>
+                  <input type="text" id="businessWebsite" name="businessWebsite" placeholder="Website, Instagram or Facebook" />
+                </div>
+
+                <div class="field">
+                  <label for="businessAddress">Business address</label>
+                  <input type="text" id="businessAddress" name="businessAddress" placeholder="Business address" />
+                </div>
+
+                <div class="field">
+                  <label for="serviceArea">City or service area</label>
+                  <input type="text" id="serviceArea" name="serviceArea" placeholder="Catania, Taormina, Etna area..." />
+                </div>
+
+                <div class="field">
+                  <label for="partnerCategory">Partner category</label>
+                  <select id="partnerCategory" name="partnerCategory">
+                    <option value="Cleaning company">Cleaning company</option>
+                    <option value="Transfer provider">Transfer provider</option>
+                    <option value="Restaurant or bar">Restaurant or bar</option>
+                    <option value="Tour or experience provider">Tour or experience provider</option>
+                    <option value="Maintenance specialist">Maintenance specialist</option>
+                    <option value="Laundry service">Laundry service</option>
+                    <option value="Welcome basket or local products">Welcome basket or local products</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="noticePeriod">How much notice do you need?</label>
+                  <select id="noticePeriod" name="noticePeriod">
+                    <option value="Same day">Same day</option>
+                    <option value="24 hours">24 hours</option>
+                    <option value="48 hours">48 hours</option>
+                    <option value="More than 48 hours">More than 48 hours</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="urgentRequests">Do you accept urgent requests?</label>
+                  <select id="urgentRequests" name="urgentRequests">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                    <option value="Depending on availability">Depending on availability</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="requestChannel">Preferred request channel</label>
+                  <select id="requestChannel" name="requestChannel">
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Email">Email</option>
+                    <option value="Partner dashboard">Partner dashboard</option>
+                    <option value="All of the above">All of the above</option>
+                  </select>
+                </div>
+
+                <div class="field full-width">
+                  <label for="partnerServices">Describe your services</label>
+                  <textarea
+                    id="partnerServices"
+                    name="partnerServices"
+                    placeholder="Describe the services you offer, your availability and any useful details..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="reg-step" data-step="4">
+            <div class="homeowner-fields">
+              <h2>Suggested plan</h2>
+              <p>
+                Based on your portfolio, Nauxica will suggest the most suitable starting plan.
+              </p>
+
+              <div class="suggested-plan-card">
+                <div class="eyebrow">Recommended</div>
+                <h3 id="suggestedPlanTitle">Professional</h3>
+                <p id="suggestedPlanText">
+                  Ideal for growing hospitality operators managing up to 5 properties.
+                </p>
+              </div>
+            </div>
+
+            <div class="partner-fields">
+              <h2>Partner application</h2>
+              <p>
+                Partner accounts are reviewed before activation to protect service quality across the Nauxica marketplace.
+              </p>
+
+              <div class="suggested-plan-card">
+                <div class="eyebrow">Application status</div>
+                <h3>Pending approval</h3>
+                <p>
+                  After submission, the Nauxica team will review your profile and contact you about marketplace activation.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="reg-step" data-step="5">
+            <h2>Review and submit</h2>
+            <p>
+              Review your registration before creating your account.
+            </p>
+
+            <div class="review-card" id="reviewCard">
+              Your summary will appear here.
+            </div>
+
+            <div class="final-checks">
+              <label>
+                <input type="checkbox" id="contactConsent" required />
+                I agree to be contacted by Nauxica about onboarding and account activation.
+              </label>
+
+              <label>
+                <input type="checkbox" id="termsConsent" required />
+                I accept the terms and privacy policy.
+              </label>
+            </div>
+          </section>
+
+          <div class="registration-actions">
+            <button type="button" class="btn-ghost" id="backButton">Back</button>
+            <button type="button" class="btn" id="nextButton">Continue</button>
+            <button type="submit" class="btn" id="submitButton">Create account</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <img
+        class="footer-logo"
+        src="assets/logo/nauxica-logo-horizontal-white.svg"
+        loading="lazy"
+        alt="Nauxica Hospitality connected logo"
+      />
+
+      <div>
+        <strong>nauxicahd.com</strong>
+        <br />
+        <a href="mailto:hello@nauxicahd.com">hello@nauxicahd.com</a>
+        <br />
+        Hospitality, connected.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+      const header = document.querySelector(".nx-header");
+      const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+      if (mobileMenuButton && header) {
+        mobileMenuButton.addEventListener("click", function () {
+          const isOpen = header.classList.toggle("nav-open");
+          mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        mobileMenuLinks.forEach(function (link) {
+          link.addEventListener("click", function () {
+            header.classList.remove("nav-open");
+            mobileMenuButton.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+
+      const form = document.getElementById("registrationForm");
+      const steps = Array.from(document.querySelectorAll(".reg-step"));
+      const progressItems = Array.from(document.querySelectorAll(".progress-step"));
+      const backButton = document.getElementById("backButton");
+      const nextButton = document.getElementById("nextButton");
+      const submitButton = document.getElementById("submitButton");
+      const accountTypeInputs = document.querySelectorAll('input[name="accountType"]');
+      const reviewCard = document.getElementById("reviewCard");
+
+      let currentStep = 1;
+
+      function getAccountType() {
+        return document.querySelector('input[name="accountType"]:checked').value;
+      }
+
+      function updateRoleVisibility() {
+        const accountType = getAccountType();
+        const homeownerFields = document.querySelectorAll(".homeowner-fields");
+        const partnerFields = document.querySelectorAll(".partner-fields");
+
+        homeownerFields.forEach(function (section) {
+          section.style.display = accountType === "homeowner" ? "block" : "none";
+        });
+
+        partnerFields.forEach(function (section) {
+          section.style.display = accountType === "partner" ? "block" : "none";
+        });
+      }
+
+      function updateSuggestedPlan() {
+        const propertyCount = document.getElementById("propertyCount").value;
+        const title = document.getElementById("suggestedPlanTitle");
+        const text = document.getElementById("suggestedPlanText");
+
+        if (!title || !text) return;
+
+        if (propertyCount === "1 to 2") {
+          title.textContent = "Essential";
+          text.textContent = "Ideal for owners managing 1 or 2 properties.";
+        } else if (propertyCount === "3 to 5") {
+          title.textContent = "Professional";
+          text.textContent = "Ideal for growing hospitality operators managing up to 5 properties.";
+        } else if (propertyCount === "6 to 10") {
+          title.textContent = "Ecosystem";
+          text.textContent = "Ideal for connected local operations managing up to 10 properties.";
+        } else {
+          title.textContent = "Enterprise";
+          text.textContent = "Best for larger portfolios that need a tailored configuration.";
+        }
+      }
+
+      function updateReview() {
+        const accountType = getAccountType();
+        const fullName = document.getElementById("fullName").value || "Not provided";
+        const email = document.getElementById("email").value || "Not provided";
+        const companyName = document.getElementById("companyName").value || "Not provided";
+
+        if (accountType === "homeowner") {
+          const propertyCount = document.getElementById("propertyCount").value;
+          const mainLocation = document.getElementById("mainLocation").value || "Not provided";
+          const propertyType = document.getElementById("propertyType").value;
+
+          const selectedNeeds = Array.from(
+            document.querySelectorAll('input[name="needs"]:checked')
+          ).map(function (input) {
+            return input.value;
+          });
+
+          reviewCard.innerHTML = `
+            <div><strong>Account type:</strong> Homeowner</div>
+            <div><strong>Name:</strong> ${fullName}</div>
+            <div><strong>Email:</strong> ${email}</div>
+            <div><strong>Company or property:</strong> ${companyName}</div>
+            <div><strong>Properties:</strong> ${propertyCount}</div>
+            <div><strong>Main location:</strong> ${mainLocation}</div>
+            <div><strong>Property type:</strong> ${propertyType}</div>
+            <div><strong>Operational needs:</strong> ${selectedNeeds.length ? selectedNeeds.join(", ") : "Not selected"}</div>
+          `;
+        } else {
+          const businessName = document.getElementById("businessName").value || "Not provided";
+          const serviceArea = document.getElementById("serviceArea").value || "Not provided";
+          const partnerCategory = document.getElementById("partnerCategory").value;
+          const noticePeriod = document.getElementById("noticePeriod").value;
+          const requestChannel = document.getElementById("requestChannel").value;
+
+          reviewCard.innerHTML = `
+            <div><strong>Account type:</strong> Local partner</div>
+            <div><strong>Name:</strong> ${fullName}</div>
+            <div><strong>Email:</strong> ${email}</div>
+            <div><strong>Business name:</strong> ${businessName}</div>
+            <div><strong>Partner category:</strong> ${partnerCategory}</div>
+            <div><strong>Service area:</strong> ${serviceArea}</div>
+            <div><strong>Notice period:</strong> ${noticePeriod}</div>
+            <div><strong>Preferred channel:</strong> ${requestChannel}</div>
+          `;
+        }
+      }
+
+      function showStep(stepNumber) {
+        currentStep = stepNumber;
+
+        steps.forEach(function (step) {
+          step.classList.toggle("is-active", Number(step.dataset.step) === currentStep);
+        });
+
+        progressItems.forEach(function (item) {
+          item.classList.toggle("is-active", Number(item.dataset.progress) <= currentStep);
+        });
+
+        backButton.style.display = currentStep === 1 ? "none" : "inline-flex";
+        nextButton.style.display = currentStep === 5 ? "none" : "inline-flex";
+        submitButton.style.display = currentStep === 5 ? "inline-flex" : "none";
+
+        updateRoleVisibility();
+        updateSuggestedPlan();
+
+        if (currentStep === 5) {
+          updateReview();
+        }
+      }
+
+      accountTypeInputs.forEach(function (input) {
+        input.addEventListener("change", function () {
+          updateRoleVisibility();
+        });
+      });
+
+      document.getElementById("propertyCount").addEventListener("change", updateSuggestedPlan);
+
+      backButton.addEventListener("click", function () {
+        if (currentStep > 1) {
+          showStep(currentStep - 1);
+        }
+      });
+
+      nextButton.addEventListener("click", function () {
+        if (currentStep < 5) {
+          showStep(currentStep + 1);
+        }
+      });
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const accountType = getAccountType();
+
+        if (accountType === "partner") {
+          window.location.href = "dashboard-partner.html";
+        } else {
+          window.location.href = "dashboard-homeowner.html";
+        }
+      });
+
+      showStep(1);
+    });
+  </script>
+</body>
+</html>

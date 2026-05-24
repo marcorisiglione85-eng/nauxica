@@ -1,0 +1,8 @@
+{
+  "brand": "Nauxica",
+  "logo_font": "Bodoni FLF",
+  "payoff_font": "Avenir",
+  "heading_recommendation": "Bodoni FLF for brand material. For web, use Bodoni 72, Didot, Georgia or a licensed webfont equivalent.",
+  "body_recommendation": "Avenir for brand material. For web, use Avenir Next, Avenir, Inter, system-ui or a licensed webfont equivalent.",
+  "notes": "Do not distribute font files. Use licensed web fonts or system fallbacks."
+}

@@ -1,0 +1,58 @@
+{
+  "dashboard-guest-concierge": {
+    "source": "guest concierge.PNG",
+    "original_size": [
+      1024,
+      1536
+    ],
+    "png": "assets/dashboard/dashboard-guest-concierge.png",
+    "webp": "assets/dashboard/dashboard-guest-concierge.webp",
+    "preview_jpg": "assets/dashboard/dashboard-guest-concierge-preview.jpg",
+    "web_size": [
+      1024,
+      1536
+    ]
+  },
+  "dashboard-partner-transfer": {
+    "source": "dashboard transfer.PNG",
+    "original_size": [
+      1536,
+      1024
+    ],
+    "png": "assets/dashboard/dashboard-partner-transfer.png",
+    "webp": "assets/dashboard/dashboard-partner-transfer.webp",
+    "preview_jpg": "assets/dashboard/dashboard-partner-transfer-preview.jpg",
+    "web_size": [
+      1536,
+      1024
+    ]
+  },
+  "dashboard-homeowner": {
+    "source": "dashboard homeowner.PNG",
+    "original_size": [
+      1536,
+      1024
+    ],
+    "png": "assets/dashboard/dashboard-homeowner.png",
+    "webp": "assets/dashboard/dashboard-homeowner.webp",
+    "preview_jpg": "assets/dashboard/dashboard-homeowner-preview.jpg",
+    "web_size": [
+      1536,
+      1024
+    ]
+  },
+  "dashboard-partner-cleaning": {
+    "source": "dashboard partner.PNG",
+    "original_size": [
+      1536,
+      1024
+    ],
+    "png": "assets/dashboard/dashboard-partner-cleaning.png",
+    "webp": "assets/dashboard/dashboard-partner-cleaning.webp",
+    "preview_jpg": "assets/dashboard/dashboard-partner-cleaning-preview.jpg",
+    "web_size": [
+      1536,
+      1024
+    ]
+  }
+}

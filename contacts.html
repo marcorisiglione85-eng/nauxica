@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="Contact Nauxica to request a demo or discuss premium hospitality operations for properties, guests, owners and local partners."
+  />
+
+  <title>Contact Nauxica | Hospitality, connected.</title>
+
+  <link rel="icon" href="assets/logo/favicon.ico" />
+  <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+    <header class="nx-header">
+  <nav class="nx-nav">
+    <a href="index.html" class="site-logo" aria-label="Nauxica home">
+      <img
+        src="assets/logo/nauxica-logo-horizontal.svg"
+        alt="Nauxica, Hospitality connected"
+      />
+    </a>
+
+    <button
+      class="mobile-menu-toggle"
+      type="button"
+      aria-label="Open menu"
+      aria-expanded="false"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <ul class="nx-links">
+  <li><a href="index.html#hero">Home</a></li>
+  <li><a href="index.html#services">Services</a></li>
+  <li><a href="index.html#pricing">Pricing</a></li>
+  <li><a href="login.html">Login</a></li>
+  <li><a href="register.html">Register</a></li>
+  <li><a class="btn" href="contacts.html">Contact</a></li>
+</ul>
+  </nav>
+</header>
+
+    <main>
+      <section class="contact-hero">
+        <div class="section-head">
+          <div class="eyebrow">Request a demo</div>
+          <h1>Let’s connect <br> your hospitality operation.</h1>
+          <p>
+            Tell us about your properties, your current setup and where Nauxica
+            could help you create a more connected experience for guests,
+            owners, operations and local partners.
+          </p>
+        </div>
+      </section>
+
+      <section class="section contact-section">
+        <div class="contact-layout">
+          <div class="contact-left">
+            <div class="contact-card intro-card">
+              <h2>Contact details</h2>
+              <p class="muted">
+                Early access, demo requests and partnership enquiries are
+                welcome. We typically reply within 2 business days.
+              </p>
+
+              <div class="contact-item">
+                <span>🌐</span>
+                <div>
+                  <div class="contact-label">Website</div>
+                  <div class="contact-value">
+                    <a href="https://nauxicahd.com">nauxicahd.com</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <span>📧</span>
+                <div>
+                  <div class="contact-label">Email</div>
+                  <div class="contact-value">
+                    <a href="mailto:hello@nauxicahd.com">
+                      hello@nauxicahd.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-highlights">
+                <div class="contact-highlight">
+                  <strong>For property owners</strong>
+                  <span>
+                    Explore guest messaging, owner visibility and operational
+                    automation.
+                  </span>
+                </div>
+
+                <div class="contact-highlight">
+                  <strong>For local partners</strong>
+                  <span>
+                    Discuss cleaning, transfer, restaurant, tour or service
+                    marketplace opportunities.
+                  </span>
+                </div>
+
+                <div class="contact-highlight">
+                  <strong>For early access</strong>
+                  <span>
+                    Join the first group of hospitality operators shaping the
+                    Nauxica platform.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-right">
+            <div class="form-card card-elevated">
+              <h3>Request a demo</h3>
+              <p class="muted">
+                Share a few details and we will prepare a relevant follow up.
+              </p>
+
+              <div class="success-banner" id="successBanner">
+                <span>✓</span>
+                <span>Your email client will open with a pre filled enquiry.</span>
+              </div>
+
+              <form id="contactForm" novalidate>
+                <div class="field">
+                  <label for="name">
+                    Full name <span class="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Your name"
+                    required
+                  />
+                  <span class="field-error" id="nameError">
+                    Please enter your name.
+                  </span>
+                </div>
+
+                <div class="field">
+                  <label for="email">
+                    Email address <span class="required">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    required
+                  />
+                  <span class="field-error" id="emailError">
+                    Please enter a valid email.
+                  </span>
+                </div>
+
+                <div class="field">
+                  <label for="company">Company or property name</label>
+                  <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    placeholder="Your company or property"
+                  />
+                </div>
+
+                <div class="field">
+                  <label for="subject">
+                    Subject <span class="required">*</span>
+                  </label>
+                  <select id="subject" name="subject" required>
+                    <option value="">Select a subject...</option>
+                    <option value="Request a demo">Request a demo</option>
+                    <option value="Property owner enquiry">
+                      Property owner enquiry
+                    </option>
+                    <option value="Partnership enquiry">
+                      Partnership enquiry
+                    </option>
+                    <option value="Early access">Early access</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <span class="field-error" id="subjectError">
+                    Please choose a subject.
+                  </span>
+                </div>
+
+                <div class="field">
+                  <label for="message">
+                    Message <span class="required">*</span>
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="Tell us about your properties, current setup or partnership idea..."
+                    required
+                  ></textarea>
+                  <span class="field-error" id="messageError">
+                    Please enter a message.
+                  </span>
+                </div>
+
+                <div class="field">
+                  <label class="privacy-field">
+                    <input
+                      type="checkbox"
+                      id="privacy"
+                      name="privacy"
+                      required
+                    />
+                    <span>
+                      I agree to be contacted by Nauxica about my enquiry.
+                    </span>
+                  </label>
+                  <span class="field-error" id="privacyError">
+                    Please confirm that we can contact you.
+                  </span>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="submit-btn">
+                    Prepare enquiry
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+  <div class="footer-inner">
+    <img
+      class="footer-logo"
+      src="assets/logo/nauxica-logo-horizontal-white.svg"
+      loading="lazy"
+      alt="Nauxica Hospitality connected logo"
+    />
+
+    <div>
+      <strong>nauxicahd.com</strong>
+      <br />
+      <a href="mailto:hello@nauxicahd.com">hello@nauxicahd.com</a>
+      <br />
+      Hospitality, connected.
+
+      <div class="footer-links">
+        <a href="index.html#hero">Home</a>
+        <a href="index.html#services">Services</a>
+        <a href="index.html#pricing">Pricing</a>
+        <a href="contacts.html">Contact</a>
+      </div>
+
+      <small>© 2026 Nauxica. All rights reserved.</small>
+    </div>
+  </div>
+</footer>
+
+    <script>
+      const form = document.getElementById("contactForm");
+      const banner = document.getElementById("successBanner");
+      let hasSubmitted = false;
+
+      function showError(id, show) {
+        const input = document.getElementById(id);
+        const error = document.getElementById(id + "Error");
+
+        if (!input || !error) return;
+
+        input.classList.toggle("invalid", show);
+        error.classList.toggle("visible", show);
+      }
+
+      function validateForm() {
+        hasSubmitted = true;
+
+        let isValid = true;
+
+        const nameEl = document.getElementById("name");
+        const emailEl = document.getElementById("email");
+        const subjectEl = document.getElementById("subject");
+        const messageEl = document.getElementById("message");
+        const privacyEl = document.getElementById("privacy");
+
+        if (!nameEl.value.trim()) {
+          showError("name", true);
+          isValid = false;
+        } else {
+          showError("name", false);
+        }
+
+        if (!emailEl.checkValidity()) {
+          showError("email", true);
+          isValid = false;
+        } else {
+          showError("email", false);
+        }
+
+        if (!subjectEl.value) {
+          showError("subject", true);
+          isValid = false;
+        } else {
+          showError("subject", false);
+        }
+
+        if (!messageEl.value.trim()) {
+          showError("message", true);
+          isValid = false;
+        } else {
+          showError("message", false);
+        }
+
+        if (!privacyEl.checked) {
+          showError("privacy", true);
+          isValid = false;
+        } else {
+          showError("privacy", false);
+        }
+
+        return isValid;
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        if (!validateForm()) return;
+
+        const nameEl = document.getElementById("name");
+        const emailEl = document.getElementById("email");
+        const companyEl = document.getElementById("company");
+        const subjectEl = document.getElementById("subject");
+        const messageEl = document.getElementById("message");
+
+        const emailSubject = "Nauxica enquiry: " + subjectEl.value;
+
+        const emailBody = [
+          "Full name: " + nameEl.value.trim(),
+          "Email: " + emailEl.value.trim(),
+          "Company or property: " + (companyEl.value.trim() || "Not provided"),
+          "Subject: " + subjectEl.value,
+          "",
+          "Message:",
+          messageEl.value.trim()
+        ].join("\n");
+
+        const mailtoLink =
+          "mailto:hello@nauxicahd.com" +
+          "?subject=" +
+          encodeURIComponent(emailSubject) +
+          "&body=" +
+          encodeURIComponent(emailBody);
+
+        banner.classList.add("visible");
+
+        setTimeout(function () {
+          window.location.href = mailtoLink;
+        }, 250);
+      });
+
+      ["name", "email", "subject", "message", "privacy"].forEach(function (id) {
+        const input = document.getElementById(id);
+
+        if (!input) return;
+
+        const validate = function () {
+          if (!hasSubmitted) return;
+
+          if (id === "email") {
+            showError(id, !input.checkValidity());
+          } else if (id === "privacy") {
+            showError(id, !input.checked);
+          } else {
+            showError(id, !input.value.trim());
+          }
+        };
+
+        input.addEventListener("input", validate);
+        input.addEventListener("change", validate);
+      });
+    </script>
+    <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+    const header = document.querySelector(".nx-header");
+    const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+    if (!mobileMenuButton || !header) return;
+
+    mobileMenuButton.addEventListener("click", function () {
+      const isOpen = header.classList.toggle("nav-open");
+      mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    mobileMenuLinks.forEach(function (link) {
+      link.addEventListener("click", function () {
+        header.classList.remove("nav-open");
+        mobileMenuButton.setAttribute("aria-expanded", "false");
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

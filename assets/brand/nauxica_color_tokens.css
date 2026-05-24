@@ -1,0 +1,18 @@
+/* Nauxica brand tokens, v2 */
+:root {
+  --nauxica-charcoal: #0F1720;
+  --nauxica-stone: #444A52;
+  --nauxica-sand: #F2ECE4;
+  --nauxica-linen: #F7F5F1;
+  --nauxica-terracotta: #C5683D;
+
+  --nauxica-bg: var(--nauxica-linen);
+  --nauxica-surface: #FFFFFF;
+  --nauxica-text: var(--nauxica-charcoal);
+  --nauxica-muted: var(--nauxica-stone);
+  --nauxica-accent: var(--nauxica-terracotta);
+  --nauxica-border: rgba(15, 23, 32, 0.10);
+
+  --nauxica-display-font: "Bodoni FLF", "Bodoni 72", Didot, Georgia, serif;
+  --nauxica-ui-font: Avenir, "Avenir Next", Inter, system-ui, sans-serif;
+}
