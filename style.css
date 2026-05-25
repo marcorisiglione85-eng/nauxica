@@ -3256,6 +3256,341 @@ footer small {
   }
 }
 
+/* Canonical dashboard consolidation, Step 1 */
+
+/* Homeowner dashboard inline rules (copied from dashboard-homeowner.html) */
+.homeowner-dashboard.dashboard-shell {
+  display: grid !important;
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  gap: 28px !important;
+  width: min(1440px, calc(100% - 40px)) !important;
+  margin: 0 auto !important;
+  padding: 32px 0 72px !important;
+  align-items: start !important;
+}
+
+.homeowner-dashboard .dashboard-sidebar {
+  position: sticky !important;
+  top: 96px !important;
+  align-self: start !important;
+  min-height: calc(100vh - 120px) !important;
+  background: #fffaf2 !important;
+  border: 1px solid rgba(29,35,39,0.08) !important;
+  border-radius: 28px !important;
+  padding: 22px !important;
+  box-shadow: 0 24px 70px rgba(29,35,39,0.10) !important;
+}
+
+.homeowner-dashboard .dashboard-sidebar-inner {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+.homeowner-dashboard .dashboard-nav {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.homeowner-dashboard .dashboard-nav-item {
+  display: flex !important;
+  align-items: center !important;
+  padding: 11px 14px !important;
+  border-radius: 999px !important;
+  color: var(--charcoal) !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+}
+
+.homeowner-dashboard .dashboard-nav-item.active,
+.homeowner-dashboard .dashboard-nav-item:hover {
+  background: var(--terracotta) !important;
+  color: white !important;
+}
+
+.homeowner-dashboard .dashboard-main {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 24px !important;
+}
+
+.homeowner-dashboard .dashboard-topbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  align-items: center !important;
+  background: rgba(255,250,242,0.78) !important;
+  border: 1px solid rgba(29,35,39,0.08) !important;
+  border-radius: 28px !important;
+  padding: 24px !important;
+  box-shadow: 0 20px 56px rgba(29,35,39,0.08) !important;
+}
+
+.homeowner-dashboard .dashboard-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+.homeowner-dashboard .dashboard-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+.homeowner-dashboard .dashboard-card,
+.homeowner-dashboard .kpi-card {
+  background: #fffaf2 !important;
+  border: 1px solid rgba(29,35,39,0.08) !important;
+  border-radius: 26px !important;
+  padding: 22px !important;
+  box-shadow: 0 20px 56px rgba(29,35,39,0.08) !important;
+}
+
+.homeowner-dashboard .kpi-label {
+  color: var(--stone) !important;
+  font-weight: 700 !important;
+}
+
+.homeowner-dashboard .kpi-value {
+  font-size: 1.6rem !important;
+  font-weight: 900 !important;
+  color: var(--charcoal) !important;
+}
+
+.homeowner-dashboard .arrival-item,
+.homeowner-dashboard .message-item,
+.homeowner-dashboard .task-item,
+.homeowner-dashboard .review-item,
+.homeowner-dashboard .marketplace-item {
+  background: rgba(247,244,241,0.9) !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(15,23,32,0.05) !important;
+  margin-top: 10px !important;
+}
+
+.homeowner-dashboard .property-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.homeowner-dashboard .property-card {
+  padding: 14px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg,#fff,#fffaf2) !important;
+  border: 1px solid rgba(29,35,39,0.08) !important;
+}
+
+@media (max-width: 1000px) {
+  .homeowner-dashboard.dashboard-shell {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: min(100% - 24px, 900px) !important;
+    margin: 0 auto !important;
+    padding: 18px 0 56px !important;
+    gap: 18px !important;
+  }
+
+  .homeowner-dashboard .dashboard-sidebar {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 14px !important;
+    border-radius: 22px !important;
+  }
+
+  .homeowner-dashboard .dashboard-sidebar-inner {
+    display: grid !important;
+    gap: 12px !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 4px !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav-item {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 999px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav-item.active,
+  .homeowner-dashboard .dashboard-nav-item:hover {
+    background: var(--terracotta) !important;
+    color: #ffffff !important;
+  }
+
+  .homeowner-dashboard .dashboard-main {
+    width: 100% !important;
+    display: grid !important;
+    gap: 18px !important;
+  }
+
+  .homeowner-dashboard .dashboard-topbar {
+    padding: 22px !important;
+    border-radius: 24px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .homeowner-dashboard .dashboard-topbar h1 {
+    font-size: clamp(2.4rem, 14vw, 4rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .homeowner-dashboard .dashboard-kpis,
+  .homeowner-dashboard .dashboard-grid,
+  .homeowner-dashboard .property-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .homeowner-dashboard .dashboard-card,
+  .homeowner-dashboard .kpi-card {
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+}
+
+/* Final stronger mobile override to force compact horizontal sidebar (copied from homeowner inline) */
+@media (max-width: 1000px) {
+  .homeowner-dashboard.dashboard-shell {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: min(100% - 24px, 900px) !important;
+    margin: 0 auto !important;
+    padding: 16px 0 48px !important;
+    gap: 16px !important;
+    align-items: start !important;
+  }
+
+  .homeowner-dashboard .dashboard-sidebar {
+    position: relative !important;
+    top: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    padding: 14px !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+  }
+
+  .homeowner-dashboard .dashboard-sidebar-inner {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .homeowner-dashboard .dashboard-sidebar h2,
+  .homeowner-dashboard .dashboard-sidebar-title,
+  .homeowner-dashboard .dashboard-brand {
+    margin: 0 0 12px !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    padding: 0 0 6px !important;
+    margin: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+  }
+
+  .homeowner-dashboard .dashboard-nav-item.active,
+  .homeowner-dashboard .dashboard-nav-item:hover {
+    background: var(--terracotta) !important;
+    color: #ffffff !important;
+  }
+
+  .homeowner-dashboard .dashboard-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 16px !important;
+  }
+
+  .homeowner-dashboard .dashboard-topbar {
+    padding: 20px !important;
+    border-radius: 22px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .homeowner-dashboard .dashboard-topbar h1 {
+    font-size: clamp(2.2rem, 13vw, 3.7rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .homeowner-dashboard .dashboard-kpis,
+  .homeowner-dashboard .dashboard-grid,
+  .homeowner-dashboard .property-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .homeowner-dashboard .dashboard-card,
+  .homeowner-dashboard .kpi-card {
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+}
+
+/* Partner dashboard inline emergency rules (copied from dashboard-partner.html) */
+.partner-dashboard.dashboard-shell {
+  display: grid !important;
+  grid-template-columns: 260px 1fr !important;
+  gap: 28px !important;
+}
+
+@media (max-width: 1000px) {
+  .partner-dashboard.dashboard-shell {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
 /* Final stronger mobile override: compact horizontal sidebar nav */
 @media (max-width: 1000px) {
   .homeowner-dashboard.dashboard-shell {
