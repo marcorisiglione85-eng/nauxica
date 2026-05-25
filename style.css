@@ -15,6 +15,8 @@
   --radius-sm:16px;
 }
 
+
+
 * {
   box-sizing:border-box;
 }
@@ -1986,6 +1988,154 @@ footer small {
   backdrop-filter: blur(18px);
 }
 
+/* Registration layout: two-column shell */
+.registration-layout {
+  display: grid;
+  grid-template-columns: 1fr 560px;
+  gap: 28px;
+  align-items: start;
+}
+
+.registration-left {
+  padding: 8px 6px 12px 6px;
+}
+
+.registration-aside {
+  margin-top: 18px;
+}
+
+.registration-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* form card container */
+.registration-right .registration-form {
+  background: #fff;
+  border-radius: 20px;
+  padding: 26px;
+  border: 1px solid rgba(15,23,32,0.06);
+  box-shadow: 0 40px 80px rgba(15,23,32,0.05);
+}
+
+/* ensure only registration-step.is-active shows */
+.registration-step:not(.is-active) { display: none; }
+.registration-step.is-active { display: block; }
+
+/* constrain form fields inside card */
+.registration-right .field input,
+.registration-right .field textarea,
+.registration-right .field select {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* progress pills */
+.registration-progress {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.registration-progress .progress-step {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(15,23,32,0.05);
+  color: var(--stone);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.registration-progress .progress-step.is-active {
+  background: rgba(197,104,61,0.14);
+  color: var(--terracotta);
+}
+
+/* role cards larger and clearly selectable */
+.role-card {
+  display: block;
+  padding: 28px;
+  border-radius: 18px;
+  transition: box-shadow 0.18s ease, transform 0.12s ease;
+}
+.role-card:hover { transform: translateY(-3px); box-shadow: 0 24px 48px rgba(15,23,32,0.06); }
+.role-card input { position: absolute; top: 18px; right: 18px; }
+.role-card:has(input:checked) { border-color: var(--terracotta); box-shadow: 0 24px 56px rgba(197,104,61,0.12); }
+
+/* smaller headings inside flow */
+.registration-head h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 6px; }
+.reg-step h2 { font-size: clamp(1.15rem, 2.4vw, 1.6rem); }
+
+/* action buttons alignment */
+.registration-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+.registration-actions .btn-ghost { background: transparent; }
+
+/* spacing before footer */
+.registration-shell { margin-bottom: 48px; }
+
+@media (max-width: 1024px) {
+  .registration-layout { grid-template-columns: 1fr; }
+  .registration-right .registration-form { box-shadow: none; border-radius: 18px; }
+}
+
+/* Final overrides for registration shell/panel layout (scoped) */
+.registration-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto 96px;
+  padding: 48px 0 24px;
+}
+
+.registration-shell .registration-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 560px);
+  gap: 32px;
+  align-items: start;
+}
+
+.registration-shell .registration-panel {
+  background: #fffaf2;
+  border: 1px solid rgba(29, 35, 39, 0.08);
+  border-radius: 30px;
+  padding: 34px;
+  box-shadow: 0 28px 80px rgba(29, 35, 39, 0.12);
+  overflow: hidden;
+}
+
+.registration-shell .registration-step:not(.is-active) {
+  display: none !important;
+}
+
+.registration-shell .registration-step.is-active {
+  display: block;
+}
+
+.registration-shell input,
+.registration-shell select,
+.registration-shell textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .registration-shell {
+    width: min(100% - 24px, 720px);
+    padding-top: 28px;
+  }
+
+  .registration-shell .registration-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-shell .registration-panel {
+    padding: 24px;
+    border-radius: 24px;
+  }
+}
+
+
+
+
+
 .registration-head {
   text-align: center;
   max-width: 760px;
@@ -2265,3 +2415,296 @@ footer small {
   cursor: default;
 }
 
+/* Final registration layout override */
+.registration-hero {
+  padding: 72px 0 96px !important;
+}
+
+.registration-hero .registration-shell {
+  width: min(1180px, calc(100% - 40px)) !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.registration-hero .registration-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 560px) !important;
+  gap: 34px !important;
+  align-items: start !important;
+}
+
+.registration-hero .registration-left {
+  min-width: 0 !important;
+}
+
+.registration-hero .registration-aside {
+  margin-top: 28px !important;
+  background: rgba(255, 248, 238, 0.78) !important;
+  border: 1px solid rgba(197, 104, 61, 0.18) !important;
+  border-radius: 28px !important;
+  padding: 28px !important;
+  box-shadow: 0 20px 56px rgba(29, 35, 39, 0.08) !important;
+}
+
+.registration-hero .registration-right.registration-panel {
+  display: block !important;
+  background: #fffaf2 !important;
+  border: 1px solid rgba(29, 35, 39, 0.08) !important;
+  border-radius: 30px !important;
+  padding: 34px !important;
+  box-shadow: 0 28px 80px rgba(29, 35, 39, 0.12) !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+}
+
+.registration-hero .registration-form {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.registration-hero .registration-step:not(.is-active) {
+  display: none !important;
+}
+
+.registration-hero .registration-step.is-active {
+  display: block !important;
+}
+
+.registration-hero .registration-head h1 {
+  font-size: clamp(3rem, 6vw, 5.8rem) !important;
+  line-height: 0.95 !important;
+  margin-bottom: 22px !important;
+}
+
+.registration-hero .registration-step h2,
+.registration-hero .reg-step h2 {
+  font-size: clamp(1.9rem, 3vw, 2.8rem) !important;
+  line-height: 1.05 !important;
+  margin: 0 0 14px !important;
+}
+
+.registration-hero .registration-progress {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 24px !important;
+}
+
+.registration-hero .progress-step {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 9px 14px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(29, 35, 39, 0.08) !important;
+  color: var(--stone) !important;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+}
+
+.registration-hero .progress-step.is-active {
+  background: var(--terracotta) !important;
+  color: white !important;
+  border-color: var(--terracotta) !important;
+}
+
+.registration-hero .role-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-top: 22px !important;
+}
+
+.registration-hero .role-card {
+  display: grid !important;
+  gap: 10px !important;
+  padding: 22px !important;
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  border: 1px solid rgba(29, 35, 39, 0.12) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.registration-hero .role-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(197, 104, 61, 0.44) !important;
+  box-shadow: 0 18px 44px rgba(29, 35, 39, 0.1) !important;
+}
+
+.registration-hero .role-card input {
+  width: auto !important;
+}
+
+.registration-hero .role-card:has(input:checked) {
+  border-color: var(--terracotta) !important;
+  background: rgba(197, 104, 61, 0.08) !important;
+}
+
+.registration-hero .role-title {
+  font-weight: 900 !important;
+  color: var(--charcoal) !important;
+  font-size: 1.05rem !important;
+}
+
+.registration-hero .role-copy {
+  color: var(--stone) !important;
+  line-height: 1.55 !important;
+  font-size: 0.94rem !important;
+}
+
+.registration-hero .form-grid {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+.registration-hero .form-grid.two-columns,
+.registration-hero .two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.registration-hero .field {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.registration-hero input,
+.registration-hero select,
+.registration-hero textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.registration-hero .registration-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin-top: 28px !important;
+}
+
+@media (max-width: 900px) {
+  .registration-hero {
+    padding: 42px 0 72px !important;
+  }
+
+  .registration-hero .registration-shell {
+    width: min(100% - 24px, 720px) !important;
+  }
+
+  .registration-hero .registration-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .registration-hero .registration-right.registration-panel,
+  .registration-hero .registration-aside {
+    padding: 24px !important;
+    border-radius: 24px !important;
+  }
+
+  .registration-hero .role-grid,
+  .registration-hero .form-grid.two-columns,
+  .registration-hero .two-columns {
+    grid-template-columns: 1fr !important;
+  }
+
+  .registration-hero .registration-head h1 {
+    font-size: clamp(2.7rem, 14vw, 4.2rem) !important;
+  }
+}
+
+/* Review summary styling */
+.summary-list {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(29, 35, 39, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(29, 35, 39, 0.04);
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  color: var(--stone);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.summary-value {
+  font-size: 1rem;
+  color: var(--charcoal);
+  text-align: right;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .summary-item {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-value {
+    text-align: left;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+}
+
+/* Final checks (consent) styling */
+.final-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.final-check label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.final-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+}
+
+.final-check-text {
+  display: block;
+  color: var(--charcoal);
+  font-size: 0.95rem;
+}
+
+/* Ensure action buttons stay aligned */
+.registration-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .registration-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
