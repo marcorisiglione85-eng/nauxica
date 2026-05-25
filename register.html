@@ -399,11 +399,14 @@
       const submitButton = document.getElementById("submitButton");
       const accountTypeInputs = document.querySelectorAll('input[name="accountType"]');
       const reviewCard = document.getElementById("reviewCard");
+      const shell = document.querySelector('.registration-shell');
 
       let currentStep = 1;
+      let hasTriedSubmit = false;
 
       function getAccountType() {
-        return document.querySelector('input[name="accountType"]:checked').value;
+        const el = document.querySelector('input[name="accountType"]:checked');
+        return el ? el.value : 'homeowner';
       }
 
       function updateRoleVisibility() {
@@ -418,10 +421,120 @@
         partnerFields.forEach(function (section) {
           section.style.display = accountType === "partner" ? "block" : "none";
         });
+
+        // Visual hint for the chosen path
+        shell.classList.toggle('registration--partner', accountType === 'partner');
+        shell.classList.toggle('registration--homeowner', accountType === 'homeowner');
+      }
+
+      function showFieldError(input, message) {
+        if (!input) return;
+        let err = input.parentElement.querySelector('.registration-field-error');
+        if (!err) {
+          err = document.createElement('span');
+          err.className = 'registration-field-error';
+          input.parentElement.appendChild(err);
+        }
+        err.textContent = message;
+        input.classList.add('invalid');
+      }
+
+      function clearFieldError(input) {
+        if (!input) return;
+        const err = input.parentElement.querySelector('.registration-field-error');
+        if (err) err.remove();
+        input.classList.remove('invalid');
+      }
+
+      function validateStep(stepNumber) {
+        const stepEl = document.querySelector(`.reg-step[data-step="${stepNumber}"]`);
+        if (!stepEl) return true;
+        let valid = true;
+
+        // custom rules per step and account type
+        const accountType = getAccountType();
+
+        // gather inputs in this step
+        const inputs = Array.from(stepEl.querySelectorAll('input, select, textarea'));
+
+        inputs.forEach(function (input) {
+          clearFieldError(input);
+        });
+
+        if (stepNumber === 1) {
+          // ensure account type selected
+          const sel = document.querySelector('input[name="accountType"]:checked');
+          if (!sel) {
+            valid = false;
+          }
+        }
+
+        if (stepNumber === 2) {
+          const required = ['fullName','email','phone','password','confirmPassword'];
+          required.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el || !el.value.trim()) {
+              valid = false;
+              showFieldError(el, 'This field is required.');
+            }
+          });
+          // password match
+          const pw = document.getElementById('password');
+          const cpw = document.getElementById('confirmPassword');
+          if (pw && cpw && pw.value && cpw.value && pw.value !== cpw.value) {
+            valid = false;
+            showFieldError(cpw, 'Passwords do not match.');
+          }
+          // basic email validity
+          const emailEl = document.getElementById('email');
+          if (emailEl && emailEl.value && !emailEl.checkValidity()) {
+            valid = false;
+            showFieldError(emailEl, 'Enter a valid email address.');
+          }
+        }
+
+        if (stepNumber === 3) {
+          if (accountType === 'homeowner') {
+            const required = ['propertyCount','mainLocation','propertyType'];
+            required.forEach(function (id) {
+              const el = document.getElementById(id);
+              if (!el || !el.value.trim()) {
+                valid = false;
+                showFieldError(el, 'This field is required.');
+              }
+            });
+          } else {
+            // partner required fields
+            const required = ['businessName','serviceArea','partnerCategory','noticePeriod'];
+            required.forEach(function (id) {
+              const el = document.getElementById(id);
+              if (!el || !el.value.trim()) {
+                valid = false;
+                showFieldError(el, 'This field is required.');
+              }
+            });
+          }
+        }
+
+        if (stepNumber === 4) {
+          // no strict required fields for operational needs; allow proceed
+        }
+
+        if (stepNumber === 5) {
+          // review step - no required fields here
+        }
+
+        return valid;
+      }
+
+      function checkStepValidityAndToggleNext() {
+        const valid = validateStep(currentStep);
+        nextButton.disabled = !valid;
       }
 
       function updateSuggestedPlan() {
-        const propertyCount = document.getElementById("propertyCount").value;
+        const propertyCountEl = document.getElementById("propertyCount");
+        const propertyCount = propertyCountEl ? propertyCountEl.value : '';
         const title = document.getElementById("suggestedPlanTitle");
         const text = document.getElementById("suggestedPlanText");
 
@@ -460,14 +573,16 @@
           });
 
           reviewCard.innerHTML = `
-            <div><strong>Account type:</strong> Homeowner</div>
-            <div><strong>Name:</strong> ${fullName}</div>
-            <div><strong>Email:</strong> ${email}</div>
-            <div><strong>Company or property:</strong> ${companyName}</div>
-            <div><strong>Properties:</strong> ${propertyCount}</div>
-            <div><strong>Main location:</strong> ${mainLocation}</div>
-            <div><strong>Property type:</strong> ${propertyType}</div>
-            <div><strong>Operational needs:</strong> ${selectedNeeds.length ? selectedNeeds.join(", ") : "Not selected"}</div>
+            <div class="summary-list">
+              <div class="summary-item"><span class="summary-label">Account type</span><span class="summary-value">Homeowner</span></div>
+              <div class="summary-item"><span class="summary-label">Name</span><span class="summary-value">${fullName}</span></div>
+              <div class="summary-item"><span class="summary-label">Email</span><span class="summary-value">${email}</span></div>
+              <div class="summary-item"><span class="summary-label">Company</span><span class="summary-value">${companyName}</span></div>
+              <div class="summary-item"><span class="summary-label">Properties</span><span class="summary-value">${propertyCount}</span></div>
+              <div class="summary-item"><span class="summary-label">Main location</span><span class="summary-value">${mainLocation}</span></div>
+              <div class="summary-item"><span class="summary-label">Property type</span><span class="summary-value">${propertyType}</span></div>
+              <div class="summary-item"><span class="summary-label">Operational needs</span><span class="summary-value">${selectedNeeds.length ? selectedNeeds.join(", ") : "Not selected"}</span></div>
+            </div>
           `;
         } else {
           const businessName = document.getElementById("businessName").value || "Not provided";
@@ -477,14 +592,16 @@
           const requestChannel = document.getElementById("requestChannel").value;
 
           reviewCard.innerHTML = `
-            <div><strong>Account type:</strong> Local partner</div>
-            <div><strong>Name:</strong> ${fullName}</div>
-            <div><strong>Email:</strong> ${email}</div>
-            <div><strong>Business name:</strong> ${businessName}</div>
-            <div><strong>Partner category:</strong> ${partnerCategory}</div>
-            <div><strong>Service area:</strong> ${serviceArea}</div>
-            <div><strong>Notice period:</strong> ${noticePeriod}</div>
-            <div><strong>Preferred channel:</strong> ${requestChannel}</div>
+            <div class="summary-list">
+              <div class="summary-item"><span class="summary-label">Account type</span><span class="summary-value">Local partner</span></div>
+              <div class="summary-item"><span class="summary-label">Name</span><span class="summary-value">${fullName}</span></div>
+              <div class="summary-item"><span class="summary-label">Email</span><span class="summary-value">${email}</span></div>
+              <div class="summary-item"><span class="summary-label">Business name</span><span class="summary-value">${businessName}</span></div>
+              <div class="summary-item"><span class="summary-label">Partner category</span><span class="summary-value">${partnerCategory}</span></div>
+              <div class="summary-item"><span class="summary-label">Service area</span><span class="summary-value">${serviceArea}</span></div>
+              <div class="summary-item"><span class="summary-label">Notice period</span><span class="summary-value">${noticePeriod}</span></div>
+              <div class="summary-item"><span class="summary-label">Preferred channel</span><span class="summary-value">${requestChannel}</span></div>
+            </div>
           `;
         }
       }
@@ -501,24 +618,42 @@
         });
 
         backButton.style.display = currentStep === 1 ? "none" : "inline-flex";
-        nextButton.style.display = currentStep === 5 ? "none" : "inline-flex";
-        submitButton.style.display = currentStep === 5 ? "inline-flex" : "none";
+        nextButton.style.display = currentStep === 6 ? "none" : "inline-flex";
+        submitButton.style.display = currentStep === 6 ? "inline-flex" : "none";
 
         updateRoleVisibility();
         updateSuggestedPlan();
 
-        if (currentStep === 5) {
+        if (currentStep === 6) {
           updateReview();
         }
+
+        // check validity for enabling next button
+        checkStepValidityAndToggleNext();
       }
 
       accountTypeInputs.forEach(function (input) {
         input.addEventListener("change", function () {
           updateRoleVisibility();
+          // re-evaluate step validity
+          checkStepValidityAndToggleNext();
         });
       });
 
-      document.getElementById("propertyCount").addEventListener("change", updateSuggestedPlan);
+      const watched = form.querySelectorAll('input, select, textarea');
+      watched.forEach(function (el) {
+        el.addEventListener('input', function () {
+          clearFieldError(el);
+          checkStepValidityAndToggleNext();
+        });
+        el.addEventListener('change', function () {
+          clearFieldError(el);
+          checkStepValidityAndToggleNext();
+        });
+      });
+
+      const propertyCountEl = document.getElementById("propertyCount");
+      if (propertyCountEl) propertyCountEl.addEventListener("change", function () { updateSuggestedPlan(); checkStepValidityAndToggleNext(); });
 
       backButton.addEventListener("click", function () {
         if (currentStep > 1) {
@@ -527,16 +662,48 @@
       });
 
       nextButton.addEventListener("click", function () {
-        if (currentStep < 5) {
-          showStep(currentStep + 1);
+        // validate current step, if valid advance
+        if (validateStep(currentStep)) {
+          if (currentStep < 6) showStep(currentStep + 1);
+        } else {
+          // focus first invalid
+          const stepEl = document.querySelector(`.reg-step[data-step="${currentStep}"]`);
+          const firstInvalid = stepEl.querySelector('.invalid');
+          if (firstInvalid) firstInvalid.focus();
         }
       });
 
       form.addEventListener("submit", function (event) {
         event.preventDefault();
+        hasTriedSubmit = true;
+        // final validation of review consents
+        const contactConsent = document.getElementById('contactConsent');
+        const termsConsent = document.getElementById('termsConsent');
+        let ok = true;
+        if (!contactConsent || !contactConsent.checked) {
+          ok = false;
+          showFieldError(contactConsent || document.getElementById('submitButton'), 'Please allow contact.');
+        }
+        if (!termsConsent || !termsConsent.checked) {
+          ok = false;
+          showFieldError(termsConsent || document.getElementById('submitButton'), 'Please accept terms.');
+        }
 
+        // also ensure all steps valid
+        for (let s = 1; s <= 5; s++) {
+          if (!validateStep(s)) ok = false;
+        }
+
+        if (!ok) {
+          // jump to first invalid step
+          for (let s = 1; s <= 6; s++) {
+            if (!validateStep(s)) { showStep(s); break; }
+          }
+          return;
+        }
+
+        // redirect based on account type
         const accountType = getAccountType();
-
         if (accountType === "partner") {
           window.location.href = "dashboard-partner.html";
         } else {
@@ -544,6 +711,8 @@
         }
       });
 
+      // initialize
+      updateRoleVisibility();
       showStep(1);
     });
   </script>
