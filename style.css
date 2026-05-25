@@ -3872,3 +3872,59 @@ footer small {
     font-size: clamp(2.6rem, 15vw, 4rem) !important;
   }
 }
+/* Register success screen */
+
+.registration-success {
+  display: grid;
+  gap: 18px;
+  text-align: left;
+  padding: 28px;
+  border-radius: 28px;
+  background: #fffaf2;
+  border: 1px solid rgba(29, 35, 39, 0.08);
+  box-shadow: 0 24px 70px rgba(29, 35, 39, 0.1);
+}
+
+.registration-success[hidden] {
+  display: none;
+}
+
+.success-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--terracotta);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 1.4rem;
+}
+
+.registration-success h2 {
+  margin: 0 0 8px;
+  color: var(--charcoal);
+}
+
+.registration-success p {
+  margin: 0;
+  color: var(--stone);
+}
+
+.success-dashboard-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  padding: 14px 22px;
+  border-radius: 999px;
+  background: var(--terracotta);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.success-dashboard-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(29, 35, 39, 0.12);
+}

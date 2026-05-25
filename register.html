@@ -210,7 +210,7 @@
               </div>
             </div>
 
-            <div class="registration-right registration-panel">
+            <d class="registration-right registration-panel">
               <form class="registration-form" id="registrationForm">
                 <section
                   class="reg-step registration-step is-active"
@@ -741,6 +741,20 @@
                   </button>
                 </div>
               </form>
+
+<div class="registration-success" id="registrationSuccess" hidden>
+  <div class="success-icon">✓</div>
+
+  <div>
+    <h2>Your Nauxica account has been created.</h2>
+    <p>We are preparing your dashboard.</p>
+  </div>
+
+  <a class="success-dashboard-btn" id="continueToDashboard" href="dashboard-homeowner.html">
+    Continue to dashboard
+  </a>
+</div>
+
             </div>
           </div>
         </div>
@@ -1227,13 +1241,29 @@
             return;
           }
 
-          // redirect based on account type
-          const accountType = getAccountType();
-          if (accountType === "partner") {
-            window.location.href = "dashboard-partner.html";
-          } else {
-            window.location.href = "dashboard-homeowner.html";
-          }
+          // show success state before redirecting
+const accountType = getAccountType();
+const dashboardUrl =
+  accountType === "partner"
+    ? "dashboard-partner.html"
+    : "dashboard-homeowner.html";
+
+const successPanel = document.getElementById("registrationSuccess");
+const continueButton = document.getElementById("continueToDashboard");
+const formPanel = document.querySelector(".registration-card, .register-card, .registration-form, form");
+
+if (continueButton) {
+  continueButton.href = dashboardUrl;
+}
+
+if (successPanel) {
+  successPanel.hidden = false;
+  successPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+if (formPanel && successPanel) {
+  formPanel.style.display = "none";
+}
         });
 
         // initialize
