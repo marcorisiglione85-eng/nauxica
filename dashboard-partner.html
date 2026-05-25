@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Partner Dashboard — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* Emergency inline rules scoped to partner-dashboard to avoid cascade issues */
+      .partner-dashboard.dashboard-shell {
+        display: grid !important;
+        grid-template-columns: 260px 1fr !important;
+        gap: 28px !important;
+      }
+      @media (max-width: 1000px) {
+        .partner-dashboard.dashboard-shell {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="partner-dashboard-page">
+    <header class="nx-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img
+            src="assets/logo/nauxica-logo-horizontal.svg"
+            alt="Nauxica, Hospitality connected"
+          />
+        </a>
+
+        <button
+          class="mobile-menu-toggle"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded="false"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nx-links">
+          <li><a href="index.html#hero">Home</a></li>
+          <li><a href="index.html#services">Services</a></li>
+          <li><a href="index.html#pricing">Pricing</a></li>
+          <li><a href="login.html">Login</a></li>
+          <li><a href="register.html">Register</a></li>
+          <li><a class="btn" href="contacts.html">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell partner-dashboard">
+      <aside
+        class="dashboard-sidebar"
+        role="navigation"
+        aria-label="Partner navigation"
+      >
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica Partners</div>
+          <nav class="dashboard-nav">
+            <a class="dashboard-nav-item active" href="#">Dashboard</a>
+            <a class="dashboard-nav-item" href="#requests">Requests</a>
+            <a class="dashboard-nav-item" href="#calendar">Calendar</a>
+            <a class="dashboard-nav-item" href="#availability">Availability</a>
+            <a class="dashboard-nav-item" href="#jobs">Jobs</a>
+            <a class="dashboard-nav-item" href="#messages">Messages</a>
+            <a class="dashboard-nav-item" href="#services">Services</a>
+            <a class="dashboard-nav-item" href="#earnings">Earnings</a>
+            <a class="dashboard-nav-item" href="#reviews">Reviews</a>
+            <a class="dashboard-nav-item" href="#profile">Profile</a>
+            <a class="dashboard-nav-item" href="#settings">Settings</a>
+            <a class="dashboard-nav-item" href="#help">Help Center</a>
+          </nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <h1 class="dashboard-title">Partner dashboard</h1>
+            <div class="topbar-sub">
+              Manage requests, availability and earnings
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="topbar-search">
+              <input
+                type="search"
+                placeholder="Search requests, jobs, messages"
+              />
+            </div>
+            <button class="btn btn-ghost">New availability</button>
+            <div class="avatar">PT</div>
+          </div>
+        </div>
+
+        <section class="dashboard-kpis">
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-label">New requests</div>
+            <div class="kpi-value">4</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-label">Accepted jobs</div>
+            <div class="kpi-value">9</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-label">This month earnings</div>
+            <div class="kpi-value">€3,420</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-label">Average rating</div>
+            <div class="kpi-value">4.7</div>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div id="requests" class="partner-request-card dashboard-card">
+              <h3 class="dashboard-section-title">Request inbox</h3>
+              <ul>
+                <li class="partner-request-item">
+                  <strong>Cleaning request</strong> — Villa Mare • Tomorrow
+                  10:00 • <span class="partner-status-pill">New</span>
+                </li>
+                <li class="partner-request-item">
+                  <strong>Airport transfer</strong> — Casa Cielo • Fri 18:30 •
+                  <span class="partner-status-pill">Pending</span>
+                </li>
+                <li class="partner-request-item">
+                  <strong>Welcome basket</strong> — Penthouse Alba • Pending
+                  confirmation • <span class="partner-status-pill">Action</span>
+                </li>
+              </ul>
+            </div>
+
+            <div id="accepted" class="dashboard-card">
+              <h3 class="dashboard-section-title">Accepted requests</h3>
+              <ul>
+                <li class="partner-job-item">
+                  Cleaning turnover — Villa Mare —
+                  <span class="partner-small">Confirmed</span>
+                </li>
+                <li class="partner-job-item">
+                  Transfer booking — Casa Cielo —
+                  <span class="partner-small">Accepted</span>
+                </li>
+                <li class="partner-job-item">
+                  Laundry pickup — Penthouse Alba —
+                  <span class="partner-small">Scheduled</span>
+                </li>
+              </ul>
+            </div>
+
+            <div id="availability" class="dashboard-card partner-availability">
+              <h3 class="dashboard-section-title">Availability</h3>
+              <div class="partner-small">
+                Available today · Urgent requests accepted · Notice period: 24h
+              </div>
+            </div>
+
+            <div id="messages" class="dashboard-card">
+              <h3 class="dashboard-section-title">Messages</h3>
+              <ul>
+                <li class="message-item">
+                  Owner — Question about cleaning window · 2h ago
+                </li>
+                <li class="message-item">
+                  Guest — Arrival coordination · 5h ago
+                </li>
+                <li class="message-item">
+                  Nauxica — Operational update · 1d ago
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div id="earnings" class="dashboard-card">
+              <h3 class="dashboard-section-title">Earnings overview</h3>
+              <div class="partner-small">
+                Monthly earnings: <strong>€3,420</strong>
+              </div>
+              <div class="partner-small">
+                Pending payout: <strong>€820</strong>
+              </div>
+              <div class="partner-small">
+                Completed jobs: <strong>24</strong>
+              </div>
+            </div>
+
+            <div id="services" class="dashboard-card partner-service-area">
+              <h3 class="dashboard-section-title">Service area</h3>
+              <div class="pill">Catania</div>
+              <div class="pill">Taormina</div>
+              <div class="pill">Giardini Naxos</div>
+              <div class="pill">Acireale</div>
+            </div>
+
+            <div id="jobs" class="dashboard-card">
+              <h3 class="dashboard-section-title">Upcoming jobs</h3>
+              <ul>
+                <li class="partner-job-item">
+                  Emma P. — Villa Mare — Cleaning — Tomorrow 10:00
+                </li>
+                <li class="partner-job-item">
+                  Lucas B. — Casa Cielo — Transfer — Fri 18:30
+                </li>
+              </ul>
+            </div>
+
+            <div id="profile" class="dashboard-card partner-profile-check">
+              <h3 class="dashboard-section-title">Profile status</h3>
+              <ul>
+                <li>Verified profile ✓</li>
+                <li>Insurance: uploaded</li>
+                <li>Service catalogue: completed</li>
+                <li>Response rate: 92%</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <img
+          class="footer-logo"
+          src="assets/logo/nauxica-logo-horizontal-white.svg"
+          loading="lazy"
+          alt="Nauxica Hospitality connected logo"
+        />
+        <div>
+          <strong>nauxicahd.com</strong><br />
+          <a href="mailto:hello@nauxicahd.com">hello@nauxicahd.com</a><br />
+          Hospitality, connected.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const shell = document.querySelector(".dashboard-shell");
+        const toggle = document.querySelector(".mobile-menu-toggle");
+        if (!toggle || !shell) return;
+        toggle.addEventListener("click", function () {
+          const expanded = toggle.getAttribute("aria-expanded") === "true";
+          toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+          shell.classList.toggle("sidebar-open");
+        });
+      })();
+    </script>
+  </body>
+</html>

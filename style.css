@@ -15,6 +15,169 @@
   --radius-sm:16px;
 }
 
+/* FINAL partner mobile override: force single-column and compact horizontal nav */
+@media (max-width: 1000px) {
+  .partner-dashboard.dashboard-shell {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: min(100% - 24px, 900px) !important;
+    margin: 0 auto !important;
+    padding: 16px 0 48px !important;
+    gap: 16px !important;
+    align-items: start !important;
+  }
+
+  .partner-dashboard .dashboard-sidebar {
+    position: relative !important;
+    top: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    grid-column: 1 / -1 !important;
+    padding: 14px !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+  }
+
+  .partner-dashboard .dashboard-sidebar-inner {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .partner-dashboard .dashboard-sidebar h2,
+  .partner-dashboard .dashboard-sidebar-title,
+  .partner-dashboard .dashboard-brand {
+    margin: 0 0 12px !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .partner-dashboard .dashboard-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    padding: 0 0 6px !important;
+    margin: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .partner-dashboard .dashboard-nav-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+  }
+
+  .partner-dashboard .dashboard-nav-item.active,
+  .partner-dashboard .dashboard-nav-item:hover {
+    background: var(--terracotta) !important;
+    color: #ffffff !important;
+  }
+
+  .partner-dashboard .dashboard-main {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 16px !important;
+  }
+
+  .partner-dashboard .dashboard-topbar {
+    padding: 20px !important;
+    border-radius: 22px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .partner-dashboard .dashboard-topbar h1 {
+    font-size: clamp(2.2rem, 13vw, 3.7rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .partner-dashboard .dashboard-kpis,
+  .partner-dashboard .dashboard-grid,
+  .partner-dashboard .partner-service-area,
+  .partner-dashboard .property-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .partner-dashboard .dashboard-card,
+  .partner-dashboard .kpi-card {
+    padding: 18px !important;
+    border-radius: 22px !important;
+  }
+}
+
+/* Partner dashboard styles (scoped) */
+.partner-dashboard.dashboard-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(255,250,246,0.45), rgba(255,250,246,0.18));
+}
+
+.partner-dashboard .dashboard-sidebar { grid-column: 1 / 2 }
+.partner-dashboard .dashboard-sidebar-inner {
+  height: calc(100vh - 96px);
+  display:flex;
+  flex-direction:column;
+  padding:20px;
+}
+
+.partner-dashboard .dashboard-nav { display:flex; flex-direction:column; gap:8px; margin-top:12px }
+.partner-dashboard .dashboard-nav-item { padding:10px 12px; border-radius:12px; color:var(--charcoal); font-weight:800 }
+.partner-dashboard .dashboard-nav-item.active, .partner-dashboard .dashboard-nav-item:hover { background: rgba(197,104,61,0.08); color:var(--charcoal) }
+
+.partner-dashboard .dashboard-main { grid-column: 2 / -1; min-width:0 }
+.partner-dashboard .dashboard-topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px }
+
+.partner-dashboard .dashboard-kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:16px; margin-bottom:18px }
+.partner-dashboard .kpi-card { display:flex; flex-direction:column; justify-content:center; align-items:flex-start }
+
+.partner-dashboard .dashboard-grid { display:grid; grid-template-columns: 1fr 420px; gap:20px }
+.partner-dashboard .col-left, .partner-dashboard .col-right { display:grid; gap:16px }
+
+.partner-dashboard .partner-request-card, .partner-dashboard .partner-job-item, .partner-dashboard .partner-service-area, .partner-dashboard .partner-profile-check { background:#ffffff; border-radius:14px; padding:14px; border:1px solid rgba(29,35,39,0.06); box-shadow:0 18px 44px rgba(29,35,39,0.04) }
+
+.partner-dashboard .partner-status-pill { display:inline-flex; padding:6px 10px; border-radius:999px; background:rgba(197,104,61,0.12); color:var(--terracotta); font-weight:800 }
+.partner-dashboard .partner-small { font-size:.95rem; color:var(--stone) }
+
+.partner-dashboard .partner-service-area { display:flex; flex-wrap:wrap; gap:8px }
+.partner-dashboard .partner-service-area .pill { background:rgba(242,236,228,.6); padding:8px 10px; border-radius:999px }
+
+/* Partner responsive: compact horizontal nav on small screens */
+@media (max-width: 1000px) {
+  .partner-dashboard.dashboard-shell { display:grid !important; grid-template-columns:1fr !important; width: min(100% - 24px, 900px); margin:0 auto; padding:16px 0 48px; gap:16px }
+  .partner-dashboard .dashboard-sidebar { position:relative !important; top:auto !important; min-height:0 !important; height:auto !important; padding:12px !important; border-radius:20px }
+  .partner-dashboard .dashboard-sidebar-inner { display:block !important; height:auto !important }
+  .partner-dashboard .dashboard-nav { display:flex !important; flex-direction:row !important; gap:8px !important; overflow-x:auto !important; padding-bottom:6px !important; -webkit-overflow-scrolling:touch }
+  .partner-dashboard .dashboard-nav-item { display:inline-flex !important; flex:0 0 auto !important; height:38px !important; padding:0 14px !important; border-radius:999px !important; align-items:center !important; justify-content:center !important }
+  .partner-dashboard .dashboard-main { width:100% !important; display:grid !important; gap:14px }
+  .partner-dashboard .dashboard-kpis, .partner-dashboard .dashboard-grid, .partner-dashboard .property-grid { grid-template-columns:1fr !important }
+}
+
+
 
 
 * {
