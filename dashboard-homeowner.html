@@ -349,146 +349,543 @@
   </header>
 
   <main class="dashboard-shell homeowner-dashboard">
-    <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
-      <div class="dashboard-sidebar-inner">
-        <div class="sidebar-brand">Nauxica</div>
-        <nav class="dashboard-nav">
-          <a class="dashboard-nav-item active" href="#">Dashboard</a>
-          <a class="dashboard-nav-item" href="#overview">Overview</a>
-          <a class="dashboard-nav-item" href="#calendar">Calendar</a>
-          <a class="dashboard-nav-item" href="#reservations">Reservations</a>
-          <a class="dashboard-nav-item" href="#guests">Guests</a>
-          <a class="dashboard-nav-item" href="#messages">Messages</a>
-          <a class="dashboard-nav-item" href="#operations">Operations</a>
-          <a class="dashboard-nav-item" href="#tasks">Tasks</a>
-          <a class="dashboard-nav-item" href="#properties">Properties</a>
-          <a class="dashboard-nav-item" href="#reports">Reports</a>
-          <a class="dashboard-nav-item" href="#revenue">Revenue</a>
-          <a class="dashboard-nav-item" href="#reviews">Reviews</a>
-          <a class="dashboard-nav-item" href="#marketplace">Marketplace</a>
-          <a class="dashboard-nav-item" href="#settings">Settings</a>
-          <a class="dashboard-nav-item" href="#help">Help Center</a>
-        </nav>
-      </div>
-    </aside>
+  <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+    <div class="dashboard-sidebar-inner">
+      <div class="sidebar-brand">Nauxica</div>
 
-    <section class="dashboard-main">
-      <div class="dashboard-topbar">
-        <div class="topbar-left">
-          <h1 class="dashboard-title">Homeowner dashboard</h1>
-          <div class="topbar-sub">Welcome back — here’s a quick overview of your properties</div>
-        </div>
-
-        <div class="topbar-actions">
-          <div class="topbar-search">
-            <input type="search" placeholder="Search reservations, guests, messages" />
-          </div>
-          <button class="btn btn-ghost">New reservation</button>
-          <div class="avatar">MR</div>
-        </div>
-      </div>
-
-      <section class="dashboard-kpis">
-        <div class="kpi-card dashboard-card">
-          <div class="kpi-label">Active properties</div>
-          <div class="kpi-value">3</div>
-        </div>
-        <div class="kpi-card dashboard-card">
-          <div class="kpi-label">Upcoming arrivals</div>
-          <div class="kpi-value">7</div>
-        </div>
-        <div class="kpi-card dashboard-card">
-          <div class="kpi-label">Open tasks</div>
-          <div class="kpi-value">12</div>
-        </div>
-        <div class="kpi-card dashboard-card">
-          <div class="kpi-label">Monthly revenue</div>
-          <div class="kpi-value">€18,420</div>
-        </div>
-      </section>
-
-      <section class="dashboard-grid">
-        <div class="col-left">
-          <div class="dashboard-card arrivals">
-            <h3 class="dashboard-section-title">Arrivals</h3>
-            <ul class="arrival-list">
-              <li class="arrival-item"><strong>Emma P.</strong> — Villa Mare • 15:00 • <span class="pill">Confirmed</span></li>
-              <li class="arrival-item"><strong>Lucas B.</strong> — Casa Cielo • 16:30 • <span class="pill">Pending</span></li>
-              <li class="arrival-item"><strong>Sofia R.</strong> — Penthouse Alba • 18:00 • <span class="pill">Confirmed</span></li>
-            </ul>
-          </div>
-
-          <div class="dashboard-card messages">
-            <h3 class="dashboard-section-title">Messages</h3>
-            <ul class="message-list">
-              <li class="message-item"><strong>Guest —</strong> Question about arrival time · 2h ago</li>
-              <li class="message-item"><strong>Partner —</strong> Cleaning completed at Casa Cielo · 4h ago</li>
-              <li class="message-item"><strong>Guest —</strong> Late check-out request · 1d ago</li>
-            </ul>
-          </div>
-
-          <div class="dashboard-card tasks">
-            <h3 class="dashboard-section-title">Tasks</h3>
-            <ul class="task-list">
-              <li class="task-item">Cleaning — Villa Mare — due today</li>
-              <li class="task-item">Maintenance — Casa Cielo — light bulb</li>
-              <li class="task-item">Guest follow-up — Penthouse Alba</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="col-right">
-          <div class="dashboard-card properties">
-            <h3 class="dashboard-section-title">Properties</h3>
-            <div class="property-grid">
-              <div class="property-card">
-                <div class="prop-title">Villa Mare</div>
-                <div class="prop-meta">Occupancy: 78% · Next arrival: 15:00</div>
-              </div>
-              <div class="property-card">
-                <div class="prop-title">Casa Cielo</div>
-                <div class="prop-meta">Occupancy: 64% · Next arrival: 16:30</div>
-              </div>
-              <div class="property-card">
-                <div class="prop-title">Penthouse Alba</div>
-                <div class="prop-meta">Occupancy: 92% · Next arrival: 18:00</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="dashboard-card revenue">
-            <h3 class="dashboard-section-title">Revenue — this month</h3>
-            <div class="revenue-summary">
-              <div class="revenue-value">€18,420</div>
-              <div class="revenue-bars">
-                <div class="bar" style="width:60%"></div>
-                <div class="bar" style="width:45%"></div>
-                <div class="bar" style="width:80%"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="dashboard-card reviews">
-            <h3 class="dashboard-section-title">Recent reviews</h3>
-            <ul class="review-list">
-              <li class="review-item"><strong>4.8</strong> — "Beautiful stay, excellent communication."</li>
-              <li class="review-item"><strong>4.5</strong> — "Very responsive cleaning team."</li>
-              <li class="review-item"><strong>5.0</strong> — "Perfect location and amenities."</li>
-            </ul>
-          </div>
-
-          <div class="dashboard-card marketplace">
-            <h3 class="dashboard-section-title">Marketplace activity</h3>
-            <ul class="marketplace-list">
-              <li class="marketplace-item">Transfer request — Villa Mare</li>
-              <li class="marketplace-item">Cleaning request — Casa Cielo</li>
-              <li class="marketplace-item">Tour booking — Penthouse Alba</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+      <nav class="dashboard-nav">
+        <a class="dashboard-nav-item active" href="#overview">Dashboard</a>
+        <a class="dashboard-nav-item" href="#overview">Overview</a>
+        <a class="dashboard-nav-item" href="#calendar">Calendar</a>
+        <a class="dashboard-nav-item" href="#reservations">Reservations</a>
+        <a class="dashboard-nav-item" href="#guests">Guests</a>
+        <a class="dashboard-nav-item" href="#messages">Messages</a>
+        <a class="dashboard-nav-item" href="#operations">Operations</a>
+        <a class="dashboard-nav-item" href="#tasks">Tasks</a>
+        <a class="dashboard-nav-item" href="#properties">Properties</a>
+        <a class="dashboard-nav-item" href="#reports">Reports</a>
+        <a class="dashboard-nav-item" href="#revenue">Revenue</a>
+        <a class="dashboard-nav-item" href="#reviews">Reviews</a>
+        <a class="dashboard-nav-item" href="#marketplace">Marketplace</a>
+        <a class="dashboard-nav-item" href="#settings">Settings</a>
+        <a class="dashboard-nav-item" href="#help">Help Center</a>
+      </nav>
     </div>
-  </main>
+  </aside>
+
+  <section class="dashboard-main">
+    <div class="dashboard-topbar">
+  <div class="topbar-left">
+    <div class="eyebrow-label">Nauxica homeowner workspace</div>
+
+    <h1 class="dashboard-title">
+      Good morning,<br />
+      Marco.
+    </h1>
+
+    <div class="topbar-sub">
+      Here’s what’s happening across your properties today.
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="topbar-search">
+      <input
+        type="search"
+        placeholder="Search guests, reservations, properties"
+      />
+    </div>
+
+    <div class="topbar-controls">
+      <button class="icon-btn" aria-label="Notifications">
+        🔔
+      </button>
+
+      <button class="icon-btn" aria-label="Help">
+        ⌘
+      </button>
+
+      <div class="date-chip">
+        Today, 25 May
+      </div>
+
+      <div class="profile-chip">
+        <div class="avatar">MR</div>
+
+        <div class="profile-meta">
+          <strong>Marco</strong>
+          <span>Homeowner</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="live-strip">
+  <div class="live-alert success">
+    <span class="live-dot"></span>
+    3 check-ins confirmed today
+  </div>
+
+  <div class="live-alert warning">
+    <span class="live-dot"></span>
+    Maintenance issue reported at Casa Cielo
+  </div>
+
+  <div class="live-alert ai">
+    <span class="live-dot"></span>
+    AI detected lower occupancy next weekend
+  </div>
+</section>
+
+    <section class="dashboard-kpis" id="overview">
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">🏡</span>
+      <span class="kpi-trend positive">+6%</span>
+    </div>
+
+    <div class="kpi-label">Occupancy</div>
+    <div class="kpi-value">78%</div>
+    <div class="kpi-sub">vs last month</div>
+  </div>
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">💶</span>
+      <span class="kpi-trend positive">+12%</span>
+    </div>
+
+    <div class="kpi-label">Revenue</div>
+    <div class="kpi-value">€18,420</div>
+    <div class="kpi-sub">monthly income</div>
+  </div>
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">🛬</span>
+      <span class="kpi-trend neutral">Today</span>
+    </div>
+
+    <div class="kpi-label">Arrivals</div>
+    <div class="kpi-value">7</div>
+    <div class="kpi-sub">scheduled check-ins</div>
+  </div>
+
+  <div class="kpi-card dashboard-card attention-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">⚠️</span>
+      <span class="kpi-trend warning">3 urgent</span>
+    </div>
+
+    <div class="kpi-label">Open tasks</div>
+    <div class="kpi-value">12</div>
+    <div class="kpi-sub">require attention</div>
+  </div>
+
+</section>
+<section class="quick-actions-panel" id="quick-actions">
+  <div class="quick-action-card">
+    <span class="quick-action-icon">＋</span>
+    <div>
+      <strong>Add reservation</strong>
+      <p>Create a new guest booking</p>
+    </div>
+  </div>
+
+  <div class="quick-action-card">
+    <span class="quick-action-icon">✓</span>
+    <div>
+      <strong>Create task</strong>
+      <p>Assign cleaning or maintenance</p>
+    </div>
+  </div>
+
+  <div class="quick-action-card">
+    <span class="quick-action-icon">✉</span>
+    <div>
+      <strong>Message guest</strong>
+      <p>Open guest communication</p>
+    </div>
+  </div>
+
+  <div class="quick-action-card">
+    <span class="quick-action-icon">📅</span>
+    <div>
+      <strong>Open calendar</strong>
+      <p>View arrivals and departures</p>
+    </div>
+  </div>
+</section>
+
+    <section class="dashboard-grid">
+      <div class="col-left">
+        <div class="dashboard-card arrivals" id="reservations">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Arrivals calendar</h3>
+      <p class="dashboard-card-text">Today’s guest movements</p>
+    </div>
+    <span class="mini-date">Today</span>
+  </div>
+
+  <div class="arrival-calendar">
+    <div class="calendar-row">
+      <div class="calendar-time">11:00</div>
+      <div class="calendar-event check">
+        <strong>Check out</strong>
+        <span>Lucas B. · Casa Cielo</span>
+      </div>
+    </div>
+
+    <div class="calendar-row">
+      <div class="calendar-time">15:00</div>
+      <div class="calendar-event check">
+        <strong>Check in</strong>
+        <span>Emma P. · Villa Mare</span>
+      </div>
+    </div>
+
+    <div class="calendar-row">
+      <div class="calendar-time">16:30</div>
+      <div class="calendar-event cleaning">
+        <strong>Cleaning completed</strong>
+        <span>Partner team · Casa Cielo</span>
+      </div>
+    </div>
+
+    <div class="calendar-row">
+      <div class="calendar-time">18:00</div>
+      <div class="calendar-event check">
+        <strong>Check in</strong>
+        <span>Sofia R. · Penthouse Alba</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <div class="dashboard-card messages inbox-card" id="messages">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Guest inbox</h3>
+      <p class="dashboard-card-text">AI assisted conversations and guest requests</p>
+    </div>
+
+    <span class="unread-badge">5 unread</span>
+  </div>
+
+  <div class="inbox-list">
+    <div class="inbox-item urgent">
+      <div class="inbox-avatar">OS</div>
+
+      <div class="inbox-content">
+        <div class="inbox-top">
+          <strong>Olivia Smith</strong>
+          <span>10:24</span>
+        </div>
+
+        <p>Hi, is late check-out possible tomorrow?</p>
+
+        <div class="inbox-tags">
+          <span class="tag ai">AI suggested reply</span>
+          <span class="tag warning">Guest request</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inbox-item">
+      <div class="inbox-avatar">JL</div>
+
+      <div class="inbox-content">
+        <div class="inbox-top">
+          <strong>James Lee</strong>
+          <span>09:15</span>
+        </div>
+
+        <p>Thank you, everything is perfect.</p>
+
+        <div class="inbox-tags">
+          <span class="tag positive">Resolved</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inbox-item ai-active">
+      <div class="inbox-avatar">AI</div>
+
+      <div class="inbox-content">
+        <div class="inbox-top">
+          <strong>Nauxica AI</strong>
+          <span>08:47</span>
+        </div>
+
+        <p>Restaurant recommendations sent to Sophia Martinez.</p>
+
+        <div class="inbox-tags">
+          <span class="tag ai">AI handled</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+       <div class="dashboard-card tasks" id="tasks">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Tasks requiring attention</h3>
+      <p class="dashboard-card-text">Priority by operational impact</p>
+    </div>
+  </div>
+  
+
+  <ul class="priority-task-list">
+    <li class="priority-task task-green">
+      <span class="task-dot"></span>
+      <div>
+        <strong>Check in preparation</strong>
+        <p>Villa Mare · guest arriving at 15:00</p>
+      </div>
+    </li>
+
+    <li class="priority-task task-green">
+      <span class="task-dot"></span>
+      <div>
+        <strong>Standard cleaning</strong>
+        <p>Casa Cielo · normal procedure task</p>
+      </div>
+    </li>
+
+    <li class="priority-task task-yellow">
+      <span class="task-dot"></span>
+      <div>
+        <strong>Guest request</strong>
+        <p>Extra pillows requested in Penthouse Alba</p>
+      </div>
+    </li>
+
+    <li class="priority-task task-yellow">
+      <span class="task-dot"></span>
+      <div>
+        <strong>Maintenance</strong>
+        <p>Bathroom light issue reported at Casa Cielo</p>
+      </div>
+    </li>
+
+    <li class="priority-task task-red">
+      <span class="task-dot"></span>
+      <div>
+        <strong>Emergency message</strong>
+        <p>Guest cannot access property, urgent support needed</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="dashboard-card ai-insights-card" id="ai-insights">
+
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">AI insights</h3>
+      <p class="dashboard-card-text">
+        Operational recommendations generated by Nauxica AI
+      </p>
+    </div>
+
+    <span class="ai-live-badge">Live AI</span>
+  </div>
+
+  <div class="ai-insights-grid">
+
+    <div class="ai-insight-item positive">
+      <div class="ai-icon">📈</div>
+
+      <div class="ai-content">
+        <strong>Occupancy trend increasing</strong>
+        <p>
+          Penthouse Alba demand is growing for the next 14 days.
+        </p>
+      </div>
+    </div>
+
+    <div class="ai-insight-item warning">
+      <div class="ai-icon">💡</div>
+
+      <div class="ai-content">
+        <strong>Dynamic pricing recommended</strong>
+        <p>
+          Villa Mare may support a 12% nightly rate increase.
+        </p>
+      </div>
+    </div>
+
+    <div class="ai-insight-item neutral">
+      <div class="ai-icon">🤖</div>
+
+      <div class="ai-content">
+        <strong>AI concierge performance improved</strong>
+        <p>
+          Guest response time decreased by 28% this week.
+        </p>
+      </div>
+    </div>
+
+    <div class="ai-insight-item danger">
+      <div class="ai-icon">🛠️</div>
+
+      <div class="ai-content">
+        <strong>Maintenance risk detected</strong>
+        <p>
+          Casa Cielo reported repeated bathroom issues.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+        <div class="dashboard-card calendar" id="calendar">
+          <h3 class="dashboard-section-title">Calendar</h3>
+          <p class="dashboard-card-text">
+            Future calendar integration for arrivals, departures, cleaning slots and owner availability.
+          </p>
+        </div>
+
+        <div class="dashboard-card operations" id="operations">
+          <h3 class="dashboard-section-title">Operations</h3>
+          <p class="dashboard-card-text">
+            Daily operational overview for cleaning, maintenance, guest support and partner coordination.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-right">
+       <div class="dashboard-card properties" id="properties">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Property overview</h3>
+      <p class="dashboard-card-text">Live performance across your portfolio</p>
+    </div>
+    <a class="mini-link" href="#properties">View all</a>
+  </div>
+
+  <div class="property-grid property-grid-vertical">
+    <div class="property-card premium-property-card">
+      <div class="property-thumb property-thumb-sea"></div>
+      <div class="property-info">
+        <div class="prop-title">Villa Mare</div>
+        <div class="prop-meta">Next arrival · 15:00</div>
+        <div class="property-stats">
+          <span>78% occupancy</span>
+          <span>€6,840</span>
+        </div>
+      </div>
+      <span class="property-status positive">Live</span>
+    </div>
+
+    <div class="property-card premium-property-card">
+      <div class="property-thumb property-thumb-city"></div>
+      <div class="property-info">
+        <div class="prop-title">Casa Cielo</div>
+        <div class="prop-meta">Cleaning in progress</div>
+        <div class="property-stats">
+          <span>64% occupancy</span>
+          <span>€4,920</span>
+        </div>
+      </div>
+      <span class="property-status warning">Attention</span>
+    </div>
+
+    <div class="property-card premium-property-card">
+      <div class="property-thumb property-thumb-penthouse"></div>
+      <div class="property-info">
+        <div class="prop-title">Penthouse Alba</div>
+        <div class="prop-meta">Next arrival · 18:00</div>
+        <div class="property-stats">
+          <span>92% occupancy</span>
+          <span>€6,660</span>
+        </div>
+      </div>
+      <span class="property-status positive">Live</span>
+    </div>
+  </div>
+</div>
+
+       <div class="dashboard-card revenue" id="revenue">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Revenue overview</h3>
+      <p class="dashboard-card-text">12 month performance</p>
+    </div>
+    <strong class="revenue-total">€18,420</strong>
+  </div>
+
+  <div class="monthly-chart" aria-label="Monthly revenue chart">
+    <div class="month-bar" style="height: 42%"><span>Jun</span></div>
+    <div class="month-bar" style="height: 55%"><span>Jul</span></div>
+    <div class="month-bar" style="height: 48%"><span>Aug</span></div>
+    <div class="month-bar" style="height: 68%"><span>Sep</span></div>
+    <div class="month-bar" style="height: 74%"><span>Oct</span></div>
+    <div class="month-bar" style="height: 61%"><span>Nov</span></div>
+    <div class="month-bar" style="height: 50%"><span>Dec</span></div>
+    <div class="month-bar" style="height: 58%"><span>Jan</span></div>
+    <div class="month-bar" style="height: 63%"><span>Feb</span></div>
+    <div class="month-bar" style="height: 79%"><span>Mar</span></div>
+    <div class="month-bar" style="height: 72%"><span>Apr</span></div>
+    <div class="month-bar current" style="height: 86%"><span>May</span></div>
+  </div>
+</div>
+
+        <div class="dashboard-card reviews" id="reviews">
+          <h3 class="dashboard-section-title">Recent reviews</h3>
+
+          <ul class="review-list">
+            <li class="review-item"><strong>4.8</strong> — Beautiful stay, excellent communication.</li>
+            <li class="review-item"><strong>4.5</strong> — Very responsive cleaning team.</li>
+            <li class="review-item"><strong>5.0</strong> — Perfect location and amenities.</li>
+          </ul>
+        </div>
+
+        <div class="dashboard-card marketplace" id="marketplace">
+          <h3 class="dashboard-section-title">Marketplace activity</h3>
+
+          <ul class="marketplace-list">
+            <li class="marketplace-item">Transfer request — Villa Mare</li>
+            <li class="marketplace-item">Cleaning request — Casa Cielo</li>
+            <li class="marketplace-item">Tour booking — Penthouse Alba</li>
+          </ul>
+        </div>
+        
+        <div class="dashboard-card guests" id="guests">
+          <h3 class="dashboard-section-title">Guests</h3>
+          <p class="dashboard-card-text">
+            Guest profiles, preferences, open requests and AI concierge history will appear here.
+          </p>
+        </div>
+
+        <div class="dashboard-card reports" id="reports">
+          <h3 class="dashboard-section-title">Reports</h3>
+          <p class="dashboard-card-text">
+            Downloadable reports, performance summaries and property analytics.
+          </p>
+        </div>
+
+        <div class="dashboard-card settings" id="settings">
+          <h3 class="dashboard-section-title">Settings</h3>
+          <p class="dashboard-card-text">
+            Manage owner profile, connected platforms, notifications and account preferences.
+          </p>
+        </div>
+
+        <div class="dashboard-card help" id="help">
+          <h3 class="dashboard-section-title">Help Center</h3>
+          <p class="dashboard-card-text">
+            Support articles, onboarding guidance and contact options for the Nauxica team.
+          </p>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
 
   <footer class="footer">
     <div class="footer-inner">
@@ -501,18 +898,100 @@
     </div>
   </footer>
 
-  <script>
-    // small interactivity: toggle sidebar on mobile
-    (function () {
-      const shell = document.querySelector('.dashboard-shell');
-      const toggle = document.querySelector('.mobile-menu-toggle');
-      if (!toggle || !shell) return;
-      toggle.addEventListener('click', function () {
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-        shell.classList.toggle('sidebar-open');
+ <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+    const header = document.querySelector(".nx-header");
+    const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+    if (mobileMenuButton && header) {
+      mobileMenuButton.addEventListener("click", function () {
+        const isOpen = header.classList.toggle("nav-open");
+        mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
       });
-    })();
-  </script>
+    }
+
+    mobileMenuLinks.forEach(function (link) {
+      link.addEventListener("click", function () {
+        header.classList.remove("nav-open");
+        mobileMenuButton.setAttribute("aria-expanded", "false");
+      });
+    });
+  });
+</script>
+<button class="ai-fab">
+  <span class="ai-fab-icon">✦</span>
+  <span>Nauxica AI</span>
+</button>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <div>
+      <div class="ai-panel-label">Nauxica AI</div>
+      <strong>Hospitality command center</strong>
+    </div>
+
+    <button class="ai-close-btn" id="closeAiPanel">✕</button>
+  </div>
+
+  <div class="ai-panel-body">
+    <button class="ai-command-card">
+      <span>🧠</span>
+      Summarise today’s operations
+    </button>
+
+    <button class="ai-command-card">
+      <span>✉️</span>
+      Reply to latest guest message
+    </button>
+
+    <button class="ai-command-card">
+      <span>🧹</span>
+      Create cleaning task
+    </button>
+
+    <button class="ai-command-card">
+      <span>💶</span>
+      Suggest pricing optimisation
+    </button>
+
+    <button class="ai-command-card">
+      <span>⚠️</span>
+      Review urgent issues
+    </button>
+
+    <div class="ai-suggestion-box">
+      <strong>AI recommendation</strong>
+      <p>
+        Weekend occupancy for Villa Mare is below trend.
+        Suggested dynamic pricing increase: +12%.
+      </p>
+    </div>
+  </div>
+</div>
+  <span class="ai-fab-icon">✦</span>
+  <span>Nauxica AI</span>
+</button>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const aiFab = document.querySelector(".ai-fab");
+    const aiPanel = document.getElementById("aiPanel");
+    const closeAiPanel = document.getElementById("closeAiPanel");
+
+    if (aiFab && aiPanel) {
+      aiFab.addEventListener("click", function () {
+        aiPanel.classList.toggle("is-visible");
+      });
+    }
+
+    if (closeAiPanel && aiPanel) {
+      closeAiPanel.addEventListener("click", function () {
+        aiPanel.classList.remove("is-visible");
+      });
+    }
+
+  });
+</script>
 </body>
 </html>

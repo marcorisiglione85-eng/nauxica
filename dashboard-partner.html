@@ -228,16 +228,25 @@
     </footer>
 
     <script>
-      (function () {
-        const shell = document.querySelector(".dashboard-shell");
-        const toggle = document.querySelector(".mobile-menu-toggle");
-        if (!toggle || !shell) return;
-        toggle.addEventListener("click", function () {
-          const expanded = toggle.getAttribute("aria-expanded") === "true";
-          toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-          shell.classList.toggle("sidebar-open");
-        });
-      })();
-    </script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+    const header = document.querySelector(".nx-header");
+    const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+    if (mobileMenuButton && header) {
+      mobileMenuButton.addEventListener("click", function () {
+        const isOpen = header.classList.toggle("nav-open");
+        mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
+
+    mobileMenuLinks.forEach(function (link) {
+      link.addEventListener("click", function () {
+        header.classList.remove("nav-open");
+        mobileMenuButton.setAttribute("aria-expanded", "false");
+      });
+    });
+  });
+</script>
   </body>
 </html>
