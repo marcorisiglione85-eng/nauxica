@@ -75,7 +75,7 @@ frequency: Enum  ("weekly" | "fortnightly" | "monthly" | "custom")
 day_of_week: Array[String]  // e.g. ["monday", "thursday"] for twice-weekly
 time_of_day: Time           // Preferred start time
 duration_hours: Decimal     // Expected job duration
-auto_create_request: Boolean // If true, PartnerRequest is auto-created on schedule
+auto_create_request: Boolean // If true, ServiceRequest is auto-created on schedule; the standard routing pipeline then creates the PartnerRequest
 ```
 
 ---

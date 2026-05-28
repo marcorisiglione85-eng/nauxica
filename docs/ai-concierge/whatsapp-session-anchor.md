@@ -44,7 +44,7 @@ Step 1 — Normalise P to E.164
 
 Step 2 — Query: find Reservation where
     guest_phone = P
-    AND reservation_status IN ('pre-arrival', 'checked-in')
+    AND reservation_status IN ('pre_arrival', 'checked_in')
     AND checkin_date <= today + 2 days  // pre-arrival window
     AND checkout_date >= today          // include check-out day
 

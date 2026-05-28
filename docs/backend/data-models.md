@@ -25,8 +25,11 @@ Visibility scopes align with the [Data Visibility Model](../architecture/data-vi
 | `PUB` | Public — accessible pre-authentication, AI concierge may share with guests |
 | `GST` | Guest-only — confirmed guest, post-booking, via WhatsApp concierge |
 | `PTR` | Partner-only — assigned service partners (cleaners, maintenance, etc.). AI may read to dispatch partners but must never share with guests. |
-| `INT` | Internal — homeowner and Nauxica staff only. AI cannot read. |
-| `AI` | May be included in AI concierge knowledge block (used in PropertyKnowledgeBlock only) |
+| `INT` | Internal — homeowner (own data) and Nauxica staff only. AI cannot read. |
+
+**Note on AI visibility:** `AI` is not a visibility scope. Whether a field is accessible to the AI concierge is determined by the `PropertyKnowledgeBlock` construction pipeline (KBB), which filters fields by scope. Fields marked `PUB` or `GST` are eligible for inclusion in the knowledge block; `PTR` and `INT` fields are not. See [data-visibility-model.md](../architecture/data-visibility-model.md) for the authoritative scope taxonomy.
+
+**Note on OPERATOR scope:** An `OPERATOR` scope appeared in an earlier version of `data-visibility-model.md`. It has been removed. Data formerly described as `OPERATOR`-scoped is `INT`-scoped; access control for Nauxica staff is enforced by RBAC, not by a separate scope.
 
 ---
 
@@ -115,7 +118,7 @@ The central model. Full field specification in [property-data-schema.md](../prop
 **Relationships:**
 - A `User` (homeowner) has zero or many `Property` records
 - A `Property` has exactly one `PropertyKnowledgeBlock`
-- A `Property` has zero or many `Booking` records
+- A `Property` has zero or many `Reservation` records
 - A `Property` has zero or many `Task` records
 - A `Property` has zero or many `PartnerRequest` records
 - A `Property` has zero or many `Review` records (from guests)
@@ -176,16 +179,16 @@ Represents a confirmed guest stay linked to a property. Guests do not have User 
 | `booking_source` | enum | `INT` | No | Recommended | Values: `direct` / `airbnb` / `booking-com` / `vrbo` / `other` |
 | `special_requests` | text | `GST` | Yes | Optional | Guest notes at booking time. AI uses this for personalisation. |
 | `internal_notes` | text | `INT` | No | Optional | Homeowner/operator notes. AI cannot read. |
-| `reservation_status` | enum | `INT` | No | Yes | Values: `confirmed` / `pre-arrival` / `checked-in` / `checked-out` / `cancelled` / `no-show` |
+| `reservation_status` | enum | `INT` | No | Yes | Values: `confirmed` / `pre_arrival` / `checked_in` / `checked_out` / `cancelled` / `no_show` |
 | `checkin_completed_at` | datetime | `INT` | No | Conditional | Set when check-in is confirmed. |
 | `checkout_completed_at` | datetime | `INT` | No | Conditional | Set when checkout is confirmed. |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |
 | `updated_at` | datetime | `INT` | No | Yes (auto) | |
 
 **Reservation status transitions:**
-- `confirmed → pre-arrival`: Automated — set when today = `checkin_date` minus 48 hours.
-- `pre-arrival → checked-in`: Set by homeowner or triggered when lockbox code is first delivered.
-- `checked-in → checked-out`: Set by homeowner or automated on `checkout_date + 1`.
+- `confirmed → pre_arrival`: Automated — set when today = `checkin_date` minus 48 hours.
+- `pre_arrival → checked_in`: Set by homeowner or triggered when lockbox code is first delivered.
+- `checked_in → checked_out`: Set by homeowner or automated on `checkout_date + 1`.
 - Any state `→ cancelled`: Homeowner or operator action.
 
 **Relationships:**
