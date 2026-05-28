@@ -316,3 +316,118 @@ The following behaviours are explicitly prohibited in the escalation system.
 - Re-enable AI mid-escalation without resolving the underlying trigger
 - Close an EMERGENCY escalation without confirming guest safety
 - Close a LEGAL_LIABILITY escalation without consulting the legal/compliance checklist
+
+---
+
+## 11. Escalation Edge Cases
+
+These situations do not map cleanly to a single trigger type. Document them as handled cases to avoid inconsistent AI behaviour.
+
+### Edge Case A — Guest complaint in ambiguous language
+
+Guest says: "This is unacceptable" or "I'm very unhappy" without specifying the issue.
+
+**Action:** AI asks one clarifying question: "I'm sorry to hear that. Could you tell me what's happened so I can help or get the right person involved?" If the guest does not clarify after one follow-up: trigger COMPLAINT_ESCALATION. Do not continue probing. Log: "Guest expressed dissatisfaction — specifics not provided."
+
+---
+
+### Edge Case B — Lockout with vulnerable guest
+
+Guest is locked out and mentions a child, elderly person, disability, extreme weather, or late-night circumstances.
+
+**Action:** Treat as urgency `urgent` regardless of time. Exhaust all access steps within 5 minutes. If unresolved: trigger MAINTENANCE_URGENT immediately. Do not wait for normal SLA. Notify homeowner directly if after 22:00.
+
+---
+
+### Edge Case C — Guest disputes a house rule they claim they were not told
+
+"Nobody told me pets weren't allowed" / "I wasn't informed about the noise rule."
+
+**Action:** AI restates the rule from the knowledge block — once, calmly, without attributing blame or implying the guest is lying. It does not reference "the rules" in a way that sounds adversarial. If the guest continues to dispute or refuses to comply: trigger COMPLAINT_ESCALATION and notify homeowner. AI does not adjudicate.
+
+---
+
+### Edge Case D — Homeowner and guest are in direct dispute
+
+Homeowner reports guest damage; guest reports damage was pre-existing. Both parties contact the platform.
+
+**Action:** The AI concierge does not mediate, relay messages between parties, or comment on responsibility. Trigger COMPLAINT_ESCALATION immediately. Nauxica support handles via the dispute resolution process. AI response to both parties: "I've passed this to the Nauxica team — they'll be in touch to help resolve this."
+
+---
+
+### Edge Case E — Post-checkout complaint
+
+Guest contacts the concierge after checkout (within the 24h grace period) to complain about the stay.
+
+**Action:** AI acknowledges without making commitments. Trigger COMPLAINT_ESCALATION tagged as `post-stay`. Nauxica support handles. The AI does not attempt to resolve complaints about a completed stay.
+
+---
+
+### Edge Case F — Unidentified number enquiring about a guest
+
+A number with no booking match sends a message: "I'm looking for my daughter, she's staying at one of your properties."
+
+**Action:** Do not confirm or deny any booking or guest information. Respond: "I'm not able to share booking information with third parties. If your daughter is a guest, she can contact us directly." Trigger IDENTITY_UNRESOLVABLE and log with flag: `third_party_enquiry`. If the message feels concerning (implies missing person): trigger SAFETY_CONCERN.
+
+---
+
+### Edge Case G — Guest reports a crime not involving the property
+
+Guest was pickpocketed on the street or witnessed an incident unrelated to the property.
+
+**Action:** This is outside property scope but the guest may need immediate guidance. Provide 113 (Polizia di Stato) and 112. Express brief concern. Offer to contact the owner if the guest needs help or feels unsafe returning to the property. Trigger SAFETY_CONCERN for operator awareness.
+
+---
+
+### Edge Case H — AI confidence fails on a safety-adjacent question
+
+Knowledge block field is empty for a question with safety implications (e.g., guest asks where the fire extinguisher is, but that field is blank in the knowledge block).
+
+**Action:** Do not guess. Respond: "I don't have that detail — please contact [owner name] on [phone number] directly." Trigger CONFIDENCE_THRESHOLD immediately for safety-adjacent gaps (do not wait for 3 consecutive failures). Flag the missing field to Nauxica operations for knowledge block update.
+
+---
+
+## 12. Founder Operational Involvement — MVP
+
+During the MVP phase (first 6 months, first 10–20 properties), the founder or a designated Nauxica team member acts as the primary escalation operator. This section defines that role.
+
+### Daily responsibilities
+
+- Monitor all open EscalationRecords via the platform dashboard before 09:00
+- Respond to any IMMEDIATE or URGENT escalations that fired overnight
+- Review previous day's escalation log for patterns:
+  - Recurring topics = knowledge block gaps → update property content
+  - Repeated HUMAN_REQUESTED triggers = AI confidence issue → review tone guidelines
+  - Homeowner response failures = SLA breach → follow up with homeowner
+  - LEGAL_LIABILITY flags = require immediate legal review
+
+### On-call commitment
+
+At minimum one Nauxica team member must be reachable during 08:00–22:00 every day the platform is live. During MVP, this will be the founder. A named backup must be designated before the first property goes active.
+
+**Out-of-hours position:** IMMEDIATE and URGENT escalations (emergencies, maintenance urgent, safety concerns) must be responded to even outside business hours. The founder accepts this responsibility at MVP. A 24h duty rota becomes necessary before exceeding 10 active properties.
+
+### MVP escalation review checklist (weekly)
+
+- [ ] How many escalations triggered this week? Compare to prior week.
+- [ ] Were all EMERGENCY escalations handled within 5 minutes?
+- [ ] Were any homeowners unreachable? How many times?
+- [ ] Were any escalations caused by missing or outdated knowledge block content?
+- [ ] Were any LEGAL_LIABILITY or ABUSE_DETECTED triggers filed?
+- [ ] Were any guest complaints left unresolved?
+- [ ] Does the average resolution time meet SLA targets?
+
+### Scaling out of MVP operations
+
+The founder-as-operator model is viable for up to approximately 15–20 active properties. Beyond this, a dedicated operations role (part-time initially) is required before the platform degrades in quality. The escalation system is designed to make this transition straightforward — all escalation logic is in the platform, not in individual knowledge.
+
+---
+
+## Related Documents
+
+- [emergency-procedures.md](emergency-procedures.md) — Full emergency response protocols and templates
+- [ai-tone-guidelines.md](ai-tone-guidelines.md) — Tone rules for escalation messages to guests
+- [knowledge-retrieval-model.md](knowledge-retrieval-model.md) — Topic routing table and conversation lifecycle
+- [whatsapp-concierge-guidelines.md](whatsapp-concierge-guidelines.md) — WhatsApp-specific escalation handling
+- [data-models.md](../backend/data-models.md) — EscalationRecord and WhatsAppSession models
+- [dispute-resolution.md](../trust-safety/dispute-resolution.md) — Post-escalation dispute resolution process

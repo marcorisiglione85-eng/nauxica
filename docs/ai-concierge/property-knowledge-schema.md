@@ -1,10 +1,10 @@
 # Property Knowledge Schema
 
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft — Architecture phase
 **Scope:** AI concierge · Sicily launch · WhatsApp-first model
 **Last updated:** 2026-05-28
-**Related:** [knowledge-retrieval-model.md](knowledge-retrieval-model.md) · [property-data-schema.md](../property-intake/property-data-schema.md) · [property-knowledge-base-template.md](../property-intake/property-knowledge-base-template.md) · [data-models.md](../backend/data-models.md)
+**Related:** [knowledge-retrieval-model.md](knowledge-retrieval-model.md) · [property-data-schema.md](../property-intake/property-data-schema.md) · [data-models.md](../backend/data-models.md) · [data-visibility-model.md](../architecture/data-visibility-model.md) · [ai-knowledge-taxonomy.md](ai-knowledge-taxonomy.md) · [whatsapp-session-anchor.md](whatsapp-session-anchor.md)
 
 ---
 
@@ -31,13 +31,109 @@ The knowledge block is a **curated, AI-safe projection** of property data. It co
 
 ---
 
+## Transformation Architecture
+
+### Raw Property Master Record vs PropertyKnowledgeBlock
+
+The `Property` master record in the database is a **multi-scope operational record**. It contains
+data across all four visibility scopes: public, guest-only, partner, and internal. It includes
+access codes, financial details, compliance data, partner assignments, owner bank details, and
+internal notes — none of which should ever reach the AI concierge.
+
+The `PropertyKnowledgeBlock` is a **derived, scope-filtered, AI-ready projection** of the
+property master. It is not a database view and not a direct API response from the Property model.
+It is a transformation output built by the Knowledge Block Builder (see Backend notes below).
+
+```
+Property Master Record (all scopes, raw)
+    │
+    ▼
+[Knowledge Block Builder]
+    ├── Step 1: Scope filter        → exclude PTR, INT fields
+    ├── Step 2: Activation gate     → return degraded block if property not ACTIVE
+    ├── Step 3: Dynamic merge       → apply active DynamicInstruction overrides
+    ├── Step 4: Language select     → pick correct language variant per session
+    ├── Step 5: Access code gate    → redact credentials outside delivery window
+    ├── Step 6: Emergency merge     → always attach full EmergencyData object
+    └── Step 7: Chunk structure     → organise fields into retrieval chunks
+    │
+    ▼
+PropertyKnowledgeBlock (GUEST-safe, session-scoped, ready for AI context)
+```
+
+**The AI concierge receives only the PropertyKnowledgeBlock output.** It never has access to
+the Property master record, the User record, partner assignment data, or any financial data.
+This is enforced at the API layer, not by prompt instruction.
+
+### Transformation Step Detail
+
+**Step 1 — Scope filter**
+Every field in the Property master record is tagged with a visibility scope (per
+[Data Visibility Model](../architecture/data-visibility-model.md)). The Knowledge Block Builder
+passes only fields tagged `PUB` or `GST`. Any field without an explicit scope tag is treated
+as `INT` and excluded. This is a blocklist approach — the safe default is exclusion.
+
+**Step 2 — Activation gate**
+If `Property.lifecycle_state` is not `active`, the Knowledge Block Builder returns a minimal
+degraded block containing only:
+- `property_id`, `display_name`, `is_complete: false`
+- EmergencyData (always included regardless of activation state)
+The AI uses the degraded mode fallback responses for all other queries.
+
+**Step 3 — Dynamic instruction merge**
+The builder checks `Property.dynamic_instructions` for any records where:
+- `active_from <= today <= active_until`
+- `scope = "guest"` (partner-scoped overrides are not applied to the guest block)
+
+For each active instruction, the builder replaces the target field's value with
+`override_text` in the appropriate language. The original field value is preserved in the
+database — only the projection is altered.
+
+**Step 4 — Language selection**
+Every multilang text field (stored as `{en: "...", it: "...", de: null, fr: null}`) is
+flattened to a single string using the session language priority chain:
+
+```
+1. WhatsAppSession.detected_language (if locked after 2+ messages)
+2. Reservation.guest_preferred_language
+3. "en"  (safe default)
+4. "it"  (Sicily fallback if "en" is null)
+```
+
+If no language variant is available for a field: the field is set to `null` in the
+projection. Null fields trigger the graceful fallback response — the AI does not invent a
+translation.
+
+**Step 5 — Access code gate**
+Credentials (lockbox code, smart lock code, gate code, parking code) are `GST`-scoped and
+pass the scope filter, but they are subject to a second delivery gate based on session phase
+and timing (see Access Code Gating Rules below). Outside the delivery window, these fields
+are set to `"[not yet available]"` in the projection. The AI is trained to interpret this
+sentinel value and respond accordingly.
+
+**Step 6 — Emergency data merge**
+The full EmergencyData object for this property is always attached to the PropertyKnowledgeBlock
+regardless of session phase or query type. The merge happens unconditionally — the only
+way emergency data is absent from the block is if the EmergencyData record is incomplete
+(`is_complete: false`), which blocks property activation anyway.
+
+**Step 7 — Retrieval chunk structure**
+The final block is not one flat object passed wholesale to the AI. It is divided into
+named retrieval chunks aligned to the [AI Knowledge Taxonomy](ai-knowledge-taxonomy.md) categories.
+See Retrieval Chunk Structure below.
+
+---
+
 ## Visibility Key
 
-| Level | Symbol | Delivered to AI |
-|---|---|---|
-| Public | `PUB` | Yes — also visible pre-booking |
-| Guest-only | `GST` | Yes — only for confirmed guests |
-| Internal | `INT` | **Never** |
+Scopes align with the [Data Visibility Model](../architecture/data-visibility-model.md). The PropertyKnowledgeBlock contains only `PUB` and `GST` fields. `PTR` and `INT` fields are never included.
+
+| Level | Symbol | Delivered to AI | Notes |
+|---|---|---|---|
+| Public | `PUB` | Yes — included for all sessions, including pre-arrival | Safe to share with any guest |
+| Guest-only | `GST` | Yes — only for confirmed guests with an anchored session | Access codes, WiFi, entry instructions |
+| Partner | `PTR` | **Never in PropertyKnowledgeBlock** | Delivered via a separate Partner Brief — not this document |
+| Internal | `INT` | **Never** | Owner financials, compliance data, operator notes |
 
 ---
 
@@ -224,6 +320,144 @@ Each seasonal note object:
 
 ---
 
+## Emergency Data Inclusion Rules
+
+The EmergencyData object is merged into every PropertyKnowledgeBlock regardless of session
+phase or query type. These rules govern how it appears in the block.
+
+**Rule EM-01 — Always present**
+The emergency block is never omitted, never lazy-loaded, never conditional on the guest's
+query. It is attached at build time before the block is delivered to the AI.
+
+**Rule EM-02 — Always at root level**
+Emergency data is not nested inside a section. It sits at the root of the
+PropertyKnowledgeBlock so the AI can access it with a single lookup, not a nested path
+traversal.
+
+**Rule EM-03 — Italian national numbers are static constants, not property data**
+The numbers 112, 113, 115, 118, and 1530 are built into the AI system prompt, not stored
+per-property. The EmergencyData merge adds property-specific fields on top of these constants.
+An incomplete EmergencyData record can never result in missing emergency numbers.
+
+**Rule EM-04 — Utility shutoffs are duplicated from Category I**
+`gas_shutoff_instructions`, `water_shutoff_instructions`, and `electricity_shutoff_instructions`
+exist in both the Property schema (Category I) and the EmergencyData object. The EmergencyData
+copy is the authoritative version for AI use. If the two diverge (stale sync), the
+EmergencyData copy takes precedence.
+
+**Rule EM-05 — No language gate on emergency data**
+Emergency fields are not subject to language fallback rules. If the English version is populated
+but Italian is null, the AI delivers the English version to an Italian-speaking guest in an
+emergency. Physical safety overrides language preference.
+
+**Rule EM-06 — Incomplete emergency data triggers degraded mode**
+If `EmergencyData.is_complete = false`, the AI must not serve the property at all (the
+property cannot be activated). If somehow an active property has `is_complete = false` on
+its EmergencyData (e.g., data was corrupted post-activation), the Knowledge Block Builder
+flags this with `emergency_data_incomplete: true` in the root of the block, and the AI
+escalates all emergency queries immediately to the Nauxica ops number (hard-coded in the
+system prompt) rather than relying on property-specific data.
+
+---
+
+## Access Code Gating Rules
+
+Access credentials (lockbox code, smart lock code, gate code, parking code) are `GST`-scoped
+and pass the scope filter, but they carry an additional delivery gate. The gate determines
+whether the actual value or a sentinel placeholder is included in the PropertyKnowledgeBlock.
+
+### Gate conditions
+
+| Credential field | Gate open when | Sentinel when gate is closed |
+|---|---|---|
+| `key_box_code` | `session_phase` IN (`check_in`, `in_stay`) OR (`pre_arrival` AND `checkin_date = today`) | `"[not yet available]"` |
+| `smart_lock_instructions` (code component) | Same as above | `"[not yet available]"` |
+| `building_door_code` | Same as above | `"[not yet available]"` |
+| `parking_access_code` | Same as above + guest has indicated they have a vehicle | `"[not yet available]"` |
+| `entry_instructions` (prose) | All phases | Always included — instructions don't contain the code, they reference it |
+
+### What the AI does with a sentinel value
+
+When a credential field contains `"[not yet available]"`, the AI responds:
+
+> "I'll send you the entry details on the morning of your arrival, [checkin_date].
+> Everything will be ready when you get there. Is there anything else I can help
+> you with in the meantime?"
+
+The AI must not:
+- Suggest the guest try to find the code another way
+- Offer to send the code "a bit earlier" outside the gate window
+- Acknowledge that a code exists but "can't be shared yet" (which confirms a code exists — a
+  minor security leak)
+
+### Early delivery exception
+
+If the homeowner has set `Property.early_access_code_delivery = true` (a planned field for
+future implementation), the gate opens 24 hours before `checkin_date` instead of on the
+day. This is a homeowner-controlled setting with a default of `false`.
+
+### Post-checkout code expiry
+
+After `checkout_date + 4 hours`, all credential fields revert to sentinel values in the
+PropertyKnowledgeBlock. This happens even if the session is still technically open (post-stay
+grace period). A guest who has checked out must not be able to retrieve a still-valid code
+for a property they no longer occupy.
+
+---
+
+## Retrieval Chunk Structure
+
+The PropertyKnowledgeBlock is not passed to the AI as a single monolithic object. It is
+divided into **retrieval chunks** — named sections that the AI loads selectively based on
+the guest's query category (per [AI Knowledge Taxonomy](ai-knowledge-taxonomy.md)).
+
+This keeps the AI's active context window relevant, prevents unrelated data from being
+cited, and allows for future vector-based retrieval without restructuring.
+
+### Chunk definitions
+
+| Chunk name | Knowledge Taxonomy ref | Fields included | Always loaded |
+|---|---|---|---|
+| `emergency` | CAT-01 | Full EmergencyData object + utility shutoffs | **Yes** |
+| `access` | CAT-02 | `access_method`, `entry_instructions`, all credential fields (gated), `lockout_instructions` | No — loaded on access/entry queries |
+| `check_in` | CAT-03 | `checkin_from`, `checkin_until`, `early_checkin_*`, `checkin_instructions`, `property_orientation`, `first_night_essentials`, arrival landmark, nearest airport/port | Loaded on `pre_arrival` and `check_in` session phases |
+| `check_out` | CAT-04 | `checkout_by`, `late_checkout_*`, `checkout_instructions`, `checkout_tasks`, `key_return_instructions` | Loaded on `check_out` session phase |
+| `wifi` | CAT-05 | `wifi_network`, `wifi_password` (gated), `wifi_backup_note`, `mobile_coverage_notes` | No — loaded on connectivity queries |
+| `amenities` | CAT-06 | `appliances`, `heating_instructions`, `cooling_instructions`, `pool_*`, `bbq_instructions`, `amenity_list`, `amenity_notes` | No — loaded on amenity/appliance queries |
+| `rules` | CAT-07 | `house_rules_summary`, `quiet_hours`, `smoking_policy`, `pet_policy`, `party_policy`, `checkout_tasks` | No — loaded on rules queries |
+| `local_area` | CAT-08 | `local_tips`, `area_description`, `nearest_*`, `getting_around_notes`, `seasonal_notes` | No — loaded on local/recommendation queries |
+| `services` | CAT-09 | `experience_recommendations`, `nearest_taxi_or_transfer`, bookable `restaurant_recommendations` | No — loaded on service/booking queries |
+| `maintenance` | CAT-10 | `appliances` (relevant item), `wifi_backup_note`, utility controls, `boiler_*` | No — loaded on issue/fault queries |
+| `tax` | CAT-11 | `tourist_tax_amount_eur`, `tourist_tax_max_nights`, `tourist_tax_exemptions`, `tourist_tax_collection_method` | No — loaded on tax queries |
+| `summary` | CAT-12 | `display_name`, `property_type`, `summary`, `area_description`, `max_guests`, `bedrooms`, `bathrooms`, `beds_configuration`, `amenity_list` | Loaded for all sessions as a thin baseline |
+
+### Loading sequence
+
+```
+For every session, at context build time:
+  1. Always load: `emergency` chunk + `summary` chunk
+  2. Load phase-appropriate chunks:
+     - pre_arrival:  + check_in chunk (directions only, no codes)
+     - check_in:     + check_in chunk + access chunk (codes gated open)
+     - in_stay:      no additional auto-load
+     - check_out:    + check_out chunk
+     - post_stay:    summary chunk only (no operational data)
+  3. On each guest message:
+     - Classify query into Knowledge Taxonomy category
+     - Load the corresponding chunk if not already loaded
+     - Merged chunk is appended to the AI's context for this response
+```
+
+### Chunk freshness
+
+Each chunk carries a `generated_at` timestamp. If a chunk was generated more than
+`chunk_ttl` seconds ago (recommended: 300 seconds / 5 minutes for in-stay sessions, 3600
+seconds / 1 hour for pre-arrival), it is re-generated from the Property master record before
+being served. This ensures dynamic instruction overrides and homeowner updates propagate to
+the AI within a predictable window.
+
+---
+
 ## Complete Example — Villa Mare
 
 ```yaml
@@ -380,11 +614,248 @@ The AI concierge must handle incomplete knowledge blocks gracefully. Define fall
 
 ---
 
+## AI Response Grounding Rules
+
+These rules define how the AI must use the PropertyKnowledgeBlock when formulating a
+response. They are the contract between the knowledge schema and the AI behaviour layer.
+
+**Rule G-01 — Ground every claim in a loaded chunk**
+Every factual statement the AI makes about the property must be derivable from a field in
+the currently loaded PropertyKnowledgeBlock. The AI must not make claims that go beyond
+what is explicitly written in the block.
+
+**Rule G-02 — Quote, do not paraphrase, for credentials**
+WiFi passwords, lockbox codes, and access codes must be delivered verbatim, not paraphrased
+or shortened. "The code is 4821" is correct. "The code starts with 4 and has four digits"
+is incorrect and unhelpful.
+
+**Rule G-03 — Do not blend property data with general knowledge**
+The AI must not supplement property data with general knowledge about Italian hospitality,
+Sicilian customs, or standard apartment features. If a field is missing, the fallback
+response applies — not a reasonable guess. The guest is at a specific property; generic
+advice may be wrong for that property.
+
+**Rule G-04 — Session phase shapes what is volunteered, not what is answered**
+The AI should proactively share phase-appropriate information (arrival instructions in
+pre_arrival, checkout reminders in check_out). But if a guest asks an out-of-phase question
+(e.g., "what's the WiFi password?" during pre_arrival), the AI loads the wifi chunk and
+answers it — the phase does not block answers to direct questions.
+
+**Rule G-05 — Recommend, do not promise, for local area**
+Recommendations from `local_tips` and `experience_recommendations` are suggestions, not
+guarantees. The AI must use recommendation language: "the owner recommends", "guests
+often enjoy", "nearby options include". It must not say "you should go to X" or "the
+best restaurant is X" as absolute statements.
+
+**Rule G-06 — Tourist tax: inform, do not collect**
+The AI provides tourist tax information (rate, exemptions, collection method) but never
+positions itself as the collection mechanism. It always directs payment to the homeowner.
+The AI must not say "please pay me the tourist tax" or any equivalent.
+
+**Rule G-07 — House rules: state, do not enforce**
+The AI states house rules clearly when asked, and can proactively mention them if a
+guest's request appears to conflict with a rule (e.g., "I'm bringing my dog"). The AI
+does not threaten penalties, does not accuse guests of breaking rules, and does not
+engage in an argument about rules. If a guest persists in requesting something against
+the rules, the AI escalates to the homeowner.
+
+**Rule G-08 — Safety information: be specific, be direct**
+In emergency situations, the AI must not be vague. "The gas shutoff is somewhere near the
+entrance" is dangerous. The AI must deliver the exact text from `gas_shutoff_instructions`
+verbatim, then add 115 and 112.
+
+**Rule G-09 — Do not confirm what you cannot confirm**
+If a guest asks "has the cleaning been done?", "has maintenance been fixed?", "is the pool
+heated today?" — these are operational states the AI does not have access to. The AI
+must not guess, must not say "it should be fine", and must not invent an operational status.
+It acknowledges the question and offers to check with the team (which triggers an escalation
+or ServiceRequest as appropriate).
+
+**Rule G-10 — Seasonal notes are additive, not replacements**
+Seasonal notes from `seasonal_notes` supplement base property information — they do not
+override it. If a seasonal note conflicts with a base field, the base field is authoritative
+unless a DynamicInstruction override has been applied.
+
+---
+
+## Hallucination Prevention Rules
+
+Hallucination — generating plausible but invented information — is the most dangerous AI
+failure mode in a hospitality context. A guest given a wrong address for a hospital, a
+wrong lockbox code, or a wrong checkout time can have their stay meaningfully harmed.
+
+These rules define the specific conditions where hallucination risk is highest and the
+mitigations that must be in place.
+
+**Rule H-01 — Null field = escalate to fallback, never invent**
+If a field relevant to the guest's query is null, empty, or absent from the loaded chunk:
+the AI must use the defined fallback response for that field type (see Fallback Behaviour).
+It must never synthesise an answer from related fields or general knowledge.
+
+| High-risk null scenario | Forbidden AI behaviour | Required AI behaviour |
+|---|---|---|
+| `entry_instructions` is null | "The entry is usually via a key box — try looking near the door" | Use entry_instructions fallback response |
+| `nearest_hospital_address` is null | "There's usually a hospital in the city centre" | "I don't have the hospital address — please call 118 for the nearest facility" |
+| `wifi_password` is null | "The password might be on a card near the router" | Use wifi fallback response |
+| `tourist_tax_amount_eur` is null | "Tourist tax in Sicily is usually €2–3 per night" | "Please ask the owner about the tourist tax at check-in" |
+| `checkout_tasks` is empty | "Usually you'd take out the rubbish and strip the beds" | "I don't have a specific checkout list for this property — please ask [emergency_contact_name] if you're unsure" |
+
+**Rule H-02 — Do not extrapolate from partial data**
+If the `checkin_from` time is populated but `late_checkin_available` is null, the AI must
+not say "late check-in should be possible". It must say "I don't have information about late
+check-in — please contact the owner to confirm."
+
+**Rule H-03 — Local area recommendations must come from `local_tips` only**
+The AI must not recommend restaurants, beaches, or experiences based on general knowledge
+of Sicily. If `local_tips` is empty, the AI says: "I don't have specific recommendations
+for this property, but [address_municipality] has plenty to explore — would you like general
+tips about the area?" The subsequent general response is clearly framed as general, not
+property-specific.
+
+**Rule H-04 — Never infer partner information**
+The AI does not have access to partner assignment data. It must never speculate about who
+the cleaner is, when they typically arrive, whether maintenance has been arranged, or which
+transfer service operates in the area. These are operational facts the AI cannot know.
+
+**Rule H-05 — Appliance instructions must match the specific model**
+If `appliances[name="Washing machine"].model` is "Bosch Serie 4" and the guest asks how to
+do a quick wash, the AI delivers the instructions for that specific appliance. It must not
+substitute generic washing machine instructions if the stored instructions differ from
+general knowledge about that model.
+
+**Rule H-06 — Dates and times are always sourced from the session context**
+The AI must not calculate relative dates (e.g., "your checkout is in 2 days") from general
+knowledge of the current date. Dates in the session context come from the Reservation record,
+and times come from property fields. The AI must use those values, not infer them.
+
+**Rule H-07 — The property is unique — do not compare to other properties**
+The AI must not say "most properties in Sicily have..." or "at other Nauxica properties, 
+the rule is...". The guest is in this specific property. All claims must reference this
+property's data only.
+
+---
+
+## Guest-Safe Projection Rules Summary
+
+A field is included in the PropertyKnowledgeBlock if and only if it meets ALL of:
+
+| Condition | Requirement |
+|---|---|
+| Visibility scope | `PUB` or `GST` only |
+| Property lifecycle state | `active` (or emergency fields, which bypass this gate) |
+| Access code gate | Delivery window is open (or field is non-credential) |
+| Language availability | At least one non-null language variant exists |
+| Not overridden | No active `DynamicInstruction` targeting this field with a null override text |
+
+A field is **excluded** from the PropertyKnowledgeBlock if any of:
+- Scope is `PTR` (partner data)
+- Scope is `INT` or untagged (operator/system data)
+- Field is a `PTR` partner-access credential
+- Field is a financial or compliance record
+- Field is an internal note
+
+**Critical exclusion list** — these fields must never appear in a PropertyKnowledgeBlock under any circumstances:
+
+- `owner_bank_iban`, `codice_fiscale_or_piva`, `billing_entity_name`
+- `commission_rate_override`, `revenue_share_pct`, `maintenance_budget_limit_eur`
+- `partner_access_code`, `partner_key_safe_code`, `partner_entry_instructions`
+- `cleaning_inventory_notes`, `linen_changeover_notes`, `property_quirks_for_partners`
+- `owner_internal_notes`, `operator_notes`, `onboarding_notes`
+- `rental_licence_number`, `alloggiati_web_required`, `alloggiati_web_registered_by`
+- `owner_id`, `approved_partner_ids`, `incident_log_refs`
+- Any field from the `PartnerAssignment` model
+
+---
+
+## Partner Brief vs PropertyKnowledgeBlock
+
+The PropertyKnowledgeBlock is a guest-facing projection. A separate **Partner Brief** is
+a partner-facing projection of the same property master record.
+
+| Attribute | PropertyKnowledgeBlock | Partner Brief |
+|---|---|---|
+| Audience | AI concierge → guest | Platform → assigned partner |
+| Scope filter | PUB + GST | PTR (+ PUB where relevant) |
+| Access codes | Guest codes (gated by timing) | Partner-specific codes (gated by job confirmation) |
+| Cleaning notes | Excluded | Included |
+| Owner emergency contact | Included | Included |
+| Partner contact details | Excluded | Included |
+| Delivery mechanism | Loaded into AI session context | Sent via in-platform PartnerRequest message |
+| Defined in this document? | Yes | See [Partner Assignment Model §6](../architecture/partner-assignment-model.md) |
+
+These two projections must never be mixed. A PropertyKnowledgeBlock must not contain PTR
+fields, and a Partner Brief must not be delivered to the AI session.
+
+---
+
+## Backend and API Implementation Notes
+
+These notes are for the backend engineering team implementing the Knowledge Block Builder.
+They are architecture guidance, not code.
+
+**The Knowledge Block Builder is a server-side transformation service, not a database view.**
+It should run as a dedicated service or module with a clear interface:
+- Input: `property_id` + `session_context` (session phase, language, checkin_date)
+- Output: `PropertyKnowledgeBlock` (the full assembled object)
+
+**Caching strategy**
+The PropertyKnowledgeBlock should be cached per `property_id` + `session_language` with
+a TTL aligned to chunk freshness rules (5 minutes for in-stay, 1 hour for pre-arrival).
+Homeowner updates to DynamicInstructions must invalidate the cache for the affected property
+immediately — not on TTL expiry.
+
+**Access code gating must be enforced server-side**
+The gate condition (session phase + checkin_date check) must be evaluated in the Knowledge
+Block Builder, not in the AI prompt. Do not pass the raw credential to the AI and instruct
+it not to share it — pass the sentinel value. The AI cannot be trusted to withhold data it
+has seen.
+
+**Emergency data must be injected unconditionally**
+Do not make the EmergencyData fetch conditional on a session query or a flag. Build it into
+the root of every call to the Knowledge Block Builder. The cost of one extra read per session
+is trivially small compared to the cost of emergency data being unavailable.
+
+**The transformation output must be schema-versioned**
+The PropertyKnowledgeBlock must carry `schema_version` at root level. When the AI prompt
+is updated to use a new block format, the version allows the system to validate compatibility.
+Old blocks in cache must be invalidated when the schema version changes.
+
+**Audit logging**
+Every call to the Knowledge Block Builder should be logged with: `property_id`, `session_id`,
+`schema_version`, `language`, `access_codes_gated` (boolean), `emergency_data_complete` (boolean),
+`generated_at`. This audit trail supports debugging, incident investigation, and compliance review.
+
+**Do not expose the raw PropertyKnowledgeBlock via a public API endpoint**
+The block is an internal AI input artefact. It must not be served via an endpoint that a
+client application can call directly. If the guest-facing app needs property data (e.g.,
+for a pre-booking page), it uses a separate public-scope property API that only returns
+`PUB` fields — not this object.
+
+---
+
+## Open Gaps and Legal Review Notes
+
+The following items are not yet resolved and must be addressed before backend implementation.
+
+| Gap | Risk | Notes |
+|---|---|---|
+| **Access code rotation** | High | Lockbox codes should be rotated between guests. The schema stores a single `key_box_code` per property. The Knowledge Block Builder currently has no mechanism to know which code is current for which reservation. A `reservation_access_code` override model is needed. |
+| **Multi-language null fallback for non-critical fields** | Medium | The current rule is: if a field is null in all languages, use the fallback response. But for low-stakes fields (e.g., `seasonal_notes`), null is acceptable — the fallback response would be noisy. A field-level `nullable_ok` flag would allow the AI to silently omit unimportant null fields rather than acknowledge the gap. |
+| **Chunk invalidation on DynamicInstruction creation** | Medium | When a homeowner creates a DynamicInstruction, the relevant cached chunk must be invalidated immediately. The mechanism for cache invalidation (event-driven vs polling) is not yet specified. |
+| **PropertyKnowledgeBlock sync with EmergencyData updates** | High | EmergencyData is a separate record. If a homeowner updates an emergency contact phone number, the cached PropertyKnowledgeBlock must be invalidated. The sync mechanism needs to be specified. |
+| **Access code gate and smart lock token expiry** | Medium | Smart lock systems may use time-limited tokens rather than static codes. The gating model assumes a static code. Token-based smart lock integration needs a separate access code delivery model. |
+| **Alloggiati Web and guest document data** | High | **(Legal review required)** Guest document data (passport number, nationality) is collected at booking for Alloggiati Web compliance but must never reach the AI. Confirm that no pathway exists for this data to appear in any AI-facing object. |
+| **GDPR retention for PropertyKnowledgeBlock cache** | Medium | **(Legal review required)** Cached blocks contain guest names, phone numbers (indirectly via session context), and stay details. Confirm whether cached blocks constitute personal data under GDPR and establish a retention/deletion policy. |
+| **Post-stay block destruction** | Medium | After `checkout_date + 24 hours`, the cached PropertyKnowledgeBlock for that session should be invalidated or anonymised. Define the exact destruction trigger and mechanism. |
+
+---
+
 ## Schema Versioning
 
 | Version | Date | Changes |
 |---|---|---|
 | `1.0` | 2026-05-28 | Initial schema — Sicily launch scope |
+| `1.1` | 2026-05-28 | Added PARTNER (PTR) scope to visibility key; Transformation Architecture section (7-step Knowledge Block Builder flow); Emergency Data Inclusion Rules; Access Code Gating Rules; Retrieval Chunk Structure aligned to AI Knowledge Taxonomy; AI Response Grounding Rules (G-01 to G-10); Hallucination Prevention Rules (H-01 to H-07); Guest-Safe Projection summary; Partner Brief vs PropertyKnowledgeBlock distinction; Backend/API Implementation Notes; Open Gaps and Legal Review Notes |
 
 When a new field is added: increment the minor version (e.g. `1.1`). When field structure changes in a breaking way: increment the major version (e.g. `2.0`) and maintain backward compatibility for at least one version cycle.
 
@@ -393,7 +864,11 @@ When a new field is added: increment the minor version (e.g. `1.1`). When field 
 ## Related Documents
 
 - [knowledge-retrieval-model.md](knowledge-retrieval-model.md) — How the AI fetches this block
-- [property-data-schema.md](../property-intake/property-data-schema.md) — Source of truth for all property fields
-- [property-knowledge-base-template.md](../property-intake/property-knowledge-base-template.md) — Human-authored content that populates this schema
-- [data-models.md](../backend/data-models.md) — Backend `PropertyKnowledgeBlock` model
+- [property-data-schema.md](../property-intake/property-data-schema.md) — Source of truth for all property fields (the raw input to the transformation)
+- [data-visibility-model.md](../architecture/data-visibility-model.md) — Authoritative visibility scope definitions (governs scope filter in Step 1)
+- [ai-knowledge-taxonomy.md](ai-knowledge-taxonomy.md) — Knowledge categories that determine retrieval chunk structure
+- [whatsapp-session-anchor.md](whatsapp-session-anchor.md) — Session context object that determines phase, language, and code gating
+- [emergency-procedures.md](emergency-procedures.md) — EmergencyData structure merged in Step 6
+- [partner-assignment-model.md](../architecture/partner-assignment-model.md) — Partner Brief (the PTR-scoped counterpart to this document)
+- [data-models.md](../backend/data-models.md) — Backend `PropertyKnowledgeBlock` model definition
 - [ai-tone-guidelines.md](ai-tone-guidelines.md) — Voice and tone for AI responses

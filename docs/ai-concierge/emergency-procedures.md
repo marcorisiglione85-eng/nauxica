@@ -229,3 +229,230 @@ Emergency data degrades in accuracy over time. The following maintenance rules a
 - **Seismic activity:** Sicily is seismically active. Properties should be enrolled in the national seismic awareness programme. Evacuation assembly points must account for this risk.
 - **Summer wildfires:** Common in Sicilian summer. Properties in rural or semi-rural areas must have evacuation plans specific to wildfire scenarios.
 - **Coast Guard (1530):** Relevant for any property within walking distance of the sea, given typical guest water activity.
+
+---
+
+## 10. Emergency Response Templates
+
+These templates define the exact structure of AI responses per emergency type. Tone rule E-04 applies to all: lead with the actionable information, not with acknowledgement. Adapt language to the guest's detected language while keeping all numbers in standard Italian format.
+
+> **Template notation:** `[FIELD]` = pulled from PropertyKnowledgeBlock or EmergencyData. `STATIC` = hard-coded constant, not from property data.
+
+---
+
+### Template: MEDICAL
+
+```
+Call 118 immediately for medical emergencies.
+Nearest hospital: [nearest_hospital_name], [nearest_hospital_address] — approximately [nearest_hospital_distance].
+
+General emergency: 112 (STATIC)
+Medical emergency: 118 (STATIC)
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've alerted our operations team. Stay safe — help is on the way.
+```
+
+---
+
+### Template: FIRE
+
+```
+Leave the building immediately. Do not use the lift.
+Evacuation route: [evacuation_route_description]
+Assembly point: [evacuation_assembly_point]
+
+Call 115 (fire brigade) — STATIC
+General emergency: 112 — STATIC
+
+Do not re-enter the building until the fire service gives the all-clear.
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've alerted our operations team.
+```
+
+---
+
+### Template: GAS
+
+```
+Do not turn on any lights or electrical switches.
+Open windows and doors immediately.
+Leave the building — do not use the lift.
+
+Gas shutoff (only if you can reach it safely without turning on anything electrical):
+[gas_shutoff_instructions]
+
+Call 115 (fire brigade) — STATIC
+General emergency: 112 — STATIC
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've alerted our operations team.
+```
+
+---
+
+### Template: FLOOD
+
+```
+Move away from any water near electrical outlets or sockets.
+Water shutoff location: [water_shutoff_instructions]
+
+If water is near electrical fittings, switch off the main electricity breaker first:
+[electricity_shutoff_instructions]
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone] — please call them now.
+Nauxica operations: [nauxica_ops_phone]
+
+General emergency (if structural risk): 112 — STATIC
+
+I've alerted our operations team.
+```
+
+---
+
+### Template: SECURITY
+
+```
+If you feel unsafe, leave the property now if you can do so safely.
+Do not confront anyone.
+
+Call 113 (Polizia di Stato) or 112 — STATIC
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've alerted our operations team immediately.
+```
+
+---
+
+### Template: LOCKOUT (Standard)
+
+```
+Here is how to get in:
+[entry_instructions condensed]
+
+Key box code: [key_box_code]
+Key box location: [key_box_location]
+
+If the code isn't working: call [owner_emergency_name] on [owner_emergency_phone].
+If no answer: call Nauxica operations on [nauxica_ops_phone].
+```
+
+---
+
+### Template: LOCKOUT (Urgent — after 22:00 or vulnerable guest)
+
+```
+I'm escalating this to our operations team right now — someone will call you within 15 minutes.
+
+In the meantime, property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+[Re-state entry instructions and code one more time]
+```
+
+---
+
+### Template: NATURAL_DISASTER (Etna alert / earthquake / wildfire)
+
+```
+Italian Civil Protection (Protezione Civile): 1515 — STATIC
+General emergency: 112 — STATIC
+
+If instructed to evacuate: leave immediately.
+Evacuation route: [evacuation_route_description]
+Assembly point: [evacuation_assembly_point]
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've alerted our operations team and will pass on any Civil Protection guidance as it comes.
+```
+
+---
+
+### Template: GUEST PERSONAL DISTRESS
+
+> ⚠️ This template handles situations where a guest expresses personal distress, extreme anxiety, or possible risk to themselves. It requires particular care. Do not be clinical. Do not dismiss. Do not escalate before acknowledging.
+
+```
+I hear you, and I want to make sure you're okay.
+
+If you're in immediate danger, please call 112 now — STATIC
+
+If you'd like to talk to someone:
+Telefono Amico: 02 2327 2327 — STATIC
+Telefono Azzurro (if involving a child): 19696 — STATIC
+
+Property owner: [owner_emergency_name] — [owner_emergency_phone]
+Nauxica operations: [nauxica_ops_phone]
+
+I've passed this to our team and someone will be in touch with you.
+```
+
+---
+
+## 11. Post-Emergency Procedures
+
+After any emergency type other than `LOCKOUT` (standard), the following steps must be completed by the Nauxica operations team.
+
+### Immediate (within 1 hour)
+
+- [ ] Confirm guest safety — contact guest directly or via homeowner
+- [ ] Confirm homeowner has been notified (for FIRE, FLOOD, SECURITY, STRUCTURAL, NATURAL_DISASTER)
+- [ ] Confirm EscalationRecord status is `ACKNOWLEDGED` by an operator
+- [ ] Check if emergency services were called — if yes, request update from homeowner when known
+
+### Within 24 hours
+
+- [ ] Debrief with homeowner — what happened, what was the outcome
+- [ ] Review AI response accuracy — did the AI provide the correct emergency data?
+- [ ] Check all emergency fields for accuracy — if any were wrong or missing, update immediately and flag for re-verification
+- [ ] Determine if property should be temporarily suspended while issue is resolved (e.g. fire damage, structural concern)
+- [ ] Determine if the incident requires insurance, legal, or compliance action — flag accordingly
+- [ ] Document the incident in the EscalationRecord resolution notes
+
+### Within 72 hours
+
+- [ ] Follow up with guest — wellbeing check and acknowledgement of the experience
+- [ ] If guest experienced harm: trigger dispute resolution process and notify legal counsel
+- [ ] Conduct post-incident review: could the AI have responded better? Was the knowledge block complete?
+- [ ] Update emergency data fields if any information was found to be inaccurate during the incident
+
+> ⚠️ Legal review required: depending on the nature of the emergency (particularly MEDICAL, SECURITY, and STRUCTURAL), there may be reporting obligations to Italian authorities or insurers. Confirm with legal counsel what constitutes a reportable incident and the required timeline.
+
+---
+
+## 12. Founder Operational Involvement — MVP
+
+During the MVP phase, the founder or a designated team member must be reachable for all IMMEDIATE and URGENT emergency escalations. This is a non-negotiable operational commitment.
+
+**Why:** The EmergencyData quality at MVP depends on homeowners completing the intake correctly. Given that this is a new platform with a small property base, the probability of a missing or inaccurate field is higher than it will be at scale. The founder's presence in escalations is a quality check as much as an operational one.
+
+**Founder responsibilities for emergencies:**
+
+- Personal review of all emergency escalations within 24 hours, regardless of resolution
+- Direct follow-up with homeowners after any FIRE, FLOOD, MEDICAL, or SECURITY incident
+- Monthly review of EmergencyData completeness across all active properties — flag any property where `last_verified_at` is older than 90 days
+- Ownership of the post-emergency debrief for the first 20 incidents handled on the platform
+
+**When to scale:** Once the platform has processed 50+ emergency-level escalations (excluding standard lockouts) without a documented AI response failure, and all active properties have complete and recently-verified EmergencyData, the founder can step back from personal review.
+
+---
+
+## Related Documents
+
+- [escalation-rules.md](escalation-rules.md) — Trigger taxonomy, SLAs, and operator handling
+- [ai-tone-guidelines.md](ai-tone-guidelines.md) — Emergency tone rules (E-01 through E-07)
+- [knowledge-retrieval-model.md](knowledge-retrieval-model.md) — Emergency detection and routing logic
+- [property-knowledge-schema.md](property-knowledge-schema.md) — EmergencyData fields in the knowledge block
+- [property-intake-checklist.md](../property-intake/property-intake-checklist.md) — Phase 3 emergency data collection
+- [data-models.md](../backend/data-models.md) — EmergencyData and EscalationRecord models
