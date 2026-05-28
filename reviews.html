@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reviews — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">
+              Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside
+        class="dashboard-sidebar"
+        role="navigation"
+        aria-label="Dashboard navigation"
+      >
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <h1 class="dashboard-title">Reviews</h1>
+            <div class="topbar-sub">
+              Guest feedback and ratings across properties
+            </div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input
+                type="search"
+                placeholder="Search reviews, guests, properties"
+                id="globalSearch"
+              />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip">Today, 27 May</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card" id="reviewsListCard">
+              <div class="card-heading-row">
+                <div>
+                  <h2 class="dashboard-section-title">Guest reviews</h2>
+                  <p class="dashboard-card-text">Recent feedback from guests</p>
+                </div>
+              </div>
+
+              <div id="reviewsList" class="reviews-list">
+                <!-- injected -->
+              </div>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div class="dashboard-card" id="reviewsSummary">
+              <h3 class="dashboard-section-title">Summary</h3>
+              <div id="reviewsStats">Loading...</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script>
+      (function () {
+        const accountType = NauxicaShared.resolveAccountType();
+
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+        NauxicaShared.setActivePage('reviews');
+        NauxicaShared.updateTopbar(accountType);
+
+        const reviewsList = document.getElementById("reviewsList");
+        const reviewsStats = document.getElementById("reviewsStats");
+
+        function loadReviews() {
+          const state = window.NauxicaDemoData.loadState();
+          return NauxicaShared.filterByAccountType(state.reviews, accountType);
+        }
+
+        function renderReviews() {
+          const reviews = loadReviews();
+          if (!reviews.length) {
+            reviewsList.innerHTML =
+              '<div class="empty-state-card"><h3>No reviews yet</h3><p>Encourage guests to leave feedback.</p></div>';
+            reviewsStats.textContent = "No reviews";
+            return;
+          }
+
+          reviewsList.innerHTML = reviews
+            .map(
+              (r) => `
+          <article class="review-row">
+            <div class="review-header"><strong>${r.guest}</strong><span class="review-rating">${r.rating} ★</span></div>
+            <p class="review-text">${r.text}</p>
+            <div class="review-meta"><small>${r.property || ""} · ${r.date}</small></div>
+          </article>
+        `,
+            )
+            .join("");
+
+          const avg = (
+            reviews.reduce((s, x) => s + (x.rating || 0), 0) / reviews.length
+          ).toFixed(2);
+          reviewsStats.innerHTML = `<strong>${avg} ★</strong> — ${reviews.length} reviews`;
+        }
+
+        document.getElementById("logout-button")
+          ?.addEventListener("click", NauxicaShared.handleLogout);
+
+        renderReviews();
+      })();
+    </script>
+  </body>
+</html>

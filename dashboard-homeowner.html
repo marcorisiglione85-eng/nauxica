@@ -327,26 +327,27 @@
   </style>
 </head>
 <body class="homeowner-dashboard-page">
-  <header class="nx-header">
-    <nav class="nx-nav">
-      <a href="index.html" class="site-logo" aria-label="Nauxica home">
-        <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
-      </a>
+  <header class="nx-header app-top-header">
+  <nav class="nx-nav">
+    <a href="index.html" class="site-logo" aria-label="Nauxica home">
+      <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
+    </a>
 
-      <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+    <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
 
-      <ul class="nx-links">
-        <li><a href="index.html#hero">Home</a></li>
-        <li><a href="index.html#services">Services</a></li>
-        <li><a href="index.html#pricing">Pricing</a></li>
-        <li><a href="login.html">Login</a></li>
-        <li><a href="register.html">Register</a></li>
-        <li><a class="btn" href="contacts.html">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
+    <ul class="nx-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="contacts.html">Contact</a></li>
+      <li>
+        <button class="btn app-logout-btn" type="button" id="logout-button">
+          Logout
+        </button>
+      </li>
+    </ul>
+  </nav>
+</header>
 
   <main class="dashboard-shell homeowner-dashboard">
   <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
@@ -354,21 +355,21 @@
       <div class="sidebar-brand">Nauxica</div>
 
       <nav class="dashboard-nav">
-        <a class="dashboard-nav-item active" href="#overview">Dashboard</a>
+        <a class="dashboard-nav-item active" data-page="dashboard" href="#overview">Dashboard</a>
         <a class="dashboard-nav-item" href="#overview">Overview</a>
-        <a class="dashboard-nav-item" href="#calendar">Calendar</a>
-        <a class="dashboard-nav-item" href="#reservations">Reservations</a>
-        <a class="dashboard-nav-item" href="#guests">Guests</a>
-        <a class="dashboard-nav-item" href="#messages">Messages</a>
-        <a class="dashboard-nav-item" href="#operations">Operations</a>
-        <a class="dashboard-nav-item" href="#tasks">Tasks</a>
-        <a class="dashboard-nav-item" href="#properties">Properties</a>
-        <a class="dashboard-nav-item" href="#reports">Reports</a>
-        <a class="dashboard-nav-item" href="#revenue">Revenue</a>
-        <a class="dashboard-nav-item" href="#reviews">Reviews</a>
-        <a class="dashboard-nav-item" href="#marketplace">Marketplace</a>
-        <a class="dashboard-nav-item" href="#settings">Settings</a>
-        <a class="dashboard-nav-item" href="#help">Help Center</a>
+        <a class="dashboard-nav-item" data-page="calendar" href="calendar.html">Calendar</a>
+        <a class="dashboard-nav-item" data-page="reservations" href="reservations.html">Reservations</a>
+        <a class="dashboard-nav-item" data-page="guests" href="guests.html">Guests</a>
+        <a class="dashboard-nav-item" data-page="messages" href="messages.html">Messages</a>
+        <a class="dashboard-nav-item" data-page="operations" href="operations.html">Operations</a>
+        <a class="dashboard-nav-item" data-page="tasks" href="tasks.html">Tasks</a>
+        <a class="dashboard-nav-item" data-page="properties" href="properties.html">Properties</a>
+        <a class="dashboard-nav-item" data-page="reports" href="reports.html">Reports</a>
+        <a class="dashboard-nav-item" data-page="revenue" href="revenue.html">Revenue</a>
+        <a class="dashboard-nav-item" data-page="reviews" href="reviews.html">Reviews</a>
+        <a class="dashboard-nav-item" data-page="marketplace" href="marketplace.html">Marketplace</a>
+        <a class="dashboard-nav-item" data-page="settings" href="settings.html">Settings</a>
+        <a class="dashboard-nav-item" data-page="help" href="help.html">Help Center</a>
       </nav>
     </div>
   </aside>
@@ -485,37 +486,37 @@
 
 </section>
 <section class="quick-actions-panel" id="quick-actions">
-  <div class="quick-action-card">
+  <button class="quick-action-card" type="button" data-panel="reservation">
     <span class="quick-action-icon">＋</span>
     <div>
       <strong>Add reservation</strong>
       <p>Create a new guest booking</p>
     </div>
-  </div>
+  </button>
 
-  <div class="quick-action-card">
+  <button class="quick-action-card" type="button" data-panel="task">
     <span class="quick-action-icon">✓</span>
     <div>
       <strong>Create task</strong>
       <p>Assign cleaning or maintenance</p>
     </div>
-  </div>
+  </button>
 
-  <div class="quick-action-card">
+  <button class="quick-action-card" type="button" data-panel="message">
     <span class="quick-action-icon">✉</span>
     <div>
       <strong>Message guest</strong>
       <p>Open guest communication</p>
     </div>
-  </div>
+  </button>
 
-  <div class="quick-action-card">
+  <button class="quick-action-card" type="button" data-panel="calendar">
     <span class="quick-action-icon">📅</span>
     <div>
       <strong>Open calendar</strong>
       <p>View arrivals and departures</p>
     </div>
-  </div>
+  </button>
 </section>
 
     <section class="dashboard-grid">
@@ -629,56 +630,15 @@
   </div>
 </div>
 
-       <div class="dashboard-card tasks" id="tasks">
+<div class="dashboard-card tasks" id="tasks">
   <div class="card-heading-row">
     <div>
       <h3 class="dashboard-section-title">Tasks requiring attention</h3>
       <p class="dashboard-card-text">Priority by operational impact</p>
     </div>
   </div>
-  
 
-  <ul class="priority-task-list">
-    <li class="priority-task task-green">
-      <span class="task-dot"></span>
-      <div>
-        <strong>Check in preparation</strong>
-        <p>Villa Mare · guest arriving at 15:00</p>
-      </div>
-    </li>
-
-    <li class="priority-task task-green">
-      <span class="task-dot"></span>
-      <div>
-        <strong>Standard cleaning</strong>
-        <p>Casa Cielo · normal procedure task</p>
-      </div>
-    </li>
-
-    <li class="priority-task task-yellow">
-      <span class="task-dot"></span>
-      <div>
-        <strong>Guest request</strong>
-        <p>Extra pillows requested in Penthouse Alba</p>
-      </div>
-    </li>
-
-    <li class="priority-task task-yellow">
-      <span class="task-dot"></span>
-      <div>
-        <strong>Maintenance</strong>
-        <p>Bathroom light issue reported at Casa Cielo</p>
-      </div>
-    </li>
-
-    <li class="priority-task task-red">
-      <span class="task-dot"></span>
-      <div>
-        <strong>Emergency message</strong>
-        <p>Guest cannot access property, urgent support needed</p>
-      </div>
-    </li>
-  </ul>
+  <div class="dynamic-task-list" id="dynamicTaskList"></div>
 </div>
 
 <div class="dashboard-card ai-insights-card" id="ai-insights">
@@ -810,6 +770,20 @@
   </div>
 </div>
 
+<div class="dashboard-card" id="homeownerLiveRequestsCard">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Live partner requests</h3>
+      <p class="dashboard-card-text">Real-time status from partner operations</p>
+    </div>
+
+    <span class="dashboard-pill" id="homeownerLiveRequestsCount">0 live</span>
+  </div>
+
+  <div id="homeownerLiveRequestsList" class="homeowner-live-requests-list">
+    <!-- Dynamic live requests -->
+  </div>
+</div>
        <div class="dashboard-card revenue" id="revenue">
   <div class="card-heading-row">
     <div>
@@ -898,27 +872,145 @@
     </div>
   </footer>
 
- <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
-    const header = document.querySelector(".nx-header");
-    const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+  <script src="nauxica-demo-data.js"></script>
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
 
-    if (mobileMenuButton && header) {
-      mobileMenuButton.addEventListener("click", function () {
-        const isOpen = header.classList.toggle("nav-open");
-        mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      });
+  function renderHomeownerLiveRequests() {
+
+    const liveRequestsList = document.getElementById("homeownerLiveRequestsList");
+    const liveRequestsCount = document.getElementById("homeownerLiveRequestsCount");
+
+    if (!liveRequestsList || !window.NauxicaDemoData) return;
+
+    const state = window.NauxicaDemoData.loadState();
+    const requests = state.partnerRequests || [];
+
+    const activeRequests = requests.filter(function (request) {
+      return request.status === "accepted" || request.status === "in-progress";
+    });
+
+    if (liveRequestsCount) {
+      liveRequestsCount.textContent = `${activeRequests.length} live`;
     }
 
-    mobileMenuLinks.forEach(function (link) {
-      link.addEventListener("click", function () {
-        header.classList.remove("nav-open");
-        mobileMenuButton.setAttribute("aria-expanded", "false");
-      });
-    });
-  });
+    if (!activeRequests.length) {
+      liveRequestsList.innerHTML = `
+        <div class="empty-state">
+          No active partner operations right now.
+        </div>
+      `;
+      return;
+    }
+
+    liveRequestsList.innerHTML = activeRequests.map(function (request) {
+
+      const statusClass =
+        request.status === "in-progress"
+          ? "live-status-progress"
+          : "live-status-accepted";
+
+      const statusLabel =
+        request.status === "in-progress"
+          ? "In progress"
+          : "Accepted";
+
+      return `
+        <div class="live-request-card ${statusClass}">
+          <div class="live-request-top">
+            <strong>${request.property}</strong>
+            <span>€${request.payout}</span>
+          </div>
+
+          <p>${request.service}</p>
+
+          <div class="live-request-footer">
+            <span class="live-request-badge">
+              ${statusLabel}
+            </span>
+
+            <small>
+              ${request.date || "Today"} · ${request.time || "Flexible"}
+            </small>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  renderHomeownerLiveRequests();
+
+  window.addEventListener("storage", renderHomeownerLiveRequests);
+
+  setInterval(renderHomeownerLiveRequests, 1500);
+
+});
 </script>
+ <script>
+  document.addEventListener("click", function (event) {
+  const clickedButton = event.target.closest(".panel-primary-btn");
+  if (!clickedButton) return;
+
+  const panelTitle = actionPanelTitle.textContent.trim();
+  if (panelTitle !== "Create task") return;
+
+  const fields = actionPanelBody.querySelectorAll("select, textarea");
+  const payoutField = actionPanelBody.querySelector('input[type="number"]');
+
+  const taskType = fields[0]?.value || "Cleaning";
+  const property = fields[1]?.value || "Villa Mare";
+  const priority = fields[2]?.value || "Normal";
+  const payout = Number(payoutField?.value || 0);
+  const description = fields[3]?.value || "New operational request";
+
+  if (window.NauxicaDemoData) {
+    const newRequest = window.NauxicaDemoData.addPartnerRequest({
+      service: taskType,
+      property: property,
+      partnerType: taskType.toLowerCase(),
+      priority: priority.toLowerCase(),
+      description: description,
+      payout: payout,
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+      }),
+      notes: "",
+      status: "new"
+    });
+
+    console.log("New partner request created:", newRequest);
+  }
+
+  actionPanelBody.innerHTML = `
+    <div class="panel-success">
+      <strong>Job request created successfully</strong>
+      <p>The request has been sent to the partner workspace.</p>
+    </div>
+  `;
+
+  setTimeout(function () {
+    closePanel();
+  }, 900);
+});
+</script>
+
+<div class="action-panel-overlay" id="actionPanelOverlay"></div>
+
+<aside class="action-panel" id="actionPanel">
+  <div class="action-panel-header">
+    <div>
+      <div class="ai-panel-label">Nauxica workspace</div>
+      <strong id="actionPanelTitle">Action panel</strong>
+    </div>
+
+    <button class="ai-close-btn" id="closeActionPanel" type="button">✕</button>
+  </div>
+
+  <div class="action-panel-body" id="actionPanelBody"></div>
+</aside>
+
 <button class="ai-fab">
   <span class="ai-fab-icon">✦</span>
   <span>Nauxica AI</span>
@@ -974,6 +1066,26 @@
 </button>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+}
+
+   setTimeout(function () {
+  window.scrollTo(0, 0);
+}, 0);
+document.documentElement.scrollTop = 0;
+document.body.scrollTop = 0;
+const dashboardMain = document.querySelector(".dashboard-main");
+const dashboardShell = document.querySelector(".dashboard-shell");
+
+if (dashboardMain) dashboardMain.scrollTop = 0;
+if (dashboardShell) dashboardShell.scrollTop = 0;
+
+setTimeout(function () {
+  if (dashboardMain) dashboardMain.scrollTop = 0;
+  if (dashboardShell) dashboardShell.scrollTop = 0;
+  window.scrollTo(0, 0);
+}, 100);
 
     const aiFab = document.querySelector(".ai-fab");
     const aiPanel = document.getElementById("aiPanel");
@@ -990,8 +1102,207 @@
         aiPanel.classList.remove("is-visible");
       });
     }
+const actionButtons = document.querySelectorAll("[data-panel]");
+const actionPanel = document.getElementById("actionPanel");
+const actionPanelOverlay = document.getElementById("actionPanelOverlay");
+const actionPanelTitle = document.getElementById("actionPanelTitle");
+const actionPanelBody = document.getElementById("actionPanelBody");
+const closeActionPanel = document.getElementById("closeActionPanel");
 
+const panelContent = {
+  reservation: {
+    title: "Add reservation",
+    body: `
+      <div class="panel-form">
+        <label>Guest name<input type="text" placeholder="Emma Johnson"></label>
+        <label>Property
+          <select>
+            <option>Villa Mare</option>
+            <option>Casa Cielo</option>
+            <option>Penthouse Alba</option>
+          </select>
+        </label>
+        <label>Check-in date<input type="date"></label>
+        <label>Notes<textarea placeholder="Arrival time, requests, guest preferences"></textarea></label>
+        <button class="panel-primary-btn" type="button">Create reservation</button>
+      </div>
+    `
+  },
+  task: {
+    title: "Create task",
+    body: `
+      <div class="panel-form">
+        <label>Task type
+          <select>
+            <option>Cleaning</option>
+            <option>Maintenance</option>
+            <option>Guest request</option>
+            <option>Emergency</option>
+          </select>
+        </label>
+        <label>Property
+          <select>
+            <option>Villa Mare</option>
+            <option>Casa Cielo</option>
+            <option>Penthouse Alba</option>
+          </select>
+        </label>
+        <label>Priority
+  <select>
+    <option>Normal</option>
+    <option>Important</option>
+    <option>Urgent</option>
+  </select>
+</label>
+
+<label>Partner payout (€)
+  <input type="number" min="0" step="5" placeholder="65">
+</label>
+
+<label>Description<textarea placeholder="Describe the task"></textarea></label>
+        <button class="panel-primary-btn" type="button">Create task</button>
+      </div>
+    `
+  },
+  message: {
+    title: "Message guest",
+    body: `
+      <div class="panel-form">
+        <label>Guest
+          <select>
+            <option>Olivia Smith</option>
+            <option>James Lee</option>
+            <option>Sophia Martinez</option>
+          </select>
+        </label>
+        <label>Template
+          <select>
+            <option>Check-in instructions</option>
+            <option>Late checkout reply</option>
+            <option>Restaurant recommendations</option>
+          </select>
+        </label>
+        <label>Message<textarea>Hello, thanks for your message. I’ll be happy to help.</textarea></label>
+        <button class="panel-primary-btn" type="button">Send message</button>
+      </div>
+    `
+  },
+  calendar: {
+    title: "Calendar",
+    body: `
+      <div class="panel-timeline">
+        <div><strong>11:00</strong><span>Check out · Lucas B. · Casa Cielo</span></div>
+        <div><strong>15:00</strong><span>Check in · Emma P. · Villa Mare</span></div>
+        <div><strong>16:30</strong><span>Cleaning completed · Casa Cielo</span></div>
+        <div><strong>18:00</strong><span>Check in · Sofia R. · Penthouse Alba</span></div>
+      </div>
+    `
+  }
+};
+
+function openActionPanel(type) {
+  const content = panelContent[type];
+  if (!content || !actionPanel || !actionPanelBody || !actionPanelTitle) return;
+
+  actionPanelTitle.textContent = content.title;
+  actionPanelBody.innerHTML = content.body;
+
+  actionPanel.classList.add("is-visible");
+  actionPanelOverlay.classList.add("is-visible");
+}
+
+function closePanel() {
+  actionPanel.classList.remove("is-visible");
+  actionPanelOverlay.classList.remove("is-visible");
+}
+
+actionButtons.forEach(function (button) {
+  button.addEventListener("click", function () {
+    openActionPanel(button.dataset.panel);
   });
+});
+
+if (closeActionPanel) {
+  closeActionPanel.addEventListener("click", closePanel);
+}
+
+if (actionPanelOverlay) {
+  actionPanelOverlay.addEventListener("click", closePanel);
+}
+if (actionPanelOverlay) {
+  actionPanelOverlay.addEventListener("click", closePanel);
+}
+
+function getTaskClass(priority, type) {
+  const value = `${priority} ${type}`.toLowerCase();
+
+  if (value.includes("emergency") || value.includes("urgent")) {
+    return "task-red";
+  }
+
+  if (value.includes("maintenance") || value.includes("important") || value.includes("guest request")) {
+    return "task-yellow";
+  }
+
+  return "task-green";
+}
+
+function renderDynamicTasks() {
+  const taskList = document.getElementById("dynamicTaskList");
+  if (!taskList || !window.NauxicaDemoData) return;
+
+  const state = window.NauxicaDemoData.loadState();
+  const tasks = (state.tasks || []).filter(function (task) {
+  return task.status !== "archived";
+});
+
+  taskList.innerHTML = tasks.map(function (task) {
+  const taskClass = getTaskClass(task.priority, task.type);
+
+  const createdDate = task.createdAt
+    ? new Date(task.createdAt).toLocaleDateString()
+    : "No date";
+
+  const createdTime = task.createdAt
+    ? new Date(task.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    : "No time";
+
+  return `
+    <div class="priority-task ${taskClass}" data-task-id="${task.id}">
+      <div class="task-main">
+        <span class="task-dot"></span>
+
+        <div>
+          <strong>${task.title}</strong>
+          <p>${task.property} · ${task.type} · ${task.status} · €${task.payout}</p>
+          <small>Requested on ${createdDate} at ${createdTime}</small>
+        </div>
+      </div>
+
+      <button class="task-undo-btn" type="button" data-action="archive-task">
+        Undo
+      </button>
+    </div>
+  `;
+}).join("");
+}
+
+renderDynamicTasks();
+document.addEventListener("click", function (event) {
+  const archiveButton = event.target.closest("[data-action='archive-task']");
+  if (!archiveButton || !window.NauxicaDemoData) return;
+
+  const taskCard = archiveButton.closest("[data-task-id]");
+  if (!taskCard) return;
+
+  window.NauxicaDemoData.updateTaskStatus(taskCard.dataset.taskId, "archived");
+  renderDynamicTasks();
+});
+
+});
 </script>
 </body>
 </html>

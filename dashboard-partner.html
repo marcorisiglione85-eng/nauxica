@@ -8,209 +8,369 @@
     <link rel="stylesheet" href="style.css?v=9999" />
   </head>
   <body class="partner-dashboard-page">
-    <header class="nx-header">
-      <nav class="nx-nav">
-        <a href="index.html" class="site-logo" aria-label="Nauxica home">
-          <img
-            src="assets/logo/nauxica-logo-horizontal.svg"
-            alt="Nauxica, Hospitality connected"
-          />
-        </a>
+    <header class="nx-header app-top-header">
+  <nav class="nx-nav">
+    <a href="index.html" class="site-logo" aria-label="Nauxica home">
+      <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
+    </a>
 
-        <button
-          class="mobile-menu-toggle"
-          type="button"
-          aria-label="Open menu"
-          aria-expanded="false"
-        >
-          <span></span><span></span><span></span>
+    <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <ul class="nx-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="contacts.html">Contact</a></li>
+      <li>
+        <button class="btn app-logout-btn" type="button" id="logout-button">
+          Logout
         </button>
-
-        <ul class="nx-links">
-          <li><a href="index.html#hero">Home</a></li>
-          <li><a href="index.html#services">Services</a></li>
-          <li><a href="index.html#pricing">Pricing</a></li>
-          <li><a href="login.html">Login</a></li>
-          <li><a href="register.html">Register</a></li>
-          <li><a class="btn" href="contacts.html">Contact</a></li>
-        </ul>
-      </nav>
-    </header>
+      </li>
+    </ul>
+  </nav>
+</header>
 
     <main class="dashboard-shell partner-dashboard">
-      <aside
-        class="dashboard-sidebar"
-        role="navigation"
-        aria-label="Partner navigation"
-      >
-        <div class="dashboard-sidebar-inner">
-          <div class="sidebar-brand">Nauxica Partners</div>
-          <nav class="dashboard-nav">
-            <a class="dashboard-nav-item active" href="#">Dashboard</a>
-            <a class="dashboard-nav-item" href="#requests">Requests</a>
-            <a class="dashboard-nav-item" href="#calendar">Calendar</a>
-            <a class="dashboard-nav-item" href="#availability">Availability</a>
-            <a class="dashboard-nav-item" href="#jobs">Jobs</a>
-            <a class="dashboard-nav-item" href="#messages">Messages</a>
-            <a class="dashboard-nav-item" href="#services">Services</a>
-            <a class="dashboard-nav-item" href="#earnings">Earnings</a>
-            <a class="dashboard-nav-item" href="#reviews">Reviews</a>
-            <a class="dashboard-nav-item" href="#profile">Profile</a>
-            <a class="dashboard-nav-item" href="#settings">Settings</a>
-            <a class="dashboard-nav-item" href="#help">Help Center</a>
-          </nav>
+  <aside class="dashboard-sidebar" role="navigation" aria-label="Partner navigation">
+    <div class="dashboard-sidebar-inner">
+      <div class="partner-brand">
+        <div class="sidebar-brand">Nauxica</div>
+        <span>Partner Network</span>
+      </div>
+
+      <div class="partner-profile-card">
+        <div class="partner-profile-icon">🧹</div>
+        <div>
+          <strong>Sparkle Clean</strong>
+          <span>Cleaning services</span>
+          <small>✓ Verified partner</small>
         </div>
-      </aside>
+      </div>
 
-      <section class="dashboard-main">
-        <div class="dashboard-topbar">
-          <div class="topbar-left">
-            <h1 class="dashboard-title">Partner dashboard</h1>
-            <div class="topbar-sub">
-              Manage requests, availability and earnings
+      <nav class="dashboard-nav">
+        <a class="dashboard-nav-item active" href="#overview">Dashboard</a>
+        <a class="dashboard-nav-item" href="#requests">Requests</a>
+        <a class="dashboard-nav-item" href="#jobs">My jobs</a>
+        <a class="dashboard-nav-item" href="calendar.html">Calendar</a>
+        <a class="dashboard-nav-item" href="availability.html">Availability</a>
+        <a class="dashboard-nav-item" href="#earnings">Earnings</a>
+        <a class="dashboard-nav-item" href="messages.html">Messages</a>
+        <a class="dashboard-nav-item" href="#performance">Performance</a>
+        <a class="dashboard-nav-item" href="#services">Services</a>
+        <a class="dashboard-nav-item" href="settings.html">Profile &amp; Settings</a>
+      </nav>
+
+      <div class="partner-help-card">
+        <strong>Need help?</strong>
+        <span>Contact Nauxica support</span>
+      </div>
+    </div>
+  </aside>
+
+  <section class="dashboard-main">
+    <div class="dashboard-topbar partner-topbar">
+      <div class="topbar-left">
+        <div class="eyebrow-label">Nauxica partner workspace</div>
+        <h1 class="dashboard-title">Good morning,<br />Maria.</h1>
+        <div class="topbar-sub">Here’s what’s happening with your cleaning business today.</div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="topbar-controls">
+          <button class="icon-btn" type="button">🔔</button>
+          <button class="btn btn-ghost" type="button">Get support</button>
+          <div class="date-chip">● Online</div>
+        </div>
+      </div>
+    </div>
+
+   <section class="dashboard-kpis partner-kpis" id="overview">
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">🧹</span>
+      <span class="kpi-trend positive">+25%</span>
+    </div>
+    <div class="kpi-label">Today’s jobs</div>
+    <div class="kpi-value">5</div>
+    <div class="kpi-sub">vs yesterday</div>
+  </div>
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">📅</span>
+      <span class="kpi-trend neutral">7 days</span>
+    </div>
+    <div class="kpi-label">Upcoming jobs</div>
+    <div class="kpi-value">8</div>
+    <div class="kpi-sub">scheduled this week</div>
+  </div>
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">💶</span>
+      <span class="kpi-trend positive">+18%</span>
+    </div>
+    <div class="kpi-label">Earnings today</div>
+    <div class="kpi-value">€380</div>
+    <div class="kpi-sub">vs yesterday</div>
+  </div>
+
+  <div class="kpi-card dashboard-card">
+    <div class="kpi-top">
+      <span class="kpi-icon">⭐</span>
+      <span class="kpi-trend warning">128 reviews</span>
+    </div>
+    <div class="kpi-label">Rating</div>
+    <div class="kpi-value">4.9</div>
+    <div class="kpi-sub">partner quality score</div>
+  </div>
+</section>
+
+    <section class="partner-ai-actions">
+  <button class="partner-ai-action">
+    <span>✦</span>
+    Summarise today
+  </button>
+
+  <button class="partner-ai-action">
+    <span>⚡</span>
+    Optimise schedule
+  </button>
+
+  <button class="partner-ai-action">
+    <span>💬</span>
+    Reply to owner
+  </button>
+</section>
+
+    <section class="dashboard-grid">
+      <div class="col-left">
+        <div class="dashboard-card" id="requests">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">Job requests</h3>
+              <p class="dashboard-card-text">New operational requests waiting for your acceptance.</p>
             </div>
+            <span class="unread-badge" id="jobRequestsCount">0 new</span>
           </div>
 
-          <div class="topbar-actions">
-            <div class="topbar-search">
-              <input
-                type="search"
-                placeholder="Search requests, jobs, messages"
-              />
-            </div>
-            <button class="btn btn-ghost">New availability</button>
-            <div class="avatar">PT</div>
+          <div id="partnerNewRequestsList" class="partner-request-list">
+            <!-- Dynamic new requests -->
           </div>
         </div>
 
-        <section class="dashboard-kpis">
-          <div class="kpi-card dashboard-card">
-            <div class="kpi-label">New requests</div>
-            <div class="kpi-value">4</div>
-          </div>
-          <div class="kpi-card dashboard-card">
-            <div class="kpi-label">Accepted jobs</div>
-            <div class="kpi-value">9</div>
-          </div>
-          <div class="kpi-card dashboard-card">
-            <div class="kpi-label">This month earnings</div>
-            <div class="kpi-value">€3,420</div>
-          </div>
-          <div class="kpi-card dashboard-card">
-            <div class="kpi-label">Average rating</div>
-            <div class="kpi-value">4.7</div>
-          </div>
-        </section>
-
-        <section class="dashboard-grid">
-          <div class="col-left">
-            <div id="requests" class="partner-request-card dashboard-card">
-              <h3 class="dashboard-section-title">Request inbox</h3>
-              <ul>
-                <li class="partner-request-item">
-                  <strong>Cleaning request</strong> — Villa Mare • Tomorrow
-                  10:00 • <span class="partner-status-pill">New</span>
-                </li>
-                <li class="partner-request-item">
-                  <strong>Airport transfer</strong> — Casa Cielo • Fri 18:30 •
-                  <span class="partner-status-pill">Pending</span>
-                </li>
-                <li class="partner-request-item">
-                  <strong>Welcome basket</strong> — Penthouse Alba • Pending
-                  confirmation • <span class="partner-status-pill">Action</span>
-                </li>
-              </ul>
+        <div class="dashboard-card" id="jobs">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">My jobs</h3>
+              <p class="dashboard-card-text">Accepted and active operational jobs</p>
             </div>
+            <span class="dashboard-pill">Active</span>
+          </div>
+          <div id="partnerMyJobsList" class="partner-request-list">
+            <!-- Dynamic jobs -->
+          </div>
+        </div>
 
-            <div id="accepted" class="dashboard-card">
-              <h3 class="dashboard-section-title">Accepted requests</h3>
-              <ul>
-                <li class="partner-job-item">
-                  Cleaning turnover — Villa Mare —
-                  <span class="partner-small">Confirmed</span>
-                </li>
-                <li class="partner-job-item">
-                  Transfer booking — Casa Cielo —
-                  <span class="partner-small">Accepted</span>
-                </li>
-                <li class="partner-job-item">
-                  Laundry pickup — Penthouse Alba —
-                  <span class="partner-small">Scheduled</span>
-                </li>
-              </ul>
+        <div class="dashboard-card" id="partnerHistoryCard">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">Request history</h3>
+              <p class="dashboard-card-text">Accepted, completed and declined requests history</p>
             </div>
+            <span class="dashboard-pill">Archive</span>
+          </div>
+          <div id="partnerHistoryList" class="partner-request-list">
+            <!-- Dynamic history -->
+          </div>
+        </div>
 
-            <div id="availability" class="dashboard-card partner-availability">
-              <h3 class="dashboard-section-title">Availability</h3>
-              <div class="partner-small">
-                Available today · Urgent requests accepted · Notice period: 24h
+        <div class="dashboard-card partner-ai-insights-card" id="partner-ai-insights">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">AI insights</h3>
+              <p class="dashboard-card-text">Suggestions to improve partner operations</p>
+            </div>
+            <span class="ai-live-badge">Live AI</span>
+          </div>
+          <div class="ai-insights-grid">
+            <div class="ai-insight-item positive">
+              <div class="ai-icon">📈</div>
+              <div class="ai-content">
+                <strong>High demand window detected</strong>
+                <p>Cleaning requests are increasing between 10:00 and 15:00.</p>
               </div>
             </div>
-
-            <div id="messages" class="dashboard-card">
-              <h3 class="dashboard-section-title">Messages</h3>
-              <ul>
-                <li class="message-item">
-                  Owner — Question about cleaning window · 2h ago
-                </li>
-                <li class="message-item">
-                  Guest — Arrival coordination · 5h ago
-                </li>
-                <li class="message-item">
-                  Nauxica — Operational update · 1d ago
-                </li>
-              </ul>
+            <div class="ai-insight-item warning">
+              <div class="ai-icon">⏱️</div>
+              <div class="ai-content">
+                <strong>Schedule optimisation recommended</strong>
+                <p>Move City Center Apartments before Sunset Villa to reduce travel time.</p>
+              </div>
+            </div>
+            <div class="ai-insight-item neutral">
+              <div class="ai-icon">💬</div>
+              <div class="ai-content">
+                <strong>Owner response pending</strong>
+                <p>Oceanview Villa asked for an earlier arrival confirmation.</p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div class="col-right">
-            <div id="earnings" class="dashboard-card">
+        <div class="dashboard-card" id="earnings">
+          <div class="card-heading-row">
+            <div>
               <h3 class="dashboard-section-title">Earnings overview</h3>
-              <div class="partner-small">
-                Monthly earnings: <strong>€3,420</strong>
-              </div>
-              <div class="partner-small">
-                Pending payout: <strong>€820</strong>
-              </div>
-              <div class="partner-small">
-                Completed jobs: <strong>24</strong>
+              <p class="dashboard-card-text">Monthly partner performance</p>
+            </div>
+            <strong class="revenue-total">€2,450</strong>
+          </div>
+          <div class="monthly-chart partner-chart">
+            <div class="month-bar" style="height: 42%"><span>1</span></div>
+            <div class="month-bar" style="height: 58%"><span>4</span></div>
+            <div class="month-bar" style="height: 46%"><span>8</span></div>
+            <div class="month-bar" style="height: 70%"><span>12</span></div>
+            <div class="month-bar current" style="height: 88%"><span>15</span></div>
+            <div class="month-bar" style="height: 62%"><span>18</span></div>
+            <div class="month-bar" style="height: 54%"><span>22</span></div>
+            <div class="month-bar" style="height: 76%"><span>26</span></div>
+            <div class="month-bar" style="height: 66%"><span>31</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="dashboard-card notifications-card" id="notifications">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">Notifications</h3>
+              <p class="dashboard-card-text">Live operational updates</p>
+            </div>
+            <span class="live-badge">Live</span>
+          </div>
+          <div id="partnerNotificationsList"></div>
+        </div>
+
+        <div class="dashboard-card" id="calendar">
+          <h3 class="dashboard-section-title">Today’s schedule</h3>
+          <div class="partner-schedule">
+            <div><strong>11:00</strong><span>Oceanview Villa · Checkout cleaning</span></div>
+            <div><strong>15:00</strong><span>City Center Apartments · Turnover cleaning</span></div>
+            <div><strong>18:00</strong><span>Sunset Villa · Deep cleaning</span></div>
+            <div><strong>20:30</strong><span>Riverside House · Upcoming</span></div>
+          </div>
+        </div>
+
+        <div class="dashboard-card partner-inbox-card" id="messages">
+          <div class="card-heading-row">
+            <div>
+              <h3 class="dashboard-section-title">Messages</h3>
+              <p class="dashboard-card-text">Owner requests and Nauxica updates</p>
+            </div>
+            <span class="unread-badge">2 unread</span>
+          </div>
+          <div class="inbox-list" id="partnerMessagesList">
+            <div class="inbox-item ai-active">
+              <div class="inbox-avatar">NX</div>
+              <div class="inbox-content">
+                <div class="inbox-top">
+                  <strong>Nauxica Support</strong>
+                  <span>09:30</span>
+                </div>
+                <p>Payment for job completed has been confirmed.</p>
+                <div class="inbox-tags">
+                  <span class="tag ai">System update</span>
+                </div>
               </div>
             </div>
-
-            <div id="services" class="dashboard-card partner-service-area">
-              <h3 class="dashboard-section-title">Service area</h3>
-              <div class="pill">Catania</div>
-              <div class="pill">Taormina</div>
-              <div class="pill">Giardini Naxos</div>
-              <div class="pill">Acireale</div>
-            </div>
-
-            <div id="jobs" class="dashboard-card">
-              <h3 class="dashboard-section-title">Upcoming jobs</h3>
-              <ul>
-                <li class="partner-job-item">
-                  Emma P. — Villa Mare — Cleaning — Tomorrow 10:00
-                </li>
-                <li class="partner-job-item">
-                  Lucas B. — Casa Cielo — Transfer — Fri 18:30
-                </li>
-              </ul>
-            </div>
-
-            <div id="profile" class="dashboard-card partner-profile-check">
-              <h3 class="dashboard-section-title">Profile status</h3>
-              <ul>
-                <li>Verified profile ✓</li>
-                <li>Insurance: uploaded</li>
-                <li>Service catalogue: completed</li>
-                <li>Response rate: 92%</li>
-              </ul>
+            <div class="inbox-item">
+              <div class="inbox-avatar">CC</div>
+              <div class="inbox-content">
+                <div class="inbox-top">
+                  <strong>City Center Apartments</strong>
+                  <span>Yesterday</span>
+                </div>
+                <p>Thank you, great job.</p>
+                <div class="inbox-tags">
+                  <span class="tag positive">Resolved</span>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
-      </section>
-    </main>
+        </div>
 
+        <div class="dashboard-card" id="performance">
+          <h3 class="dashboard-section-title">Performance</h3>
+          <div class="performance-grid">
+            <div><strong>24</strong><span>Jobs completed</span></div>
+            <div><strong>96%</strong><span>On-time rate</span></div>
+            <div><strong>18m</strong><span>Response time</span></div>
+          </div>
+        </div>
+
+        <div class="dashboard-card" id="services">
+          <h3 class="dashboard-section-title">Service area</h3>
+          <div class="partner-service-area">
+            <span class="pill">Catania</span>
+            <span class="pill">Taormina</span>
+            <span class="pill">Giardini Naxos</span>
+            <span class="pill">Acireale</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<button class="ai-fab partner-ai-fab" type="button">
+  <span class="ai-fab-icon">✦</span>
+  <span>Nauxica AI</span>
+</button>
+<div class="partner-ai-panel" id="partnerAiPanel">
+  <div class="ai-panel-header">
+    <div>
+      <div class="ai-panel-label">Nauxica AI</div>
+      <strong>Partner command center</strong>
+    </div>
+
+    <button class="ai-close-btn" id="closePartnerAiPanel" type="button">✕</button>
+  </div>
+
+  <div class="ai-panel-body">
+    <button class="ai-command-card" type="button">
+      <span>🧠</span>
+      Summarise today’s jobs
+    </button>
+
+    <button class="ai-command-card" type="button">
+      <span>⚡</span>
+      Optimise my schedule
+    </button>
+
+    <button class="ai-command-card" type="button">
+      <span>💬</span>
+      Reply to latest owner request
+    </button>
+
+    <button class="ai-command-card" type="button">
+      <span>📍</span>
+      Check route efficiency
+    </button>
+
+    <button class="ai-command-card" type="button">
+      <span>💶</span>
+      Review today’s earnings
+    </button>
+
+    <div class="ai-suggestion-box">
+      <strong>AI recommendation</strong>
+      <p>
+        Move City Center Apartments before Sunset Villa to reduce travel time and protect your on-time rating.
+      </p>
+    </div>
+  </div>
+</div>
     <footer class="footer">
       <div class="footer-inner">
         <img
@@ -227,26 +387,399 @@
       </div>
     </footer>
 
+    <script src="nauxica-demo-data.js"></script>
     <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
-    const header = document.querySelector(".nx-header");
-    const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+document.addEventListener("DOMContentLoaded", function () {
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
 
-    if (mobileMenuButton && header) {
-      mobileMenuButton.addEventListener("click", function () {
-        const isOpen = header.classList.toggle("nav-open");
-        mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      });
-    }
+  window.scrollTo(0, 0);
 
-    mobileMenuLinks.forEach(function (link) {
-      link.addEventListener("click", function () {
-        header.classList.remove("nav-open");
+  setTimeout(function () {
+    window.scrollTo(0, 0);
+  }, 50);
+
+  const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+  const header = document.querySelector(".nx-header");
+  const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+
+  if (mobileMenuButton && header) {
+    mobileMenuButton.addEventListener("click", function () {
+      const isOpen = header.classList.toggle("nav-open");
+      mobileMenuButton.setAttribute(
+        "aria-expanded",
+        isOpen ? "true" : "false"
+      );
+    });
+  }
+
+  mobileMenuLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+      header.classList.remove("nav-open");
+
+      if (mobileMenuButton) {
         mobileMenuButton.setAttribute("aria-expanded", "false");
-      });
+      }
     });
   });
+
+  const partnerAiFab = document.querySelector(".partner-ai-fab");
+  const partnerAiPanel = document.getElementById("partnerAiPanel");
+  const closePartnerAiPanel = document.getElementById(
+    "closePartnerAiPanel"
+  );
+
+  if (partnerAiFab && partnerAiPanel) {
+    partnerAiFab.addEventListener("click", function () {
+      partnerAiPanel.classList.toggle("is-visible");
+    });
+  }
+
+  if (closePartnerAiPanel && partnerAiPanel) {
+    closePartnerAiPanel.addEventListener("click", function () {
+      partnerAiPanel.classList.remove("is-visible");
+    });
+  }
+
+  function renderPartnerNotifications() {
+    const notificationsList = document.getElementById(
+      "partnerNotificationsList"
+    );
+
+    if (!notificationsList || !window.NauxicaDemoData) return;
+
+    const state = window.NauxicaDemoData.loadState();
+    const notifications = state.notifications || [];
+
+    notificationsList.innerHTML = notifications.length
+      ? notifications
+          .slice(0, 5)
+          .map(function (notification) {
+            const createdAt = new Date(notification.createdAt);
+
+            return `
+              <div class="partner-notification-item">
+                <div class="notification-dot"></div>
+
+                <div class="notification-content">
+                  <strong>${notification.title}</strong>
+                  <p>${notification.message}</p>
+
+                  <small>
+                    ${createdAt.toLocaleDateString()} ·
+                    ${createdAt.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })}
+                  </small>
+                </div>
+              </div>
+            `;
+          })
+          .join("")
+      : `<div class="empty-state">No notifications.</div>`;
+  }
+
+  function renderPartnerMessages() {
+  const messagesCard = document.getElementById("partnerMessagesCard");
+  if (!messagesCard || !window.NauxicaDemoData) return;
+
+  const state = window.NauxicaDemoData.loadState();
+
+  const messages = (state.messages || []).filter(function (message) {
+    return message.accountType === "partner" && !message.archived;
+  });
+
+  const unreadCount = messages.filter(function (message) {
+    return !message.read;
+  }).length;
+
+  messagesCard.innerHTML = `
+    <h3>Messages</h3>
+    <p>Owner requests and Nauxica updates</p>
+
+    <span class="dashboard-pill">
+      ${unreadCount} unread
+    </span>
+
+    <div class="dashboard-mini-list">
+      ${
+        messages.length
+          ? messages
+              .slice(0, 3)
+              .map(function (message) {
+                return `
+                  <div class="dashboard-mini-item">
+                    <strong>${message.title}</strong>
+                    <span>${message.body}</span>
+                  </div>
+                `;
+              })
+              .join("")
+          : `<p>No messages.</p>`
+      }
+    </div>
+
+    <a class="text-button" href="messages.html">Open messages</a>
+  `;
+}
+
+  function renderNewPartnerRequest(request) {
+    return `
+      <div class="partner-request-card request-new" data-request-id="${request.id}">
+        <div>
+          <strong>${request.property}</strong>
+          <p>${request.service}</p>
+
+          <small>
+            Requested on ${request.date || "Today"} at ${
+      request.time || "Flexible"
+    }
+          </small>
+        </div>
+
+        <div class="partner-request-meta">
+          <span>€${request.payout}</span>
+
+          <div class="request-actions">
+            <button
+              class="decline-btn"
+              type="button"
+              data-action="decline-request"
+            >
+              Decline
+            </button>
+
+            <button
+              class="accept-btn"
+              type="button"
+              data-action="accept-request"
+            >
+              Accept
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPartnerJobRequest(request) {
+    let actionButton = "";
+
+    if (request.status === "accepted") {
+      actionButton = `
+        <button
+          class="accept-btn"
+          type="button"
+          data-action="start-request"
+        >
+          Start job
+        </button>
+      `;
+    }
+
+    if (request.status === "in-progress") {
+      actionButton = `
+        <button
+          class="accept-btn"
+          type="button"
+          data-action="complete-request"
+        >
+          Complete
+        </button>
+      `;
+    }
+
+    return `
+      <div class="partner-request-card request-${request.status}" data-request-id="${request.id}">
+        <div>
+          <strong>${request.property}</strong>
+          <p>${request.service}</p>
+
+          <small>
+            Status: ${request.status} · Requested on ${
+      request.date || "Today"
+    } at ${request.time || "Flexible"}
+          </small>
+        </div>
+
+        <div class="partner-request-meta">
+          <span>€${request.payout}</span>
+          ${actionButton}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPartnerHistoryRequest(request) {
+    return `
+      <div class="partner-request-card request-${request.status}" data-request-id="${request.id}">
+        <div>
+          <strong>${request.property}</strong>
+          <p>${request.service}</p>
+
+          <small>
+            Status: ${request.status} · Requested on ${
+      request.date || "Today"
+    } at ${request.time || "Flexible"}
+          </small>
+        </div>
+
+        <div class="partner-request-meta">
+          <span>€${request.payout}</span>
+
+          <button
+            class="decline-btn"
+            type="button"
+            data-action="undo-request"
+          >
+            Undo
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPartnerRequests() {
+    const newRequestsList = document.getElementById(
+      "partnerNewRequestsList"
+    );
+
+    const myJobsList = document.getElementById(
+      "partnerMyJobsList"
+    );
+
+    const historyList = document.getElementById(
+      "partnerHistoryList"
+    );
+
+    if (
+      !newRequestsList ||
+      !myJobsList ||
+      !historyList ||
+      !window.NauxicaDemoData
+    ) {
+      return;
+    }
+
+    const state = window.NauxicaDemoData.loadState();
+    const partnerRequests = state.partnerRequests || [];
+
+    const newRequests = partnerRequests.filter(function (request) {
+      return (
+        request.status === "new" ||
+        request.status === "pending" ||
+        request.status === "approved"
+      );
+    });
+
+    const myJobs = partnerRequests.filter(function (request) {
+      return (
+        request.status === "accepted" ||
+        request.status === "in-progress"
+      );
+    });
+
+    const requestHistory = partnerRequests.filter(function (request) {
+      return (
+        request.status === "completed" ||
+        request.status === "declined"
+      );
+    });
+
+    const jobRequestsCount = document.getElementById(
+      "jobRequestsCount"
+    );
+
+    if (jobRequestsCount) {
+      jobRequestsCount.textContent = `${newRequests.length} new`;
+    }
+
+    newRequestsList.innerHTML = newRequests.length
+      ? newRequests.map(renderNewPartnerRequest).join("")
+      : `<div class="empty-state">All caught up. No pending requests.</div>`;
+
+    myJobsList.innerHTML = myJobs.length
+      ? myJobs.map(renderPartnerJobRequest).join("")
+      : `<div class="empty-state">No accepted jobs yet.</div>`;
+
+    historyList.innerHTML = requestHistory.length
+      ? requestHistory.map(renderPartnerHistoryRequest).join("")
+      : `<div class="empty-state">No history to display.</div>`;
+  }
+
+  renderPartnerRequests();
+  renderPartnerNotifications();
+  renderPartnerMessages();
+
+  document.body.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-action]");
+if (!button || !window.NauxicaDemoData) return;
+
+const action = button.dataset.action;
+
+if (action === "read-message") {
+  window.NauxicaDemoData.markMessageRead(button.dataset.messageId);
+  renderPartnerMessages();
+  return;
+}
+if (action === "archive-message") {
+  window.NauxicaDemoData.archiveMessage(button.dataset.messageId);
+  renderPartnerMessages();
+  return;
+}
+
+const card = button.closest("[data-request-id]");
+if (!card) return;
+
+  if (action === "accept-request") {
+  window.NauxicaDemoData.updatePartnerRequest(
+    card.dataset.requestId,
+    "accepted"
+  );
+}
+
+  if (action === "decline-request") {
+  window.NauxicaDemoData.updatePartnerRequest(
+    card.dataset.requestId,
+    "declined"
+  );
+}
+
+if (action === "start-request") {
+  window.NauxicaDemoData.updatePartnerRequest(
+    card.dataset.requestId,
+    "in-progress"
+  );
+}
+
+if (action === "complete-request") {
+  window.NauxicaDemoData.updatePartnerRequest(
+    card.dataset.requestId,
+    "completed"
+  );
+}
+
+if (action === "undo-request") {
+  window.NauxicaDemoData.updatePartnerRequest(
+    card.dataset.requestId,
+    "archived"
+  );
+}
+
+renderPartnerRequests();
+renderPartnerNotifications();
+renderPartnerMessages();
+  });
+});
+const logoutButton = document.querySelector("#logout-button");
+
+logoutButton?.addEventListener("click", () => {
+  localStorage.removeItem("nauxicaAccountType");
+  localStorage.removeItem("accountType");
+  window.location.href = "index.html";
+});
 </script>
   </body>
 </html>

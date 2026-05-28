@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tasks — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <h1 class="dashboard-title">Tasks</h1>
+            <div class="topbar-sub" id="tasks-summary">Open tasks and to-dos across your properties</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input type="search" placeholder="Search tasks, properties, types" id="globalSearch" />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip" id="date-chip">Today</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h2 class="dashboard-section-title">Task list</h2>
+                  <p class="dashboard-card-text">Track and manage tasks for your properties</p>
+                </div>
+              </div>
+              <div class="dynamic-task-list" id="tasksList"></div>
+            </div>
+          </div>
+          <div class="col-right">
+            <div class="dashboard-card" id="tasksSummaryCard">
+              <h3 class="dashboard-section-title">Summary</h3>
+              <div id="taskStatsPanel" class="dashboard-card-text">Loading...</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script>
+      (function () {
+        const accountType = NauxicaShared.resolveAccountType();
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+        NauxicaShared.setActivePage('tasks');
+        NauxicaShared.updateTopbar(accountType);
+
+        const chip = document.getElementById('date-chip');
+        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+
+        document.getElementById('logout-button')
+          ?.addEventListener('click', NauxicaShared.handleLogout);
+
+        const tasksList = document.getElementById('tasksList');
+        const taskStatsPanel = document.getElementById('taskStatsPanel');
+        const tasksSummary = document.getElementById('tasks-summary');
+
+        function getPriorityClass(priority, type) {
+          if (priority === 'urgent') return 'task-red';
+          if (priority === 'important' || type === 'maintenance') return 'task-yellow';
+          return 'task-green';
+        }
+
+        function renderTasks() {
+          if (!window.NauxicaDemoData) return;
+          const state = window.NauxicaDemoData.loadState();
+          // TODO Phase C: filter by accountType once task objects include an accountType field
+          const tasks = (state.tasks || []).filter(function (t) { return t.status !== 'archived'; });
+
+          if (tasksSummary) {
+            tasksSummary.textContent = tasks.length === 1 ? '1 open task' : tasks.length + ' open tasks across your properties';
+          }
+
+          if (!tasks.length) {
+            tasksList.innerHTML = '<div class="empty-state-card"><h3>No open tasks</h3><p>All tasks are complete or archived.</p></div>';
+            if (taskStatsPanel) taskStatsPanel.textContent = 'No tasks to show.';
+            return;
+          }
+
+          tasksList.innerHTML = tasks.map(function (task) {
+            const cls = getPriorityClass(task.priority, task.type);
+            return '<div class="priority-task ' + cls + '" data-task-id="' + task.id + '">' +
+              '<div class="task-main">' +
+              '<span class="task-dot"></span>' +
+              '<div>' +
+              '<strong>' + task.title + '</strong>' +
+              '<p>' + (task.property || '') + (task.type ? ' · ' + task.type : '') + (task.status ? ' · ' + task.status : '') + '</p>' +
+              '</div>' +
+              '</div>' +
+              '<button class="task-undo-btn" type="button" data-action="archive-task">Done</button>' +
+              '</div>';
+          }).join('');
+
+          const pending = tasks.filter(function (t) { return t.status === 'pending'; }).length;
+          const important = tasks.filter(function (t) { return t.priority === 'important' || t.priority === 'urgent'; }).length;
+          if (taskStatsPanel) {
+            taskStatsPanel.innerHTML = '<strong>' + tasks.length + '</strong> open tasks<br>' +
+              '<span>' + pending + ' pending · ' + important + ' high priority</span>';
+          }
+        }
+
+        renderTasks();
+
+        tasksList.addEventListener('click', function (e) {
+          const btn = e.target.closest('[data-action="archive-task"]');
+          if (!btn || !window.NauxicaDemoData) return;
+          const card = btn.closest('[data-task-id]');
+          if (!card) return;
+          window.NauxicaDemoData.updateTaskStatus(card.dataset.taskId, 'archived');
+          renderTasks();
+        });
+      })();
+    </script>
+  </body>
+</html>

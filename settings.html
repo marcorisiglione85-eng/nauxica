@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Settings — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav" id="sidebar-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <h1 class="dashboard-title">Settings</h1>
+            <div class="topbar-sub">Account preferences and profile configuration</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input type="search" placeholder="Search settings" id="globalSearch" />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip" id="date-chip">Today</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h2 class="dashboard-section-title">Profile</h2>
+                  <p class="dashboard-card-text">Your account details and preferences</p>
+                </div>
+              </div>
+              <div class="empty-state-card">
+                <h3>Settings coming soon</h3>
+                <p>Profile editing, notification preferences, language settings, billing and account management will be available here.</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h2 class="dashboard-section-title">Notifications</h2>
+                  <p class="dashboard-card-text">Configure how and when you receive alerts</p>
+                </div>
+              </div>
+              <div class="empty-state-card">
+                <p>Notification preferences coming soon.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-right">
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Account</h3>
+              <p class="dashboard-card-text">Your current plan and account status</p>
+              <div class="empty-state-card">
+                <p>Account management coming soon.</p>
+              </div>
+            </div>
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Danger zone</h3>
+              <p class="dashboard-card-text">Irreversible account actions</p>
+              <div style="margin-top: 12px;">
+                <button class="btn app-logout-btn" type="button" id="logout-button-2">Log out of Nauxica</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script>
+      (function () {
+        const accountType = NauxicaShared.resolveAccountType();
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+        NauxicaShared.setActivePage('settings');
+        NauxicaShared.updateTopbar(accountType);
+
+        const chip = document.getElementById('date-chip');
+        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+
+        document.getElementById('logout-button')
+          ?.addEventListener('click', NauxicaShared.handleLogout);
+        document.getElementById('logout-button-2')
+          ?.addEventListener('click', NauxicaShared.handleLogout);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Calendar — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">
+              Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside
+        class="dashboard-sidebar"
+        role="navigation"
+        aria-label="Dashboard navigation"
+      >
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <h1 class="dashboard-title">Calendar</h1>
+            <div class="topbar-sub">
+              View upcoming jobs, guest movements and property operations.
+            </div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input
+                type="search"
+                placeholder="Search guests, events, properties"
+                id="globalSearch"
+              />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip">Today, 27 May</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card" aria-labelledby="scheduleTitle">
+              <div class="card-heading-row">
+                <div>
+                  <h2 id="scheduleTitle" class="dashboard-section-title">
+                    Schedule
+                  </h2>
+                  <p class="dashboard-card-text" id="calendar-summary">
+                    Loading calendar...
+                  </p>
+                </div>
+              </div>
+
+              <div class="message-filters" aria-label="Calendar filters">
+                <button class="message-filter active" data-filter="today">
+                  Today
+                </button>
+                <button class="message-filter" data-filter="upcoming">
+                  Upcoming
+                </button>
+                <button class="message-filter" data-filter="completed">
+                  Completed
+                </button>
+                <button class="message-filter" data-filter="all">All</button>
+              </div>
+
+              <div class="calendar-date-strip" id="calendar-date-strip"></div>
+              <div class="messages-list" id="calendar-events-list"></div>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div class="dashboard-card" id="detailsCard">
+              <h3 class="dashboard-section-title">Event details</h3>
+              <div id="eventDetails" class="dashboard-card-text">
+                Select an event to view details.
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script>
+      (function () {
+        const accountType = NauxicaShared.resolveAccountType();
+
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+        NauxicaShared.setActivePage('calendar');
+        NauxicaShared.updateTopbar(accountType);
+
+        const filters = document.querySelectorAll(".message-filter");
+        const eventsList = document.getElementById("calendar-events-list");
+        const calendarSummary = document.getElementById("calendar-summary");
+        const calendarDateStrip = document.getElementById(
+          "calendar-date-strip",
+        );
+        const eventDetails = document.getElementById("eventDetails");
+
+        let activeFilter = "today";
+        let selectedDate = new Date().toISOString().split("T")[0];
+
+        function getCalendarEvents() {
+          const state = window.NauxicaDemoData.loadState();
+          return NauxicaShared.filterByAccountType(state.calendarEvents, accountType);
+        }
+
+        function getVisibleEvents() {
+          const events = getCalendarEvents();
+          return events.filter((event) => {
+            if (activeFilter === "all") return true;
+            if (activeFilter === "completed")
+              return event.status === "completed";
+            if (activeFilter === "today")
+              return event.eventDate === selectedDate;
+            if (activeFilter === "upcoming")
+              return (
+                event.eventDate > selectedDate && event.status !== "completed"
+              );
+            return true;
+          });
+        }
+
+        function formatDateLabel(date, index) {
+          if (index === 0) return "Today";
+          if (index === 1) return "Tomorrow";
+          return date.toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+          });
+        }
+
+        function renderDateStrip() {
+          const today = new Date();
+          calendarDateStrip.innerHTML = Array.from({ length: 7 })
+            .map((_, index) => {
+              const date = new Date(today);
+              date.setDate(today.getDate() + index);
+              const dateValue = date.toISOString().split("T")[0];
+              const isActive = dateValue === selectedDate;
+              return `<button class="calendar-date-chip ${isActive ? "active" : ""}" type="button" data-date="${dateValue}"><span>${formatDateLabel(date, index)}</span><small>${date.toLocaleDateString("en-GB", { month: "short" })}</small></button>`;
+            })
+            .join("");
+        }
+
+        function renderCalendarEvents() {
+          const visibleEvents = getVisibleEvents();
+          calendarSummary.textContent =
+            visibleEvents.length === 1
+              ? "1 event found"
+              : `${visibleEvents.length} events found`;
+          if (!visibleEvents.length) {
+            eventsList.innerHTML = `<div class="empty-state-card"><h3>No events here</h3><p>Try another filter or check back later.</p></div>`;
+            return;
+          }
+
+          eventsList.innerHTML = visibleEvents
+            .map(
+              (event) => `
+          <article class="message-row calendar-event-row" data-event-id="${event.id}">
+            <div class="message-row-main">
+              <div class="message-meta-row"><span class="message-type-pill">${event.category}</span><span class="message-date">${event.eventDate} · ${event.time || ""}</span></div>
+              <h3>${event.title}</h3>
+              <p>${event.property || ""}</p>
+              <p>${event.description || ""}</p>
+            </div>
+            <div class="message-actions"><span class="read-label">${event.status || ""}</span></div>
+          </article>
+        `,
+            )
+            .join("");
+        }
+
+        function showEventDetails(id) {
+          const events = getCalendarEvents();
+          const ev = events.find((e) => String(e.id) === String(id));
+          if (!ev) return;
+          eventDetails.innerHTML = `<strong>${ev.title}</strong><p>${ev.description || ""}</p><p>${ev.property || ""} · ${ev.eventDate} ${ev.time || ""}</p>`;
+        }
+
+        function setActiveFilter(filter) {
+          activeFilter = filter;
+          filters.forEach((button) =>
+            button.classList.toggle("active", button.dataset.filter === filter),
+          );
+          renderCalendarEvents();
+        }
+
+        filters.forEach((button) =>
+          button.addEventListener("click", () =>
+            setActiveFilter(button.dataset.filter),
+          ),
+        );
+
+        calendarDateStrip.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-date]");
+          if (!button) return;
+          selectedDate = button.dataset.date;
+          activeFilter = "today";
+          filters.forEach((b) =>
+            b.classList.toggle("active", b.dataset.filter === "today"),
+          );
+          renderDateStrip();
+          renderCalendarEvents();
+        });
+
+        eventsList.addEventListener("click", (e) => {
+          const row = e.target.closest("[data-event-id]");
+          if (!row) return;
+          showEventDetails(row.dataset.eventId);
+        });
+
+        document.getElementById("logout-button")
+          ?.addEventListener("click", NauxicaShared.handleLogout);
+
+        // init
+        renderDateStrip();
+        renderCalendarEvents();
+      })();
+    </script>
+  </body>
+</html>

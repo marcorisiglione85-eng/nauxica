@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Messages | Nauxica</title>
+
+  <link rel="icon" href="assets/logo/favicon.ico" />
+  <link rel="stylesheet" href="style.css?v=9999" />
+</head>
+
+<body class="homeowner-dashboard-page">
+  <header class="nx-header app-top-header">
+    <nav class="nx-nav">
+      <a href="index.html" class="site-logo" aria-label="Nauxica home">
+        <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
+      </a>
+
+      <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <ul class="nx-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="contacts.html">Contact</a></li>
+        <li>
+          <button class="btn app-logout-btn" type="button" id="logout-button">
+            Logout
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="dashboard-shell homeowner-dashboard">
+    <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+      <div class="dashboard-sidebar-inner">
+        <div class="sidebar-brand">Nauxica</div>
+
+        <nav class="dashboard-nav"></nav>
+      </div>
+    </aside>
+
+    <section class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-left">
+          <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+          <h1 class="dashboard-title">Messages</h1>
+          <div class="topbar-sub">
+            Manage conversations, alerts and updates in one place.
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="topbar-search">
+            <input type="search" placeholder="Search messages..." />
+          </div>
+          <div class="topbar-controls">
+            <button class="icon-btn" aria-label="Notifications">🔔</button>
+            <button class="icon-btn" aria-label="Help">⌘</button>
+            <div class="date-chip">Today, 27 May</div>
+            <div class="profile-chip">
+              <div class="avatar" id="profile-avatar">MR</div>
+              <div class="profile-meta">
+                <strong id="profile-name">Marco</strong>
+                <span id="profile-role">Homeowner</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="message-filters" aria-label="Message filters">
+        <button class="message-filter active" data-filter="all">All</button>
+        <button class="message-filter" data-filter="unread">Unread</button>
+        <button class="message-filter" data-filter="archived">Archived</button>
+        <button class="message-filter" data-filter="nauxica">Nauxica</button>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="card-heading-row">
+          <div>
+            <h2 class="dashboard-section-title">Inbox</h2>
+            <p class="dashboard-card-text" id="messages-summary">
+              Loading messages...
+            </p>
+          </div>
+        </div>
+
+        <div class="messages-list" id="messages-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="nauxica-demo-data.js"></script>
+  <script src="nauxica-shared.js"></script>
+
+  <script>
+    const accountType = NauxicaShared.resolveAccountType();
+
+    NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+    NauxicaShared.setActivePage('messages');
+    NauxicaShared.updateTopbar(accountType);
+
+    const filters = document.querySelectorAll(".message-filter");
+    const messagesList = document.querySelector("#messages-list");
+    const messagesSummary = document.querySelector("#messages-summary");
+
+    let activeFilter = "all";
+
+    function getMessages() {
+      const state = window.NauxicaDemoData.loadState();
+      return NauxicaShared.filterByAccountType(state.messages, accountType);
+    }
+
+    function getVisibleMessages() {
+      const messages = getMessages();
+
+      return messages.filter((message) => {
+        if (activeFilter === "all") return !message.archived;
+        if (activeFilter === "unread") return !message.read && !message.archived;
+        if (activeFilter === "archived") return message.archived;
+        if (activeFilter === "nauxica") return message.type === "nauxica" && !message.archived;
+
+        return !message.archived;
+      });
+    }
+
+    function renderMessages() {
+      const visibleMessages = getVisibleMessages();
+
+      messagesSummary.textContent =
+        visibleMessages.length === 1
+          ? "1 message found"
+          : `${visibleMessages.length} messages found`;
+
+      if (!visibleMessages.length) {
+        messagesList.innerHTML = `
+          <div class="empty-state-card">
+            <h3>No messages here</h3>
+            <p>Try another filter or check back later.</p>
+          </div>
+        `;
+        return;
+      }
+
+      messagesList.innerHTML = visibleMessages
+        .map((message) => {
+          const readClass = message.read ? "is-read" : "is-unread";
+          const archivedLabel = message.archived ? "Undo archive" : "Archive";
+
+          return `
+            <article class="message-row ${readClass}" data-message-id="${message.id}">
+              <div class="message-row-main">
+                <div class="message-meta-row">
+                  <span class="message-type-pill">${message.type}</span>
+                  <span class="message-date">${message.date}</span>
+                </div>
+
+                <h3>${message.title}</h3>
+                <p>${message.body}</p>
+              </div>
+
+              <div class="message-actions">
+                ${
+                  !message.read
+                    ? `<button class="text-button" data-action="mark-read">Mark as read</button>`
+                    : `<span class="read-label">Read</span>`
+                }
+
+                <button class="text-button" data-action="toggle-archive">
+                  ${archivedLabel}
+                </button>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function setActiveFilter(filter) {
+      activeFilter = filter;
+
+      filters.forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === filter);
+      });
+
+      renderMessages();
+    }
+
+    filters.forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveFilter(button.dataset.filter);
+      });
+    });
+
+    messagesList.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-action]");
+      if (!actionButton) return;
+
+      const messageRow = actionButton.closest("[data-message-id]");
+      if (!messageRow) return;
+
+      const messageId = messageRow.dataset.messageId;
+      const action = actionButton.dataset.action;
+
+      if (action === "mark-read") {
+        window.NauxicaDemoData.markMessageRead(messageId);
+      }
+
+      if (action === "toggle-archive") {
+        window.NauxicaDemoData.archiveMessage(messageId);
+      }
+
+      renderMessages();
+    });
+
+    document.querySelector("#logout-button")
+      ?.addEventListener("click", NauxicaShared.handleLogout);
+
+    renderMessages();
+  </script>
+</body>
+</html>
