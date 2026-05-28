@@ -30,7 +30,8 @@
         property: "Villa Mare",
         type: "check-in",
         priority: "normal",
-        status: "pending"
+        status: "pending",
+        accountType: "homeowner"
       },
       {
         id: "task-002",
@@ -38,7 +39,8 @@
         property: "Casa Cielo",
         type: "maintenance",
         priority: "important",
-        status: "pending"
+        status: "pending",
+        accountType: "homeowner"
       }
     ],
 
@@ -123,6 +125,44 @@ messages: [
     date: "Today",
     read: false,
     archived: false
+  }
+],
+reviews: [
+  {
+    id: "rev-homeowner-001",
+    accountType: "homeowner",
+    guest: "Sophie L.",
+    rating: 4.9,
+    text: "Absolutely beautiful property. The views were stunning and everything was perfectly prepared for our arrival.",
+    property: "Villa Mare",
+    date: "22 May 2026"
+  },
+  {
+    id: "rev-homeowner-002",
+    accountType: "homeowner",
+    guest: "James T.",
+    rating: 4.7,
+    text: "Great location and very well maintained. Host was responsive and the check-in process was smooth.",
+    property: "Casa Cielo",
+    date: "15 May 2026"
+  },
+  {
+    id: "rev-partner-001",
+    accountType: "partner",
+    guest: "Marco R.",
+    rating: 5.0,
+    text: "Excellent cleaning service. The team was punctual, thorough and left everything in perfect condition.",
+    property: "Oceanview Villa",
+    date: "20 May 2026"
+  },
+  {
+    id: "rev-partner-002",
+    accountType: "partner",
+    guest: "Anna K.",
+    rating: 4.8,
+    text: "Reliable and professional. Very happy with the maintenance work carried out on time.",
+    property: "Sunset Villa",
+    date: "18 May 2026"
   }
 ],
 calendarEvents: [
@@ -341,12 +381,17 @@ function addMessage(message) {
 
   const newMessage = {
     id: `msg-${Date.now()}`,
+    accountType: message.accountType || getCurrentAccountType(),
+    type: message.type || "general",
     from: message.from || "owner",
     to: message.to || "partner",
     property: message.property || "Property",
-    message: message.message || "",
+    title: message.title || "",
+    body: message.body || message.message || "",
+    date: message.date || "Today",
     createdAt: new Date().toISOString(),
-    read: false
+    read: false,
+    archived: false
   };
 
   state.messages.unshift(newMessage);
