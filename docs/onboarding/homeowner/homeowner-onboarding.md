@@ -47,7 +47,7 @@ Gather these before beginning. Missing items will block specific steps.
 
 ## Step 1 — Account Creation
 
-**Platform:** Registration page at [platform URL]
+**Platform:** Registration page at [FOUNDER_DECISION_REQUIRED]
 **Estimated time:** 5 minutes
 
 ### 1.1 Register

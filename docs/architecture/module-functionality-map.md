@@ -337,7 +337,7 @@ The following CRITICAL conflicts must be resolved before any module that touches
 | **External dependencies** | Notification service (operator alert) |
 | **MVP required** | Yes |
 
-**11 escalation triggers:** EMERGENCY, MAINTENANCE_URGENT, COMPLAINT, SAFETY_CONCERN, LEGAL_CLAIM, IDENTITY_CONFLICT, ACCESS_DENIED, BOOKING_MODIFICATION, REPEATED_UNANSWERED, ABUSE, IDENTITY_UNRESOLVABLE.
+**11 escalation triggers:** EMERGENCY, MAINTENANCE_URGENT, COMPLAINT, SAFETY_CONCERN, LEGAL_CLAIM, IDENTITY_CONFLICT, ACCESS_DENIED, RESERVATION_MODIFICATION, REPEATED_UNANSWERED, ABUSE, IDENTITY_UNRESOLVABLE.
 
 **SLA:** Operator acknowledgement within the SLA defined per trigger type. EMERGENCY: 5 minutes. COMPLAINT: 2 hours.
 

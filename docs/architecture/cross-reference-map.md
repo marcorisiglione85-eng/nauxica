@@ -138,8 +138,8 @@ Ownership: AI concierge architect
 ### Group 2 — Emergency Response Rules
 
 Must stay consistent:
-- `docs/ai-concierge/emergency-procedures.md` §5 (AI rules E-01 through E-07) (authoritative)
-- `docs/ai-concierge/whatsapp-concierge-guidelines.md` §13 (EM-01 through EM-07)
+- `docs/ai-concierge/emergency-procedures.md` §5 (AI rules E-01 through E-07 — legacy prefix; inconsistent with EM-XX in whatsapp-concierge-guidelines.md) (authoritative)
+- `docs/ai-concierge/whatsapp-concierge-guidelines.md` §13 (EM-01 through EM-07 — legacy prefix; same rules as E-01 through E-07; consolidation required in a future editorial sprint)
 
 Ownership: AI concierge architect
 
@@ -285,12 +285,6 @@ These documents are architecturally stable and can be used directly by backend e
 
 | Document | Status | Blocking what |
 |---|---|---|
-| `docs/agent-ops/phase-control-log.md` | Missing | Agent-ops workflows cannot execute |
-| `docs/agent-ops/pre-approval-template.md` | Missing | Agent-ops workflows cannot execute |
-| `docs/agent-ops/testing-checklist.md` | Missing | Agent-ops workflows cannot execute |
-| `docs/agent-ops/handoff-report-template.md` | Missing | Agent-ops workflows cannot execute |
-| `docs/agent-ops/docs-agent-scope.md` | Missing | Docs agent scope undefined |
-| `docs/agent-ops/backend-agent-scope.md` | Missing | Backend agent scope undefined |
 | `docs/legal/terms-of-service.md` | Stub / legal-pending | Homeowner and partner onboarding finalisation |
 | `docs/legal/partner-agreement.md` | Stub / legal-pending | Partner activation |
 | `docs/legal/privacy-policy.md` | Stub / legal-pending | Platform launch |

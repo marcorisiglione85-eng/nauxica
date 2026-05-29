@@ -1,6 +1,6 @@
 # WhatsApp Concierge Guidelines
 
-**Version:** 2.0
+**Version:** 2.1
 **Status:** Draft — Architecture phase
 **Scope:** AI concierge · WhatsApp Business API · Sicily launch MVP
 **Last updated:** 2026-05-28
@@ -508,18 +508,18 @@ The trust relationship with the guest is fundamental. These rules are non-negoti
 
 ### Rule T-01 — Identify as Nauxica
 
-The AI always identifies itself as the Nauxica concierge in the first message of every
+The AI always identifies itself as the Nauxica Concierge in the first message of every
 booking. It does not present itself as the homeowner, as a property management platform
 without a name, or as a personal assistant without affiliation.
 
-First message identification: "I'm your Nauxica concierge for this stay."
+First message identification: "I'm your Nauxica Concierge for this stay."
 
 ### Rule T-02 — Never Pretend to Be the Owner
 
 The AI is not Marco, it is not the homeowner, it is not "Airbnb support" or any other
 identity. If the guest asks "Is this Marco?" or "Am I talking to the owner?", the answer is
-clear: "No — I'm the Nauxica AI concierge. I can help you with your stay, and I can connect
-you with the owner if needed."
+clear: "No — I'm the Nauxica Concierge. I can help you with your stay, and I can connect
+you with the homeowner if needed."
 
 Pretending to be the owner is a deception that could expose Nauxica and the homeowner to
 liability if the guest relies on statements the owner never actually made.
@@ -626,7 +626,9 @@ Retention, access controls, and deletion procedures must be defined before launc
 ## 11. Access Code Delivery Rules
 
 Access codes (lockbox code, smart lock code, gate code, parking code) are `GST`-scoped
-credentials requiring both a session anchor and a timing gate before delivery.
+credentials requiring both a session anchor and a timing gate before delivery. For the
+authoritative delivery timing rules, see [whatsapp-session-anchor.md §8](whatsapp-session-anchor.md).
+This section defines the operational rules for the WhatsApp channel.
 
 ### 11.1 Reservation Gating
 
@@ -651,8 +653,8 @@ The default gate opens at the `check_in` or `in_stay` session phase:
 | `post_stay` | No — all codes become sentinel values |
 
 **Early delivery exception:** If `Property.early_access_code_delivery = true` (homeowner-set,
-default `false`), codes may be delivered from midnight on `checkin_date`. This flag is a
-future implementation.
+default `false`), codes may be delivered during the `pre_arrival` phase on `checkin_date`
+(before `check_in_from` time). This flag is a future implementation.
 
 ### 11.3 Unavailable-Code Sentinel Behaviour
 
@@ -793,6 +795,8 @@ the check-in information or the guest receives nothing.
 
 ## 13. Emergency Messaging Rules
 
+> **Notation note:** The rule codes below use the legacy `EM-XX` prefix. These correspond to emergency response rules E-01 through E-07 in `emergency-procedures.md §5`. Both prefixes are legacy and inconsistent — consolidation under a single prefix is required in a future editorial sprint.
+
 These rules govern AI behaviour during emergency situations. They override all other message
 format and tone rules.
 
@@ -855,7 +859,7 @@ Full emergency type classifications and procedures: [emergency-procedures.md](em
 | Media type | AI behaviour |
 |---|---|
 | Photo — general | "Thanks — I've received your photo. Could you describe what you need help with?" — AI cannot process image content at MVP |
-| Photo — damage | Acknowledge receipt. Create a ServiceRequest with `urgency = urgent`. "I've flagged this to the property owner immediately. They'll be in touch." |
+| Photo — damage | Acknowledge receipt. Create a ServiceRequest with `urgency = urgent`. "I've flagged this to the homeowner immediately. They'll be in touch." |
 | Photo — access issue | Acknowledge. Attempt to resolve via knowledge block. If unresolved: escalate. |
 | Voice note | "I can't play audio messages — could you type your question? I'm here to help." |
 | Document / PDF | "I can't read documents. Could you describe what you need? For urgent matters, please call [nauxica_ops_phone]." |

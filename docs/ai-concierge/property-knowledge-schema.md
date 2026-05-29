@@ -1,6 +1,6 @@
 # Property Knowledge Schema
 
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Draft — Architecture phase
 **Scope:** AI concierge · Sicily launch · WhatsApp-first model
 **Last updated:** 2026-05-28
@@ -370,7 +370,7 @@ whether the actual value or a sentinel placeholder is included in the PropertyKn
 
 | Credential field | Gate open when | Sentinel when gate is closed |
 |---|---|---|
-| `key_box_code` | `session_phase` IN (`check_in`, `in_stay`) OR (`pre_arrival` AND `checkin_date = today`) | `"[not yet available]"` |
+| `key_box_code` | `session_phase` IN (`check_in`, `in_stay`) OR (`pre_arrival` AND `checkin_date = today` AND `Property.early_access_code_delivery = true`) | `"[not yet available]"` |
 | `smart_lock_instructions` (code component) | Same as above | `"[not yet available]"` |
 | `building_door_code` | Same as above | `"[not yet available]"` |
 | `parking_access_code` | Same as above + guest has indicated they have a vehicle | `"[not yet available]"` |
@@ -393,8 +393,9 @@ The AI must not:
 ### Early delivery exception
 
 If the homeowner has set `Property.early_access_code_delivery = true` (a planned field for
-future implementation), the gate opens 24 hours before `checkin_date` instead of on the
-day. This is a homeowner-controlled setting with a default of `false`.
+future implementation), the gate opens during the `pre_arrival` phase on `checkin_date`
+(before `check_in_from` time). This is a homeowner-controlled setting with a default of `false`.
+See [whatsapp-session-anchor.md §8](whatsapp-session-anchor.md) for the authoritative delivery rules.
 
 ### Post-checkout code expiry
 

@@ -4,7 +4,7 @@
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch · All partner service types
 **Last updated:** 2026-05-28
-**Related:** [partner-agreement.md](../legal/partner-agreement.md) · [dispute-resolution.md](dispute-resolution.md) · [data-models.md](../backend/data-models.md) · [regulatory-compliance-checklist.md](../legal/regulatory-compliance-checklist.md) · [partner-onboarding.md](../onboarding/partner/partner-onboarding.md)
+**Related:** [partner-agreement.md](../legal/partner-agreement.md) · [dispute-resolution.md](dispute-resolution.md) · [data-models.md](../backend/data-models.md) · [regulatory-compliance-checklist.md](../legal/regulatory-compliance-checklist.md) · [partner-onboarding.md](../onboarding/partner/partner-onboarding.md) · [legal-review-tracker.md](../legal/legal-review-tracker.md)
 
 ---
 

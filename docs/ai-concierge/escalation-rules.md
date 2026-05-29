@@ -19,7 +19,7 @@ is created and the operator is notified. The AI does not delay to attempt one mo
 
 **The AI never pretends a human is available when one is not.** If the escalation SLA
 has elapsed without operator acknowledgement, the AI tells the guest honestly and gives
-them the Nauxica ops number.
+them the Nauxica Support number.
 
 **The conversation belongs to the operator once escalated.** The AI must not continue
 answering queries in an escalated session unless the operator explicitly re-enables AI
@@ -49,7 +49,7 @@ Every EscalationRecord must be tagged with one of the following trigger types.
 **Detection:** Sentiment and context pattern matching.
 **Response time SLA:** Immediate (0–5 minutes).
 **Who is notified:** Nauxica operator on duty.
-**AI behaviour after trigger:** Acknowledge the guest's concern. Provide 112 and Nauxica ops number. Handoff. Do not downplay.
+**AI behaviour after trigger:** Acknowledge the guest's concern. Provide 112 and Nauxica Support number. Handoff. Do not downplay.
 
 ---
 
@@ -67,7 +67,7 @@ Every EscalationRecord must be tagged with one of the following trigger types.
 **Detection:** Explicit phrase matching, multiple language variants.
 **Response time SLA:** High (0–2 hours during business hours; next available out of hours).
 **Who is notified:** Nauxica operator.
-**AI behaviour after trigger:** Acknowledge the request. Confirm a human will be in touch. Give estimated wait time based on current hour. Provide Nauxica ops number for urgent matters that cannot wait.
+**AI behaviour after trigger:** Acknowledge the request. Confirm a human will be in touch. Give estimated wait time based on current hour. Provide Nauxica Support number for urgent matters that cannot wait.
 
 ---
 
@@ -99,7 +99,7 @@ Every EscalationRecord must be tagged with one of the following trigger types.
 **AI behaviour after trigger:** Acknowledge receipt. Do not say anything that could be construed as admitting liability. Do not apologise on behalf of the property or Nauxica (AI apology can be used in legal proceedings). Escalate immediately.
 
 **Example AI response:**
-> "Thank you for bringing this to our attention. I've passed your message to our team, who will be in contact with you shortly. If you need immediate assistance, please call our operations line: [Nauxica ops number]."
+> "Thank you for bringing this to our attention. I've passed your message to our team, who will be in contact with you shortly. If you need immediate assistance, please call our support line: [Nauxica Support number]."
 
 ---
 
@@ -202,7 +202,7 @@ EscalationRecord.status → RESOLVED      │
 
 The AI sends a holding message to the guest immediately after triggering escalation. The holding message must:
 - Confirm the guest's message has been received and escalated
-- Provide a human contact number (Nauxica ops) for matters that cannot wait
+- Provide a human contact number (Nauxica Support) for matters that cannot wait
 - Give a realistic expectation of response time
 - Not make commitments or promises on behalf of operators or homeowners
 
@@ -210,18 +210,18 @@ The AI sends a holding message to the guest immediately after triggering escalat
 ```
 [Acknowledge concern in 1 sentence]
 [Confirm escalation in 1 sentence]
-[Provide Nauxica ops number]
+[Provide Nauxica Support number]
 [Give response time expectation based on SLA and current hour]
 ```
 
 **Example (emergency):**
-> "I've immediately alerted our operations team about your situation. For urgent help right now, please call our 24/7 line: [Nauxica ops number]. Emergency services in Italy: 112."
+> "I've immediately alerted our operations team about your situation. For urgent help right now, please call our 24/7 line: [Nauxica Support number]. Emergency services in Italy: 112."
 
 **Example (human requested, business hours):**
-> "Of course — I'll connect you with a member of our team. Someone will be in touch within the next hour. If it's urgent, you can also call us directly: [Nauxica ops number]."
+> "Of course — I'll connect you with a member of our team. Someone will be in touch within the next hour. If it's urgent, you can also call us directly: [Nauxica Support number]."
 
 **Example (human requested, out of hours):**
-> "I'll pass this to our team. Our support hours are 08:00–22:00 — someone will be in touch first thing tomorrow morning. For anything urgent tonight, please call: [Nauxica ops number]."
+> "I'll pass this to our team. Our support hours are 08:00–22:00 — someone will be in touch first thing tomorrow morning. For anything urgent tonight, please call: [Nauxica Support number]."
 
 ---
 
@@ -306,7 +306,7 @@ The following behaviours are explicitly prohibited in the escalation system.
 **AI must NOT:**
 - Continue answering queries in an escalated session
 - Tell the guest the issue has been "resolved" before the operator has confirmed it
-- Share the operator's or homeowner's personal phone number (use the designated Nauxica ops number)
+- Share the operator's or homeowner's personal phone number (use the designated Nauxica Support number)
 - Promise a specific callback time if the operator has not confirmed availability
 - Apologise in a way that implies liability
 - Attempt to negotiate or resolve disputes independently
@@ -351,7 +351,7 @@ Guest is locked out and mentions a child, elderly person, disability, extreme we
 
 Homeowner reports guest damage; guest reports damage was pre-existing. Both parties contact the platform.
 
-**Action:** The AI concierge does not mediate, relay messages between parties, or comment on responsibility. Trigger COMPLAINT_ESCALATION immediately. Nauxica support handles via the dispute resolution process. AI response to both parties: "I've passed this to the Nauxica team — they'll be in touch to help resolve this."
+**Action:** The AI concierge does not mediate, relay messages between parties, or comment on responsibility. Trigger COMPLAINT_ESCALATION immediately. Nauxica Support handles via the dispute resolution process. AI response to both parties: "I've passed this to the Nauxica team — they'll be in touch to help resolve this."
 
 ---
 
@@ -359,7 +359,7 @@ Homeowner reports guest damage; guest reports damage was pre-existing. Both part
 
 Guest contacts the concierge after checkout (within the 24h grace period) to complain about the stay.
 
-**Action:** AI acknowledges without making commitments. Trigger COMPLAINT_ESCALATION tagged as `post-stay`. Nauxica support handles. The AI does not attempt to resolve complaints about a completed stay.
+**Action:** AI acknowledges without making commitments. Trigger COMPLAINT_ESCALATION tagged as `post-stay`. Nauxica Support handles. The AI does not attempt to resolve complaints about a completed stay.
 
 ---
 

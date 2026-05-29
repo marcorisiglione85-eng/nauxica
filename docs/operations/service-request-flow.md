@@ -96,7 +96,7 @@ The AI creates a `ServiceRequest` in response to a guest message. Examples:
 Homeowner creates a request directly from the dashboard. Examples:
 - Scheduling a post-checkout clean
 - Requesting routine maintenance
-- Scheduling a pool or garden maintenance visit
+- Scheduling routine maintenance (pool or garden maintenance is classified as MAINTENANCE at MVP)
 - Requesting an inspection before a new reservation
 
 Homeowner creation includes full job description, preferred date/time window, and optional notes for the partner.
@@ -131,7 +131,7 @@ Classification happens immediately after `CREATED`. It assigns:
 | Urgent | `URGENT` | Partner response within 30 min | No hot water, broken lock, no electricity |
 | High | `HIGH` | Partner response within 4 hours | Washing machine not working, pool pump failure |
 | Normal | `NORMAL` | Partner response within 24 hours | AC unit servicing, minor repair, routine clean |
-| Scheduled | `SCHEDULED` | Defined by homeowner at creation | Pool maintenance, garden service, pre-arrival inspection |
+| Scheduled | `SCHEDULED` | Defined by homeowner at creation | Recurring maintenance visit, seasonal property service, pre-arrival property check |
 
 **EMERGENCY classification:** If a `ServiceRequest` is classified as `EMERGENCY`, it is immediately escalated. No `PartnerRequest` is created. The request moves directly to `ESCALATED` state and an `EscalationRecord` of type `EMERGENCY` is created. The flow diverges from the standard path — see Section 8 (Escalation Flow).
 
@@ -320,10 +320,10 @@ Completion evidence requirements vary by service type:
 | CLEANING | ≥ 4 photos covering bedrooms, bathrooms, kitchen, living area | Completion note |
 | MAINTENANCE | Before photo + after photo of the fixed item | During-work photo, materials note |
 | LAUNDRY | Photo of cleaned/pressed linen bagged or returned | |
-| TRANSFER | Arrival confirmation (passenger safely delivered) — text confirmation | Screenshot of navigation |
-| EXPERIENCE | Completion note confirming activity took place and guest count | Photo of activity |
-| POOL_MAINTENANCE | Photo of pool and water, plus reading notes if applicable | |
-| INSPECTION | Structured checklist completed in platform, minimum 6 photos | Full written report |
+| TRANSFERS | Arrival confirmation (passenger safely delivered) — text confirmation | Screenshot of navigation |
+| EXPERIENCES | Completion note confirming activity took place and guest count | Photo of activity |
+| POOL_MAINTENANCE *(Post-MVP subtype)* | Photo of pool and water, plus reading notes if applicable | |
+| INSPECTION *(Post-MVP subtype)* | Structured checklist completed in platform, minimum 6 photos | Full written report |
 
 ### 7.2 Photo requirements
 
@@ -454,7 +454,7 @@ The following extends [data-models.md Model 9](../backend/data-models.md) with f
 | `id` | UUID | Primary key |
 | `property_id` | String → Property | |
 | `reservation_id` | UUID → Reservation | Nullable — homeowner-created requests may not link to a reservation |
-| `service_type` | Enum | One of 9 types from partner-assignment-model.md |
+| `service_type` | Enum | One of 5 MVP service types: `CLEANING` / `MAINTENANCE` / `LAUNDRY` / `TRANSFERS` / `EXPERIENCES` — see [partner-assignment-model.md](../architecture/partner-assignment-model.md) |
 | `initiated_by` | Enum | `ai_concierge` / `homeowner` / `guest` / `operator` |
 | `urgency` | Enum | `EMERGENCY` / `URGENT` / `HIGH` / `NORMAL` / `SCHEDULED` |
 | `classification_source` | Enum | `ai_keyword_match` / `homeowner_specified` / `operator_override` / `default` |

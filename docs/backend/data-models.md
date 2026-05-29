@@ -1,9 +1,9 @@
 # Data Models
 
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — pre-backend implementation reference
-**Last updated:** 2026-05-28
+**Last updated:** 2026-05-29
 **Related:** [property-data-schema.md](../property-intake/property-data-schema.md) · [api-overview.md](../api/api-overview.md) · [localStorage-to-backend-migration.md](localStorage-to-backend-migration.md) · [data-visibility-model.md](../architecture/data-visibility-model.md)
 
 ---
@@ -315,7 +315,7 @@ A formal assignment of a service partner to a property for a specific service ty
 | `id` | uuid | `INT` | No | Yes (auto) | |
 | `property_id` | string → Property | `INT` | No | Yes | |
 | `partner_id` | uuid → User | `INT` | No | Yes | |
-| `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `transfers` / `experiences` / `laundry` / `pool` / `garden` |
+| `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `transfers` / `experiences` / `laundry`. Post-MVP subtypes (`pool_maintenance`, `garden_maintenance`, `concierge_in_person`, `inspection`) are not active at Sicily launch — see [partner-assignment-model.md](../architecture/partner-assignment-model.md) §2. |
 | `assignment_status` | enum | `INT` | No | Yes | Values: `active` / `paused` / `ended` |
 | `valid_from` | date | `INT` | No | Yes | |
 | `valid_until` | date | `INT` | No | No | Null = ongoing. |
@@ -335,7 +335,7 @@ A request for a service action, which can be initiated by: the AI concierge (on 
 | `property_id` | string → Property | `INT` | No | Yes | |
 | `reservation_id` | uuid → Reservation | `INT` | No | Conditional | Required if initiated during a stay. |
 | `initiated_by` | enum | `INT` | No | Yes | Values: `ai_concierge` / `guest_direct` / `homeowner` / `operator` |
-| `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `transfer` / `experience` / `supply_delivery` / `emergency` / `other` |
+| `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `laundry` / `transfers` / `experiences`. Emergency-level requests use the `urgency` field, not `service_type`. Pool and garden maintenance are classified as `maintenance` at MVP — see [partner-assignment-model.md](../architecture/partner-assignment-model.md). |
 | `urgency` | enum | `INT` | Yes | Yes | Values: `routine` / `same_day` / `urgent` / `emergency`. AI uses this to determine response tone and escalation. |
 | `description` | text | `INT` | No | Yes | Internal description of what's needed. |
 | `guest_message` | text | `GST` | Yes | Conditional | The original guest message that triggered this request. Visible to AI for context. |
@@ -437,109 +437,9 @@ A rating and comment record. Reviews can be: guest → property (post-stay), hom
 | `reviewer_name` | string | `PUB` | No | Yes | Display name. |
 | `reviewer_guest_phone` | string | `INT` | No | Conditional | For guest reviews only. ⚠️ **Legal review required** — retention and anonymisation policy needed. |
 | `subject_id` | uuid | `INT` | No | Yes | References User (for partner reviews) or Property (for property reviews). |
-| `booking_id` | uuid → Reservation | `INT` | No | Conditional | Required for guest-to-property reviews. |
+| `reservation_id` | uuid → Reservation | `INT` | No | Conditional | Required for guest-to-property reviews. |
 | `partner_request_id` | uuid → PartnerRequest | `INT` | No | Conditional | Required for partner/homeowner mutual reviews. |
 | `rating` | integer | `PUB` | No | Yes | 1–5. |
-| `comment` | text | `PUB` | No | Recommended | |
-| `is_visible` | boolean | `PUB` | No | Yes | Default: true. Can be set false if disputed and under review. |
-| `created_at` | datetime | `INT` | No | Yes (auto) | |
-
-**localStorage equivalent:** `reviews` array in `nauxicaDemoState`
-
----
-
-## Model 5 — Task
-
-An operational to-do item tied to a property, owned by the homeowner.
-
-| Field | Type | Visibility | AI | Required | Notes |
-|---|---|---|---|---|---|
-| `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
-| `owner_id` | uuid → User | `INT` | No | Yes | |
-| `title` | string | `INT` | No | Yes | |
-| `description` | text | `INT` | No | Optional | |
-| `task_type` | enum | `INT` | No | Yes | Values: `check-in` / `maintenance` / `cleaning` / `inspection` / `admin` / `other` |
-| `priority` | enum | `INT` | No | Yes | Values: `low` / `normal` | `important` / `urgent` |
-| `status` | enum | `INT` | No | Yes | Values: `pending` / `in-progress` / `completed` / `cancelled` |
-| `due_date` | date | `INT` | No | Optional | |
-| `assigned_partner_request_id` | uuid → PartnerRequest | `INT` | No | Optional | If task resulted in a partner job |
-| `created_at` | datetime | `INT` | No | Yes (auto) | |
-| `updated_at` | datetime | `INT` | No | Yes (auto) | |
-| `completed_at` | datetime | `INT` | No | Conditional | Set when status transitions to `completed` |
-
-**localStorage equivalent:** `tasks` array in `nauxicaDemoState`
-
----
-
-## Model 6 — PartnerRequest
-
-A service job request created by a homeowner and sent to a partner. The central model for the operations workflow.
-
-| Field | Type | Visibility | AI | Required | Notes |
-|---|---|---|---|---|---|
-| `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
-| `homeowner_id` | uuid → User | `INT` | No | Yes | |
-| `partner_id` | uuid → User | `INT` | No | Conditional | Null until partner accepts or is assigned |
-| `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `transfers` / `experiences` / `laundry` |
-| `title` | string | `INT` | No | Yes | Short description of the job |
-| `description` | text | `INT` | No | Recommended | Full details for the partner |
-| `priority` | enum | `INT` | No | Yes | Values: `low` / `normal` / `important` / `urgent` |
-| `requested_date` | date | `INT` | No | Yes | Date the job should happen |
-| `requested_time` | time | `INT` | No | Recommended | Preferred start time |
-| `notes_for_partner` | text | `INT` | No | Optional | Additional instructions |
-| `agreed_payout_eur` | decimal | `INT` | No | Recommended | Direct billing amount (homeowner pays partner) |
-| `nauxica_commission_eur` | decimal | `INT` | No | Conditional | Only if Nauxica coordinates this job and earns commission |
-| `status` | enum | `INT` | No | Yes | Values: `new` / `accepted` / `declined` / `in-progress` / `completed` / `disputed` |
-| `partner_completion_notes` | text | `INT` | No | Optional | Partner's notes on job completion |
-| `completion_photo_urls` | array of strings | `INT` | No | Optional | CDN URLs of completion photos |
-| `created_at` | datetime | `INT` | No | Yes (auto) | |
-| `updated_at` | datetime | `INT` | No | Yes (auto) | |
-| `accepted_at` | datetime | `INT` | No | Conditional | |
-| `completed_at` | datetime | `INT` | No | Conditional | |
-
-**localStorage equivalent:** `partnerRequests` array in `nauxicaDemoState`
-
----
-
-## Model 7 — Message
-
-An in-platform message record. Supports homeowner–partner communication. Does not model WhatsApp guest messages (those are external to the platform at MVP).
-
-| Field | Type | Visibility | AI | Required | Notes |
-|---|---|---|---|---|---|
-| `id` | uuid | `INT` | No | Yes (auto) | |
-| `sender_id` | uuid → User | `INT` | No | Yes | |
-| `recipient_id` | uuid → User | `INT` | No | Yes | |
-| `account_type_context` | enum | `INT` | No | Yes | Renders correct UI view. Values: `homeowner` / `partner` |
-| `message_type` | enum | `INT` | No | Yes | Values: `partner` / `nauxica` / `system` |
-| `subject` | string | `INT` | No | Optional | |
-| `body` | text | `INT` | No | Yes | |
-| `is_read` | boolean | `INT` | No | Yes | Default: false |
-| `is_archived` | boolean | `INT` | No | Yes | Default: false |
-| `related_partner_request_id` | uuid → PartnerRequest | `INT` | No | Optional | If message is about a specific job |
-| `created_at` | datetime | `INT` | No | Yes (auto) | |
-
-**localStorage equivalent:** `messages` array in `nauxicaDemoState`
-
----
-
-## Model 8 — Review
-
-A rating and comment record. Reviews can be: guest → property (post-stay), homeowner → partner (post-job), partner → homeowner (post-job).
-
-| Field | Type | Visibility | AI | Required | Notes |
-|---|---|---|---|---|---|
-| `id` | uuid | `INT` | No | Yes (auto) | |
-| `review_type` | enum | `INT` | No | Yes | Values: `guest-to-property` / `homeowner-to-partner` / `partner-to-homeowner` |
-| `reviewer_id` | uuid → User | `INT` | No | Conditional | Null for guest reviews (no account) |
-| `reviewer_name` | string | `PUB` | No | Yes | Display name |
-| `reviewer_guest_phone` | string | `INT` | No | Conditional | For guest reviews only. ⚠️ **Legal review required** — retention and anonymisation policy needed. |
-| `subject_id` | uuid | `INT` | No | Yes | References User (for partner reviews) or Property (for property reviews) |
-| `booking_id` | uuid → Booking | `INT` | No | Conditional | Required for guest-to-property reviews |
-| `partner_request_id` | uuid → PartnerRequest | `INT` | No | Conditional | Required for partner/homeowner mutual reviews |
-| `rating` | integer | `PUB` | No | Yes | 1–5 |
 | `comment` | text | `PUB` | No | Recommended | |
 | `is_visible` | boolean | `PUB` | No | Yes | Default: true. Can be set false if disputed and under review. |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |

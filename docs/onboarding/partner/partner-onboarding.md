@@ -5,7 +5,7 @@
 **Scope:** Sicily launch · All service partner types
 **Last updated:** 2026-05-28
 **Audience:** Prospective partners (cleaners, maintenance, transfers, laundry, experiences)
-**Related:** [partner-vetting.md](../../trust-safety/partner-vetting.md) · [partner-agreement.md](../../legal/partner-agreement.md) · [partner-assignment-model.md](../../architecture/partner-assignment-model.md) · [first-job-walkthrough.md](first-job-walkthrough.md)
+**Related:** [partner-vetting.md](../../trust-safety/partner-vetting.md) · [partner-agreement.md](../../legal/partner-agreement.md) · [partner-assignment-model.md](../../architecture/partner-assignment-model.md) · [first-job-walkthrough.md](first-job-walkthrough.md) · [legal-review-tracker.md](../../legal/legal-review-tracker.md)
 
 ---
 
@@ -97,7 +97,7 @@ Have these ready before you begin. Missing documents will slow your application.
 
 ## Step 1 — Account Registration
 
-**Platform:** Registration page at [platform URL]
+**Platform:** Registration page at [FOUNDER_DECISION_REQUIRED]
 **Estimated time:** 10 minutes
 
 ### 1.1 Create your account
@@ -141,10 +141,10 @@ Select every service type you offer. You can add or remove service types later �
 | Service type code | What it covers |
 |---|---|
 | `CLEANING` | Post-checkout deep clean, mid-stay refresh, emergency clean |
-| `MAINTENANCE` | Repairs, technical fixes, installations |
+| `MAINTENANCE` | Repairs, technical fixes, installations; at MVP also covers pool and garden maintenance |
 | `LAUNDRY` | Linen and towel changeover, washing, pressing |
-| `TRANSFER` | Airport/port pickups and dropoffs |
-| `EXPERIENCE` | Tours, boat trips, cooking classes, wine tastings |
+| `TRANSFERS` | Airport/port pickups and dropoffs |
+| `EXPERIENCES` | Tours, boat trips, cooking classes, wine tastings |
 
 ### 2.2 Define your operating area
 
@@ -198,7 +198,7 @@ Check each document before uploading: read the key fields on screen. If you cann
 
 If a document is pending (e.g. insurance renewal in progress, criminal record certificate requested but not yet received):
 - Upload what you have and add a note in the document field
-- Notify the Nauxica team via [contact method] with an expected date
+- Notify the Nauxica team via [FOUNDER_DECISION_REQUIRED] with an expected date
 - Your application will remain `pending` — it cannot proceed to review until all required documents are present
 
 ---
@@ -399,9 +399,8 @@ When a service is needed (e.g. a checkout triggers a cleaning request):
 | CLEANING | 2 hours |
 | MAINTENANCE (routine) | 4 hours |
 | MAINTENANCE (urgent) | 30 minutes |
-| TRANSFER | 1 hour |
-| EXPERIENCE | 4 hours |
-| POOL / GARDEN | 24 hours |
+| TRANSFERS | 1 hour |
+| EXPERIENCES | 4 hours |
 
 Missing your response window is noted. Three no-responses in a 90-day period trigger an automatic flag for review. See [partner-vetting.md](../../trust-safety/partner-vetting.md) for monitoring criteria.
 
@@ -423,7 +422,7 @@ At the moment you accept:
 
 ### 9.1 How payment works
 
-You invoice homeowners directly. Nauxica does not process payments on your behalf for cleaning, maintenance, laundry, or pool/garden jobs. The invoicing relationship is between you and the homeowner.
+You invoice homeowners directly. Nauxica does not process payments on your behalf for cleaning, maintenance, or laundry jobs. The invoicing relationship is between you and the homeowner.
 
 **Exception: Experiences and Transfers booked via the AI concierge.** When a guest requests a transfer or experience through the Nauxica AI concierge, Nauxica processes the payment and remits to you, deducting the platform commission. See your Partner Agreement for the commission rate and payment timeline.
 

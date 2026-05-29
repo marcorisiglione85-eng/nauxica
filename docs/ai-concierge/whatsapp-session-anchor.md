@@ -213,19 +213,25 @@ require a delivery gate — they must not be shared on demand at any time of day
 
 | Code type | When delivered | How delivered |
 |---|---|---|
-| Lockbox code / smart lock | On `check_in_from` time on `checkin_date`, or when guest confirms they are near the property | AI sends as a WhatsApp message. Also sent in confirmation if homeowner configured early delivery. |
-| Gate / building code | With check-in instructions on arrival day | Included in the arrival briefing message. |
-| Parking code | On arrival day with parking instructions | Included only if guest confirms they have a car. |
+| Lockbox code / smart lock | At `check_in_from` time on `checkin_date` (start of `check_in` phase). Early delivery exception: if `Property.early_access_code_delivery = true`, deliverable during `pre_arrival` phase on `checkin_date`. | AI sends as a WhatsApp message, included in MSG-03. If a guest arrives before `check_in_from`: AI escalates to the homeowner — no automatic early delivery. |
+| Gate / building code | At start of `check_in` phase (`check_in_from` time on `checkin_date`) | Included in the arrival briefing message (MSG-03). |
+| Parking code | At start of `check_in` phase, with parking instructions | Included only if guest confirms they have a car. |
 
 **Security principle:** Access codes must never be shared in the `pre_arrival` phase unless
-the homeowner has explicitly enabled early delivery. The AI must refuse if a guest asks for
-the code more than 24 hours before check-in:
+`Property.early_access_code_delivery = true` (homeowner flag, default `false`). The gate is
+phase-based — the delivery window is determined by session phase, not by time-distance from
+check-in. If a guest arrives at the property before `check_in_from`, the AI escalates to the
+homeowner to decide whether to deliver early — the AI does not deliver codes automatically
+outside the gate window.
+
+When a code is requested outside the delivery window, the AI responds:
 
 ```
-"I'll send you the entry details on the day of your arrival
-([checkin_date]). You'll receive them in the morning so everything
-is ready when you arrive. Is there anything else I can help you with beforehand?"
+"I'll send you the entry details on the morning of your arrival
+([checkin_date]). Everything will be ready when you arrive. Is there anything else I can help you with beforehand?"
 ```
+
+For KBB implementation of this gate, see [knowledge-retrieval-model.md §5 Step 5](knowledge-retrieval-model.md).
 
 ---
 

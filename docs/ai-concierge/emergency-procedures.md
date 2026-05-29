@@ -142,14 +142,16 @@ The AI classifies emergency situations into types to determine the correct respo
 | `GAS` | gas smell, gas leak, sulphur smell, rotten eggs | Do NOT turn on lights. Open windows and doors. Gas shutoff location. Leave building. Call 115. | Immediate |
 | `FLOOD` | water everywhere, flood, pipe burst, water leak, ceiling dripping | Water shutoff location. Move valuables to high ground. Electricity shutoff if water near sockets. Operator contact. | Urgent |
 | `POWER` | no electricity, lights out, power cut, power off | Electricity shutoff / breaker location (to check if it tripped). If full building: likely local outage — call electricity operator. | Routine (unless unsafe) |
-| `LOCKOUT` | locked out, can't get in, lost key, left key inside | Access code or lockbox procedure. Key contact if applicable. Nauxica ops if unresolvable. | Urgent (if after 22:00) |
-| `SECURITY` | intruder, break-in, theft, someone in the property, threatening, robbery | Call 113 or 112. Leave property if unsafe. Do not confront. Nauxica ops. | Immediate |
+| `LOCKOUT` | locked out, can't get in, lost key, left key inside | Access code or lockbox procedure. Key contact if applicable. Nauxica Support if unresolvable. | Urgent (if after 22:00) |
+| `SECURITY` | intruder, break-in, theft, someone in the property, threatening, robbery | Call 113 or 112. Leave property if unsafe. Do not confront. Nauxica Support. | Immediate |
 | `STRUCTURAL` | crack in wall, ceiling collapsed, structural damage, earthquake damage | Leave building immediately. Call 115. Assembly point. | Immediate |
 | `NATURAL_DISASTER` | earthquake, eruption, tsunami (Sicily context), storm damage | Italian Civil Protection (Protezione Civile): 1515. Evacuate if instructed. 112 for general emergency. | Immediate |
 
 ---
 
 ## 5. AI Emergency Response Rules
+
+> **Notation note:** The rule codes below use the legacy `E-XX` prefix. The same rules also appear as `EM-XX` in `whatsapp-concierge-guidelines.md §13`. Both prefixes are legacy and inconsistent — consolidation under a single prefix is required in a future editorial sprint. `TRIGGER-XX` codes in `escalation-rules.md` govern the `EscalationRecord` lifecycle and are a separate system; do not confuse them with these emergency response rules.
 
 ### Rule E-01: Always provide 112 first
 In any emergency response, 112 is the first thing provided. No exceptions. It works in Italian, English, and other languages.
@@ -173,7 +175,7 @@ Emergency responses are not prefaced with "I'm sorry to hear that" or similar. L
 After providing emergency information, the AI must always notify a Nauxica operator. This happens automatically via the EscalationRecord system (see [Escalation Rules](escalation-rules.md)).
 
 ### Rule E-06: Repeat contact information
-In emergencies, include the owner emergency contact number AND the Nauxica ops number. The guest may be panicking and need information repeated.
+In emergencies, include the owner emergency contact number AND the Nauxica Support contact number. The guest may be panicking and need information repeated.
 
 ### Rule E-07: Language — default to guest language, include Italian numbers
 Emergency numbers are Italian — include them in their standard format. Do not translate numbers. The AI may use the guest's detected language for all instructions.
@@ -189,7 +191,7 @@ Lockout is the most common "emergency" the AI will handle. It is time-sensitive 
 2. Provide access code / lockbox code if in delivery window
 3. If code was already provided: re-send it
 4. If lockbox malfunction is suspected: owner emergency contact
-5. If no resolution: Nauxica ops
+5. If no resolution: Nauxica Support
 
 **After 22:00 escalation:** Any unresolved lockout after 22:00 is automatically escalated to the operator duty line. A guest locked out overnight is an urgent operational failure.
 
@@ -353,7 +355,7 @@ If no answer: call Nauxica operations on [nauxica_ops_phone].
 ```
 I'm escalating this to our operations team right now — someone will call you within 15 minutes.
 
-In the meantime, property owner: [owner_emergency_name] — [owner_emergency_phone]
+In the meantime, homeowner: [owner_emergency_name] — [owner_emergency_phone]
 Nauxica operations: [nauxica_ops_phone]
 
 [Re-state entry instructions and code one more time]

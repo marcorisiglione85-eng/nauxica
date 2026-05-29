@@ -4,7 +4,7 @@
 **Status:** Draft — Architecture phase. Not legal-final.
 **Scope:** Sicily launch · All actor types (guest, homeowner, partner)
 **Last updated:** 2026-05-28
-**Related:** [escalation-rules.md](../ai-concierge/escalation-rules.md) · [partner-vetting.md](partner-vetting.md) · [partner-agreement.md](../legal/partner-agreement.md) · [regulatory-compliance-checklist.md](../legal/regulatory-compliance-checklist.md) · [data-models.md](../backend/data-models.md)
+**Related:** [escalation-rules.md](../ai-concierge/escalation-rules.md) · [partner-vetting.md](partner-vetting.md) · [partner-agreement.md](../legal/partner-agreement.md) · [regulatory-compliance-checklist.md](../legal/regulatory-compliance-checklist.md) · [data-models.md](../backend/data-models.md) · [legal-review-tracker.md](../legal/legal-review-tracker.md)
 
 ---
 
@@ -356,7 +356,7 @@ Every dispute generates a `DisputeRecord`. Required fields at creation:
 | `reported_by` | Yes | User ID or `guest_phone_hash` |
 | `reported_at` | Yes | Timestamp |
 | `property_id` | Yes | |
-| `booking_id` | Yes (if applicable) | |
+| `reservation_id` | Yes (if applicable) | |
 | `partner_request_id` | Conditional | Required for D-05 through D-08 |
 | `status` | Yes | Starts as `REPORTED` |
 | `description` | Yes | Submitting party's account |

@@ -218,7 +218,7 @@ If the KBB returns an error or times out:
 | Failure type | AI runtime action |
 |---|---|
 | KBB timeout (> 200ms) | Use cached block from previous session request (if within TTL) |
-| No cached block available | Issue degraded response: "I'm having trouble accessing your property information right now. For anything urgent, please call your host directly: [emergency_contact_phone]." |
+| No cached block available | Issue degraded response: "I'm having trouble accessing your property information right now. For anything urgent, please contact the homeowner directly: [emergency_contact_phone]." |
 | EmergencyData unavailable | Use hardcoded Italian emergency numbers. Never proceed without emergency data. |
 | Property not found / not active | Issue unknown-property fallback and escalate to operator |
 
@@ -358,7 +358,7 @@ The AI runtime can create the following records as part of a message handling cy
 - Urgent maintenance (gas, no water, broken lock) → create `ServiceRequest` with urgency `URGENT`, simultaneously create `EscalationRecord` with `MAINTENANCE_URGENT`
 - Non-urgent maintenance (appliance not working) → create `ServiceRequest` with urgency `HIGH`
 - Transfer/experience request → create `ServiceRequest` with urgency `NORMAL`
-- The AI tells the guest exactly what it submitted: "I've submitted a maintenance request for your hot water issue — your host's partner will aim to respond within 30 minutes."
+- The AI tells the guest exactly what it submitted: "I've submitted a maintenance request for your hot water issue — a partner will aim to respond within 30 minutes."
 
 **Action confirmation in response:**
 Every action the AI takes must be reflected in its message to the guest. The AI cannot silently create a `ServiceRequest` without telling the guest. The guest's `guest_status_message` on the ServiceRequest must be consistent with what the AI said.

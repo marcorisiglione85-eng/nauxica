@@ -164,7 +164,7 @@ The access code is in the job brief. Before you leave for the property:
 If the access code field shows `[not yet available]` or is blank:
 - Do not travel to the property — you will not be able to enter
 - Contact the homeowner using the emergency contact in the Partner Brief
-- If you cannot reach the homeowner, contact the Nauxica team at [contact method]
+- If you cannot reach the homeowner, contact the Nauxica team at [FOUNDER_DECISION_REQUIRED]
 
 This is a data issue. Do not attempt to access the property by other means.
 
@@ -256,7 +256,7 @@ Poor or missing completion photos are the most common cause of disputes. Take th
 - Greet guests with the passenger name as confirmed in the brief (not the homeowner's name)
 - Do not share homeowner contact details with guests
 - Do not discuss property details, rental terms, or pricing with guests
-- If a guest asks about something you cannot help with, direct them to the Nauxica concierge: "You can ask the Nauxica concierge on WhatsApp — they'll be able to help with that"
+- If a guest asks about something you cannot help with, direct them to the Nauxica Concierge: "You can ask the Nauxica Concierge on WhatsApp — they'll be able to help with that"
 
 ---
 
@@ -376,7 +376,7 @@ A well-documented job (photos, completion note, issue reports) is almost always 
 | The job takes longer than expected | Scope larger than described | Contact homeowner via in-platform message immediately; do not walk off mid-job without communication |
 | Guest is still at the property during a cleaning or maintenance job | Checkout delayed or homeowner did not confirm checkout | Contact homeowner immediately. Do not enter an occupied property without the homeowner's explicit instruction. |
 | You cannot safely complete the maintenance job (beyond your skills) | Issue is more complex than described | Do not attempt work you are not qualified for. Report via platform immediately with description. |
-| Guest asks you questions about the property | Transfer or experience partner; guest is curious | Answer only what is directly relevant to your service. For any platform or property questions: "The Nauxica concierge on WhatsApp will be able to help you with that." |
+| Guest asks you questions about the property | Transfer or experience partner; guest is curious | Answer only what is directly relevant to your service. For any platform or property questions: "The Nauxica Concierge on WhatsApp will be able to help you with that." |
 | You accidentally damage something | Accidents happen | Report immediately via the platform. Do not hide it. Immediate, honest reporting is always better than the homeowner discovering it later. |
 | You cannot find the key return location | Brief instructions unclear | Contact homeowner via emergency contact. Do not leave the property unsecured or retain the key. |
 

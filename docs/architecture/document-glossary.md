@@ -63,8 +63,8 @@ This glossary defines every major term, object, role, and acronym used across th
 
 ### AI Concierge
 
-**Canonical:** AI concierge (lowercase 'c')
-**Prohibited alternatives:** GuestPal, Nauxica concierge, WhatsApp concierge, AI assistant, concierge AI, the bot
+**Canonical:** Nauxica Concierge (in named references and self-identification); "AI concierge" (generic descriptor only, acceptable in technical/architectural prose)
+**Prohibited alternatives:** GuestPal, AI bot, AI assistant, concierge AI, the bot
 **Definition:** The automated WhatsApp guest assistant. Operates within a strict scope boundary defined by the data visibility model. Serves confirmed guests with property-specific information during their stay. Cannot be elevated by user prompt to access data outside its permitted scope.
 **Where used:** All AI concierge documents, operations, onboarding
 **Domain:** AI Concierge, Operations
@@ -347,26 +347,29 @@ Used in `EscalationRecord.trigger_type`. All 11 canonical triggers:
 **Source of truth:** `docs/ai-concierge/escalation-rules.md`
 **Note:** `TRIGGER-08` was formerly `BOOKING_MODIFICATION_REQUEST` — renamed in line with the Booking→Reservation rename.
 
+**Legacy notation:** Emergency response rules in `emergency-procedures.md §5` use the prefix `E-XX` (E-01 through E-07). The same rules also appear as `EM-XX` in `whatsapp-concierge-guidelines.md §13`. Both are legacy prefixes and are inconsistent with each other. Consolidation under a single prefix is required in a future editorial sprint. Note: `TRIGGER-XX` codes govern escalation triggers (the `EscalationRecord` lifecycle) — they are a separate system from the emergency response rules and must not be confused with them.
+
 ---
 
 ## Service Types
 
-Canonical enum values for partner service types. All `SCREAMING_SNAKE_CASE`. Values marked **MVP** are in scope at Sicily launch. Values marked **Post-MVP** are defined in the data model but not activated at launch.
+Canonical enum values for partner service types. All `SCREAMING_SNAKE_CASE`. The five values marked **MVP** are the only active `service_type` values at Sicily launch.
 
 | Code | Label | Vetting tier | MVP? |
 |---|---|---|---|
-| `CLEANING` | Cleaning | Tier 2 — High | MVP |
-| `MAINTENANCE` | Maintenance | Tier 2 — High | MVP |
-| `LAUNDRY` | Laundry | Tier 1 — Standard | MVP |
-| `TRANSFER` | Transfer | Tier 1 — Standard | MVP |
-| `EXPERIENCE` | Experience | Tier 1 — Standard | MVP |
-| `POOL_MAINTENANCE` | Pool Maintenance | Tier 2 — High | Post-MVP |
-| `GARDEN_MAINTENANCE` | Garden Maintenance | Tier 1 — Standard | Post-MVP |
-| `CONCIERGE_IN_PERSON` | In-Person Concierge | Tier 2 — High | Post-MVP |
-| `INSPECTION` | Inspection | Tier 2 — High | Post-MVP |
+| `CLEANING` | Cleaning | Tier 2 — High | ✓ MVP |
+| `MAINTENANCE` | Maintenance | Tier 2 — High | ✓ MVP |
+| `LAUNDRY` | Laundry | Tier 1 — Standard | ✓ MVP |
+| `TRANSFERS` | Transfers | Tier 1 — Standard | ✓ MVP |
+| `EXPERIENCES` | Experiences | Tier 1 — Standard | ✓ MVP |
+| `POOL_MAINTENANCE` | Pool Maintenance | Tier 2 — High | Post-MVP subtype |
+| `GARDEN_MAINTENANCE` | Garden Maintenance | Tier 1 — Standard | Post-MVP subtype |
+| `CONCIERGE_IN_PERSON` | In-Person Concierge | Tier 2 — High | Post-MVP subtype |
+| `INSPECTION` | Inspection | Tier 2 — High | Post-MVP subtype |
 
 **Source of truth:** `docs/architecture/partner-assignment-model.md`
-**Note on naming:** Always singular (`TRANSFER` not `TRANSFERS`). Partner-facing prose may use plural ("transfers partner", "experiences") — but enum values are singular.
+**Note on naming:** `CLEANING`, `MAINTENANCE`, and `LAUNDRY` are singular. `TRANSFERS` and `EXPERIENCES` are plural — this is the canonical form. Partner-facing prose may use any natural form.
+**Note on post-MVP subtypes:** `POOL_MAINTENANCE`, `GARDEN_MAINTENANCE`, `CONCIERGE_IN_PERSON`, and `INSPECTION` are not `service_type` values at MVP. At MVP, pool and garden maintenance jobs are classified as `MAINTENANCE`. These codes are reserved for post-MVP activation as service subtypes.
 
 ---
 
@@ -393,7 +396,7 @@ Canonical enum values for partner service types. All `SCREAMING_SNAKE_CASE`. Val
 
 **Canonical:** Trust Score (operational concept, not yet a formal metric)
 **Definition:** A composite measure of a partner's reliability and conduct on the platform. Inputs include: response rate, acceptance rate, completion rate, homeowner rating, and dispute history. Currently assessed manually by the operator. Formal automated calculation is a post-MVP feature.
-**Source of truth:** `docs/trust-safety/partner-vetting.md`
+**Source of truth:** `docs/trust-safety/scoring-model.md`
 
 ---
 
@@ -402,7 +405,7 @@ Canonical enum values for partner service types. All `SCREAMING_SNAKE_CASE`. Val
 **Canonical:** Reliability Score (operational concept, not yet a formal metric)
 **Definition:** A partner-specific measure focused on operational dependability: response rate, no-show rate, and completion-on-time rate. Distinct from Trust Score in that it measures operational reliability only, not overall conduct.
 **Note:** Neither Trust Score nor Reliability Score is formally calculated at MVP. Both are assessed manually. The distinction should be preserved for post-MVP implementation.
-**Source of truth:** `docs/trust-safety/partner-vetting.md`
+**Source of truth:** `docs/trust-safety/scoring-model.md`
 
 ---
 

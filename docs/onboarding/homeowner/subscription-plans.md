@@ -36,11 +36,11 @@ Three tiers. A homeowner selects one plan at registration. Plan tier applies to 
 
 | Feature | Starter | Professional | Premium |
 |---|---|---|---|
-| **Monthly price (indicative)** | €[X]/mo | €[XX]/mo | €[XXX]/mo |
-| **Annual price (indicative)** | €[X×10]/yr | €[XX×10]/yr | €[XXX×10]/yr |
+| **Monthly price (indicative)** | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
+| **Annual price (indicative)** | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
 | **Annual saving** | ~2 months free | ~2 months free | ~2 months free |
 | **Properties included** | 1 | Up to 3 | Up to 10 |
-| **Additional properties** | Not available | €[X]/mo each | €[X]/mo each |
+| **Additional properties** | Not available | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
 | **AI concierge (WhatsApp)** | ✓ 1 property | ✓ All properties | ✓ All properties |
 | **Proactive guest messages** | Check-in + checkout only | Full schedule (MSG-01 to MSG-05) | Full schedule + custom messages |
 | **Partner marketplace access** | ✓ Post ad-hoc requests | ✓ Full marketplace | ✓ Full marketplace + preferred partners |
@@ -122,10 +122,10 @@ Available on top of any plan. Pricing indicative.
 
 | Add-on | Price | Description |
 |---|---|---|
-| Additional property | €[X]/mo each | Add a property beyond the plan limit |
-| Assisted property onboarding | One-time €[X] per property | Nauxica team completes property knowledge base and review |
-| Annual knowledge base refresh | One-time €[X] per property | Nauxica team re-verifies and updates all property AI content |
-| Partner coordination (commission-based) | [X]% of job value | Nauxica actively matches homeowner with a partner for a specific job — commission on that job only |
+| Additional property | [FOUNDER_DECISION_REQUIRED] | Add a property beyond the plan limit |
+| Assisted property onboarding | [FOUNDER_DECISION_REQUIRED] | Nauxica team completes property knowledge base and review |
+| Annual knowledge base refresh | [FOUNDER_DECISION_REQUIRED] | Nauxica team re-verifies and updates all property AI content |
+| Partner coordination (commission-based) | [FOUNDER_DECISION_REQUIRED] | Nauxica actively matches homeowner with a partner for a specific job — commission on that job only |
 
 ---
 
@@ -137,8 +137,8 @@ Two tiers for service partners. Partner plans control visibility on the marketpl
 
 | Feature | Basic | Professional |
 |---|---|---|
-| **Monthly price (indicative)** | €[X]/mo | €[XX]/mo |
-| **Annual price (indicative)** | €[X×10]/yr | €[XX×10]/yr |
+| **Monthly price (indicative)** | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
+| **Annual price (indicative)** | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
 | **Marketplace listing** | ✓ Listed | ✓ Featured listing |
 | **Inbound job requests** | ✓ Unlimited | ✓ Unlimited + priority routing |
 | **Preferred partner assignments (from homeowners)** | ✓ Can be assigned | ✓ Can be assigned |
@@ -146,7 +146,7 @@ Two tiers for service partners. Partner plans control visibility on the marketpl
 | **Earnings dashboard** | ✓ Basic | ✓ Full with history |
 | **Reviews management** | ✓ View | ✓ View + respond |
 | **Performance insights** | — | ✓ Job acceptance rate, rating trends |
-| **Commission on Nauxica-coordinated jobs** | [X]% | [X - discount]% |
+| **Commission on Nauxica-coordinated jobs** | [FOUNDER_DECISION_REQUIRED] | [FOUNDER_DECISION_REQUIRED] |
 | **Support SLA** | Email — 48h | Email — 24h |
 
 ---
@@ -188,10 +188,10 @@ The commission model applies only when Nauxica actively coordinates a match betw
 
 | Element | Description |
 |---|---|
-| Commission rate (Basic partner) | [X]% of agreed job value |
-| Commission rate (Professional partner) | [X - discount]% of agreed job value |
+| Commission rate (Basic partner) | [FOUNDER_DECISION_REQUIRED] |
+| Commission rate (Professional partner) | [FOUNDER_DECISION_REQUIRED] |
 | Collection method | At MVP (direct billing model): homeowner pays partner; partner invoices Nauxica commission separately. ⚠️ This requires clear invoicing terms in the Partner Agreement. |
-| Minimum commission | €[X] per coordinated job (if percentage is below this) |
+| Minimum commission | [FOUNDER_DECISION_REQUIRED] |
 | Commission disputes | Filed as D-08 variant — Nauxica reviews |
 
 ⚠️ **Legal review required:** The commission collection mechanism requires a clear contractual basis in the Partner Agreement. Confirm whether this constitutes agency, intermediation, or another legal relationship under Italian commercial law. Confirm VAT treatment of commissions.
@@ -280,7 +280,7 @@ These assumptions govern what the platform can support at each phase of growth. 
 - Existing subscribers may cancel without penalty if they do not accept the new price
 - New plans do not change existing subscribers' prices without notice
 
-**Grandfathering:** At MVP, early subscribers (first [N] — founder decision) may be offered a founding-member price that is locked for [period — founder decision]. This is a commercial decision and must be documented in the subscription agreement.
+**Grandfathering:** At MVP, early subscribers (first [FOUNDER_DECISION_REQUIRED] homeowners) may be offered a founding-member price that is locked for [FOUNDER_DECISION_REQUIRED]. This is a commercial decision and must be documented in the subscription agreement.
 
 ⚠️ **Legal review required:** Price change notification requirements under Italian consumer law (Codice del Consumo) and EU distance selling regulations apply. Confirm minimum notice period and format.
 
@@ -293,3 +293,4 @@ These assumptions govern what the platform can support at each phase of growth. 
 - [terms-of-service.md](../../legal/terms-of-service.md) — Contractual basis for subscriptions
 - [regulatory-compliance-checklist.md](../../legal/regulatory-compliance-checklist.md) — Legal framework for subscriptions and commissions
 - [data-models.md](../../backend/data-models.md) — `nauxica_plan_tier` field on User and Property models
+- [legal-review-tracker.md](../../legal/legal-review-tracker.md) — Legal review status for all platform obligations

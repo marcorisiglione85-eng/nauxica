@@ -47,6 +47,8 @@ Operators are the human layer between the automated platform and the homeowners,
 - Founder transitions from frontline response to supervision and exception handling
 - Staff operators work from this runbook; founder maintains escalation-of-last-resort role
 
+**Terminology note (MVP):** At MVP, "operator," "Nauxica ops," and "Nauxica support" all refer to the same person — the founder. In guest-facing AI scripts and platform communications, the canonical external term is "Nauxica Support." Internally, the role is "Operator" (capital O). "Operations Team" is the correct plural form for future reference when staff are hired. All three informal variants are acceptable within this runbook.
+
 ### 1.3 Accountability boundaries
 
 Operators are accountable for:

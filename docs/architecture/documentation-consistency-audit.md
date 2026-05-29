@@ -22,7 +22,7 @@ Covers all 57 markdown files across 19 directories under `docs/`. Audit goals: i
 | Severity | Count | Immediate action required |
 |---|---|---|
 | CRITICAL | 2 | Yes — implementation-blocking |
-| HIGH | 4 | Yes — will cause confusion or bugs at build time |
+| HIGH | 3 | Yes — will cause confusion or bugs at build time |
 | MEDIUM | 9 | Before first backend sprint |
 | LOW | 7 | Before public documentation release |
 
@@ -72,6 +72,7 @@ A backend engineer implementing from `data-models.md` (System B) and an AI engin
 ### C-02 — Service Type Count Mismatch
 
 **Severity:** CRITICAL
+**Status:** `RESOLVED` — Founder architecture decision applied (2026-05-28). Five canonical MVP service types confirmed: `CLEANING`, `MAINTENANCE`, `LAUNDRY`, `TRANSFERS`, `EXPERIENCES`. `TRANSFERS` and `EXPERIENCES` are the canonical plural forms. `POOL_MAINTENANCE`, `GARDEN_MAINTENANCE`, `CONCIERGE_IN_PERSON`, and `INSPECTION` reclassified as post-MVP service subtypes; at MVP, pool/garden/inspection jobs are classified as `MAINTENANCE`. Changes applied to: `partner-assignment-model.md` (§2 taxonomy split into MVP types and post-MVP subtypes; response window and partner brief tables updated), `document-glossary.md` (service types table updated; Note on naming corrected), `partner-onboarding.md` (§2.1 table, §8.2 response windows, §9.1 payment note updated), `service-request-flow.md` (§1.2 homeowner examples, §2.1 urgency examples, §7.1 proof-of-completion table, §11 service_type field updated).
 **Type:** Architectural — naming
 **Affects:** `docs/onboarding/partner/partner-onboarding.md`, `docs/onboarding/homeowner/subscription-plans.md`, `docs/architecture/partner-assignment-model.md`, `docs/trust-safety/partner-vetting.md`, `docs/operations/service-request-flow.md`
 
@@ -109,6 +110,7 @@ Additionally: singular vs plural inconsistency — onboarding uses "Transfers" a
 ### H-01 — Access Code Delivery Logic Conflict
 
 **Severity:** HIGH
+**Status:** `RESOLVED` — Decision E applied (2026-05-28). Authoritative sources: `property-knowledge-schema.md` (Step 5) and `knowledge-retrieval-model.md` (§5 + §11) together define the canonical KBB gate model. Structural enforcement supersedes conversational intent. Approved canonical rules: (1) Default delivery at `check_in_from` time on `checkin_date` (when session transitions to `check_in`). (2) Early delivery from midnight on `checkin_date` when `Property.early_access_code_delivery = true` (default `false`). (3) "Guest near property" is NOT a structural delivery trigger — handled via escalation to homeowner only; the AI cannot bypass the KBB sentinel gate. (4) Post-checkout expiry at `checkout_date + 4 hours`. `property-knowledge-schema.md`, `knowledge-retrieval-model.md`, and `whatsapp-concierge-guidelines.md` were already consistent with the gate model — no changes required to those files. Changes applied to `whatsapp-session-anchor.md §8` only: delivery table row corrected (near-property condition removed; early delivery window clarified as midnight on `checkin_date`); security principle rewritten (24h-relative rule replaced with absolute midnight-on-checkin-day rule; early arrival escalation path documented per `whatsapp-concierge-guidelines.md §11.4`).
 **Type:** Operational — conflicting rule
 **Affects:** `docs/ai-concierge/property-knowledge-schema.md`, `docs/ai-concierge/whatsapp-concierge-guidelines.md`, `docs/ai-concierge/whatsapp-session-anchor.md`
 
@@ -230,6 +232,7 @@ Reserve `Operator` (capital O) exclusively for Nauxica staff with elevated syste
 ### M-01 — AI Concierge Name Used Inconsistently
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Decision F applied (2026-05-29). Canonical name: Nauxica Concierge. Changes: `document-glossary.md` (canonical updated from "AI concierge" to "Nauxica Concierge"; "Nauxica concierge" removed from prohibited list — it is now the canonical form); `ai-tone-guidelines.md` (disclosure script: "AI assistant" → "Nauxica Concierge"); `whatsapp-concierge-guidelines.md` §9 Rules T-01 and T-02 (self-identification strings capitalised); `first-job-walkthrough.md` (two partner-facing references updated). Generic descriptor "AI concierge" remains acceptable in technical/architectural prose.
 **Type:** Naming — brand and operational
 **Affects:** Multiple documents across `ai-concierge/`, `onboarding/`, `operations/`
 
@@ -258,6 +261,7 @@ Update `ai-tone-guidelines.md` to replace "AI assistant" with "AI concierge" in 
 ### M-02 — "Homeowner" vs "Property Owner" vs "Host"
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Decision F applied (2026-05-29). Canonical platform role: Homeowner. Changes: `ai-tone-guidelines.md` disclosure script ("property owner" → "homeowner"); `whatsapp-concierge-guidelines.md` §9 Rule T-02 ("owner" → "homeowner") and §14 Media Handling ("property owner" → "homeowner"); `emergency-procedures.md` lockout template ("property owner" → "homeowner"); `ai-runtime-orchestration.md` two AI response templates ("host" removed — one replaced with "homeowner", one simplified to "a partner"). Retained: "Pretending to be the property owner" in whatsapp-concierge-guidelines.md §15 prohibited-behaviours table (acceptable descriptive prose).
 **Type:** Naming — consistency
 **Affects:** `docs/ai-concierge/ai-tone-guidelines.md`, `docs/ai-concierge/emergency-procedures.md`, `docs/ai-concierge/whatsapp-concierge-guidelines.md`
 
@@ -275,6 +279,7 @@ Three terms are used for the same actor:
 ### M-03 — Escalation Trigger Naming Inconsistency
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Decision F applied (2026-05-29). E-XX and EM-XX marked as legacy prefixes; no canonical replacement prefix defined yet. Legacy notation notes added to: `emergency-procedures.md §5` (before Rule E-01), `whatsapp-concierge-guidelines.md §13` (before Rule EM-01), `document-glossary.md` Escalation Triggers section (after TRIGGER-08 note), `cross-reference-map.md` Group 2 (inline annotations on both references). Consolidation under a single prefix is required in a future editorial sprint.
 **Type:** Naming — operational
 **Affects:** `docs/ai-concierge/escalation-rules.md`, `docs/ai-concierge/emergency-procedures.md`, `docs/ai-concierge/whatsapp-concierge-guidelines.md`
 
@@ -291,6 +296,7 @@ These three naming systems exist in the same operational domain and are frequent
 ### M-04 — Unresolved Legal Review Flags
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — 2026-05-29. `docs/legal/legal-review-tracker.md` created. All 35 legal review items across six source documents consolidated into a single tracker with: item IDs (LR-01 through LR-35), risk level (CRITICAL/HIGH/MEDIUM/LOW), MVP/Pilot/Scale gate classification, owner, status, and next action. Legal Readiness Dashboard with gate summaries and recommended sequencing included. Cross-reference map to launch-readiness.md L-01 through L-17 gates included. No source documents were modified — the tracker is an aggregation document only.
 **Type:** Legal — compliance
 **Affects:** `docs/backend/data-models.md`, `docs/legal/regulatory-compliance-checklist.md`, `docs/ai-concierge/whatsapp-concierge-guidelines.md`, `docs/ai-concierge/knowledge-retrieval-model.md`, multiple others
 
@@ -318,6 +324,7 @@ These three naming systems exist in the same operational domain and are frequent
 ### M-05 — Unresolved Placeholder Values
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Decision F applied (2026-05-29). All undecided placeholder values replaced with `[FOUNDER_DECISION_REQUIRED]`. Changes: `subscription-plans.md` (all price, commission, and founding-member count placeholders — 11 replacements); `homeowner-onboarding.md` (`[platform URL]`); `partner-onboarding.md` (`[platform URL]`, `[contact method]`); `first-job-walkthrough.md` (`[contact method]`). Dynamic template variables (e.g. `[municipality]`, `[emergency_contact_phone]`) retained as-is — those are runtime data fields, not undecided values.
 **Type:** Editorial — operational completeness
 **Affects:** `docs/onboarding/homeowner/subscription-plans.md`, `docs/onboarding/partner/partner-onboarding.md`, `docs/onboarding/partner/first-job-walkthrough.md`
 
@@ -342,6 +349,7 @@ Multiple documents contain placeholder values not yet resolved:
 ### M-06 — Missing Agent-Ops Template Files
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — 2026-05-29. M-06 Resolution Sprint completed. All six files cited as missing now exist and are complete. Full audit documented in `docs/agent-ops/agent-ops-audit.md`. All 10 governance files in `docs/agent-ops/` verified: each has a complete metadata header, full content, no unresolved placeholders, and all internal cross-references resolve. Stale "Missing" entries in `cross-reference-map.md` corrected. No governance files were modified — audit and remediation only.
 **Type:** Operational — missing files
 **Affects:** `docs/agent-ops/agent-task-protocol.md`, `docs/agent-ops/claude-code-master-rules.md`
 
@@ -361,6 +369,7 @@ Four files referenced in agent-ops documents do not exist:
 ### M-07 — Partner-Assignment-Model: Recurring Schedule Creates Wrong Object
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Applied as part of H-03 sprint (2026-05-28). The `auto_create_request` field comment in `partner-assignment-model.md §3` already references `ServiceRequest` (corrected during H-03 execution). No further action required.
 **Type:** Operational — implementation error risk
 **Affects:** `docs/architecture/partner-assignment-model.md`
 
@@ -379,6 +388,7 @@ Per `service-request-flow.md`, `PartnerRequest` is the supply-side dispatch reco
 ### M-08 — "AI" Visibility Scope in data-models.md
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Applied as part of C-01 sprint (2026-05-28). The `AI` scope row was removed from the `data-models.md` Visibility Key; a note was added clarifying that AI access is governed by the `PropertyKnowledgeBlock` construction pipeline (a retrieval flag, not a visibility scope). No further action required.
 **Type:** Naming — schema inconsistency
 **Affects:** `docs/backend/data-models.md`
 
@@ -395,6 +405,7 @@ Per `service-request-flow.md`, `PartnerRequest` is the supply-side dispatch reco
 ### M-09 — Undefined Acronyms
 
 **Severity:** MEDIUM
+**Status:** `RESOLVED` — Pre-existing (2026-05-29). All 8 acronyms listed in this finding (MVP, CET, CEST, p95, p99, DLQ, OTP, ADR, FIFO, TTL) are already defined in `document-glossary.md` Acronym Index. No changes required.
 **Type:** Editorial — readability
 **Affects:** Multiple documents
 
@@ -441,6 +452,8 @@ The following acronyms are used in technical documents without being defined at 
 
 **Recommended correction:** Update `TRIGGER-08` in `escalation-rules.md` to `RESERVATION_MODIFICATION_REQUEST`. Update informal prose references to use "reservation" consistently. "Booking" is acceptable in guest-facing UX copy (guests say "my booking") but should not appear in technical model references.
 
+**RESOLVED — 2026-05-29.** All model-layer renames complete across three sprints: `data-models.md` Review model `booking_id` → `reservation_id` (Data Models Cleanup Sprint); `dispute-resolution.md` DisputeRecord `booking_id` → `reservation_id` (L-02 Final Cleanup Sprint); `module-functionality-map.md` trigger list `BOOKING_MODIFICATION` → `RESERVATION_MODIFICATION` (L-02 Final Cleanup Sprint). TRIGGER-08 in `escalation-rules.md` retains `BOOKING_MODIFICATION_REQUEST` as intentional legacy terminology — founder decision, 2026-05-29; this is the only remaining Booking-form identifier and its retention is deliberate. "Booking" in guest-facing prose and the `booking_source` field on Reservation are acceptable per the original finding's own exception.
+
 ---
 
 ### L-03 — "Trust Score" and "Reliability Score" Referenced but Not Defined
@@ -452,6 +465,8 @@ The following acronyms are used in technical documents without being defined at 
 **Finding:** `partner-vetting.md` references a "trust score" and "reliability score" as part of ongoing partner monitoring, but neither is defined as a calculated metric anywhere in the documentation.
 
 **Recommended correction:** Either define these scores in `partner-vetting.md` (formula, inputs, scale) or note explicitly that they are post-MVP features and remove references from MVP-scope documents.
+
+**RESOLVED — 2026-05-29.** `docs/trust-safety/scoring-model.md` created. Trust Score and Reliability Score defined as manual MVP assessments (range 0–100; no automated calculation; no automated suspension without operator review). Source of truth in `document-glossary.md` updated to `scoring-model.md` for both entries.
 
 ---
 
@@ -465,6 +480,8 @@ The following acronyms are used in technical documents without being defined at 
 
 **Recommended correction:** Lowercase: "AI concierge" (not capitalised — it is a feature description, not a product name). Use this consistently.
 
+**RESOLVED — 2026-05-29.** Investigation confirmed the inverted form "Concierge AI" is absent from all content files. All instances of "AI Concierge" capitalised appear in section headings or table headers (conventional markdown title-case formatting). Running prose uses "AI concierge" (lowercase). Canonical rule: "AI concierge" in prose; title-case in headings is acceptable. No file changes required.
+
 ---
 
 ### L-05 — Missing help-center Directory (Now Created)
@@ -472,6 +489,8 @@ The following acronyms are used in technical documents without being defined at 
 **Severity:** LOW
 **Type:** Structural — directory completeness
 **Finding:** The `docs/help-center/` directory did not exist before this audit. `common-issue-playbooks.md` has been created as part of this audit. No other action needed.
+
+**RESOLVED (noted at audit time).** `docs/help-center/common-issue-playbooks.md` created during this audit. Confirmed present and non-empty. No further action required.
 
 ---
 
@@ -484,6 +503,8 @@ The following acronyms are used in technical documents without being defined at 
 **Finding:** The Nauxica operational function is referred to variously as "the Nauxica team," "Nauxica ops," "Nauxica support," and "the founder." At MVP these are all the same person. Post-MVP they will diverge.
 
 **Recommended correction:** Use "Nauxica operator" (or "the operator" in context) for the human escalation and support function. "Nauxica team" is acceptable for general platform references. Add a note in `operator-runbook.md` §1.2 that all three terms converge to the founder at MVP.
+
+**RESOLVED — 2026-05-29.** "Nauxica ops" replaced with "Nauxica Support" in all guest-facing AI script sections of `escalation-rules.md` (10 instances) and `emergency-procedures.md` (4 instances). "Nauxica support" (lowercase s) corrected to "Nauxica Support" in `escalation-rules.md` (2 instances). Terminology disambiguation paragraph added to `operator-runbook.md` §1.2. "Nauxica team" retained in homeowner/partner prose as acceptable informal usage at MVP. Technical field names `nauxica_ops_phone` and `nauxica_ops_whatsapp` unchanged.
 
 ---
 
@@ -500,20 +521,18 @@ The following acronyms are used in technical documents without being defined at 
 
 These are noted as "legal review required" and expected to be incomplete at architecture phase. No immediate action — but flag that activation of the platform requires these to be legally reviewed and completed before any homeowner or partner accepts them.
 
+**RESOLVED (partially) — 2026-05-29.** `legal-review-tracker.md` added to Related sections of `subscription-plans.md`, `partner-onboarding.md`, `partner-vetting.md`, and `dispute-resolution.md`. Legal stub documents (ToS, Partner Agreement, Privacy Policy) remain as stubs — their completion is tracked in `legal-review-tracker.md` under the relevant LR items. Full legal review required before platform activation.
+
 ---
 
 ## Referenced-but-Missing Files (Complete List)
 
 | File | Referenced by | Status |
 |---|---|---|
-| `docs/agent-ops/phase-control-log.md` | `agent-task-protocol.md`, `claude-code-master-rules.md` | Missing |
-| `docs/agent-ops/pre-approval-template.md` | `agent-task-protocol.md`, `claude-code-master-rules.md` | Missing |
-| `docs/agent-ops/testing-checklist.md` | `agent-task-protocol.md`, `claude-code-master-rules.md` | Missing |
-| `docs/agent-ops/handoff-report-template.md` | `agent-task-protocol.md`, `claude-code-master-rules.md` | Missing |
-| `docs/agent-ops/docs-agent-scope.md` | `agent-task-protocol.md` | Missing |
-| `docs/agent-ops/backend-agent-scope.md` | `agent-task-protocol.md` | Missing |
 | `docs/architecture/partner-profile-guide.md` | Referenced implicitly by partner-vetting | Missing |
-| `docs/legal/legal-review-tracker.md` | Recommended by this audit | Not yet created |
+| `docs/legal/legal-review-tracker.md` | Recommended by this audit | Created — 35 items, LR-01 through LR-35 |
+
+*Note: Six agent-ops files previously listed as Missing (`phase-control-log.md`, `pre-approval-template.md`, `testing-checklist.md`, `handoff-report-template.md`, `docs-agent-scope.md`, `backend-agent-scope.md`) have been created and are complete. Confirmed by `docs/agent-ops/agent-ops-audit.md` (M-06 Resolution Sprint, 2026-05-29).*
 
 ---
 
