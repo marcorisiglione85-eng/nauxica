@@ -242,6 +242,43 @@ a {
   color:var(--terracotta);
 }
 
+.lang-switch {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:var(--stone);
+  font-size:.78rem;
+}
+
+.lang-switch > span {
+  opacity:.3;
+  user-select:none;
+}
+
+.lang-btn {
+  background:none;
+  border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  color:var(--stone);
+  padding:2px 1px;
+  line-height:1;
+  transition:color .15s, border-color .15s;
+}
+
+.lang-btn:hover {
+  color:var(--terracotta);
+}
+
+.lang-btn.active {
+  color:var(--terracotta);
+  border-bottom-color:var(--terracotta);
+}
+
 .btn,.btn-light,.btn-ghost {
   display:inline-flex;
   align-items:center;
@@ -2020,6 +2057,16 @@ footer small {
 
   .nx-links li {
     width: 100%;
+  }
+
+  .lang-switch {
+    justify-content: center;
+    padding: 8px 0 4px;
+  }
+
+  .lang-btn {
+    min-height: 36px;
+    padding: 4px 10px;
   }
 
   .nx-links a {
