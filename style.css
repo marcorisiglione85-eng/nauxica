@@ -624,7 +624,7 @@ h3 {
 }
 
 .price li:before {
-  content:"â€¢";
+  content:"•";
   color:var(--terracotta);
   margin-right:10px;
   font-weight:900;
