@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Nauxica | Ospitalità, connessa.",
-    "description": "Nauxica, Ospitalità connessa. Gestione premium dell'ospitalità per proprietari, ospiti, operazioni e partner locali."
+    "title": "Nauxica | Hospitality, Connected.",
+    "description": "Nauxica, Hospitality, Connected. Gestione premium dell'ospitalità per proprietari, ospiti, operazioni e partner locali."
   },
   "nav": {
     "home": "Home",
@@ -11,8 +11,8 @@
     "openMenu": "Apri menu"
   },
   "hero": {
-    "eyebrow": "Ospitalità, connessa.",
-    "h1": "Ospitalità, connessa.",
+    "eyebrow": "Hospitality, Connected.",
+    "h1": "Hospitality, Connected.",
     "lead": "Un'unica piattaforma intelligente che connette ospiti, proprietari, operazioni e partner locali.",
     "demoBtn": "Richiedi una demo",
     "exploreBtn": "Esplora la piattaforma",
@@ -49,7 +49,7 @@
   },
   "how": {
     "eyebrow": "Come funziona",
-    "h2": "Dal setup della proprietà alle operazioni connesse.",
+    "h2": "Dal setup della proprietà alle operazioni interconnesse.",
     "intro": "Nauxica trasforma le attività di ospitalità disperse in un unico flusso operativo chiaro, dall'arrivo degli ospiti al coordinamento dei partner e al reporting per i proprietari.",
     "step1Title": "Connetti la tua proprietà",
     "step1Desc": "Aggiungi dettagli della proprietà, regole della casa, istruzioni per il check-in e servizi preferiti.",
@@ -150,6 +150,6 @@
     "btn": "Richiedi una demo"
   },
   "footer": {
-    "tagline": "Ospitalità, connessa."
+    "tagline": "Hospitality, Connected."
   }
 }
