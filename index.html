@@ -46,6 +46,8 @@
     <button class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
     <span aria-hidden="true">|</span>
     <button class="lang-btn" data-lang="it" aria-pressed="false">IT</button>
+    <span aria-hidden="true">|</span>
+    <button class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
   </li>
   <li><a class="btn" href="contacts.html" data-i18n="nav.contact">Contact</a></li>
 </ul>
@@ -688,19 +690,22 @@
     });
   }
 
+  var _nav = navigator.language || "";
   var savedLang = localStorage.getItem("nauxica-lang") ||
-    (navigator.language && navigator.language.startsWith("it") ? "it" : "en");
+    (_nav.startsWith("it") ? "it" : _nav.startsWith("es") ? "es" : "en");
 
   Promise.all([
     fetch("./locales/en.json").then(function (r) { return r.json(); }),
-    fetch("./locales/it.json").then(function (r) { return r.json(); })
+    fetch("./locales/it.json").then(function (r) { return r.json(); }),
+    fetch("./locales/es.json").then(function (r) { return r.json(); })
   ]).then(function (results) {
     return i18next.init({
       lng: savedLang,
       fallbackLng: "en",
       resources: {
         en: { translation: results[0] },
-        it: { translation: results[1] }
+        it: { translation: results[1] },
+        es: { translation: results[2] }
       }
     });
   }).then(function () {
