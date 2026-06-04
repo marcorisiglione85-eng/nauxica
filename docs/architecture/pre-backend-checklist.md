@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — implementation readiness gate
-**Last updated:** 2026-05-28
+**Last updated:** 2026-06-02
 **Related:** [launch-readiness.md](launch-readiness.md) · [implementation-roadmap.md](implementation-roadmap.md) · [documentation-consistency-audit.md](documentation-consistency-audit.md) · [security-model.md](security-model.md) · [pre-approval-template.md](../agent-ops/pre-approval-template.md)
 
 ---
@@ -30,123 +30,94 @@ This document is intended to be checked once, before Sprint 0 of the implementat
 
 ---
 
-## SECTION 1 — CRITICAL ARCHITECTURE DECISIONS
+## SECTION 1 — CRITICAL ARCHITECTURE DECISIONS — RESOLVED
 
-**These two items must be resolved before any schema migration is written.**
+**Both items were resolved on 2026-05-28 before any schema migration was written.**
 
-Both are CRITICAL findings from [documentation-consistency-audit.md](documentation-consistency-audit.md). Every data model in the system depends on these decisions. Building before they are resolved means rebuilding after they are.
+Both are CRITICAL findings from [documentation-consistency-audit.md](documentation-consistency-audit.md). Both decisions have been made and all conflicting documents updated.
 
 ---
 
-### `[DECISION]` ⛔ C-01 — Visibility Scope Taxonomy Designated
+### `[x]` ✅ C-01 — Visibility Scope Taxonomy Designated
 
-**Status:** BLOCKER / ARCHITECT DECISION REQUIRED
+**Status:** RESOLVED — Decision A applied (2026-05-28). PUB/GST/PTR/INT designated as canonical shortcodes. OPERATOR removed as a visibility scope and reclassified as an RBAC role. Changes applied to `data-visibility-model.md`, `data-models.md`, and `document-glossary.md`.
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-01
 
-**What must happen:**
+**Resolution:** `data-visibility-model.md` is the single authoritative source. All conflicting documents updated to use the PUB/GST/PTR/INT canonical shortcodes.
 
-1. The founder/architect designates one visibility scope taxonomy as canonical:
-   - Option A: `data-visibility-model.md` system — GUEST / PARTNER / OPERATOR / INTERNAL (add PUBLIC for pre-auth fields)
-   - Option B: `data-models.md` shortcode system — PUB / GST / PTR / INT (reconcile OPERATOR vs INT distinction)
-
-2. All documents that use the other system are updated to use the canonical system.
-
-3. A note is added to `data-visibility-model.md` confirming the decision and date.
-
-**Documents requiring update depending on decision:**
-- `data-models.md` — uses System B shortcodes throughout
-- `property-data-schema.md` — uses System B shortcodes
-- `property-knowledge-schema.md` — uses System B shortcodes
-
-**Why this cannot be deferred:** Every field in every schema carries a visibility scope. The KBB scope filter is built against one system. The access control middleware is built against one system. Building both systems and reconciling later is not a viable approach.
-
-**Gate:** `[ ]` Decision documented. All conflicting documents updated. data-visibility-model.md is the single authoritative source.
+**Gate:** `[x]` Decision documented. All conflicting documents updated. `data-visibility-model.md` is the single authoritative source.
 
 ---
 
-### `[DECISION]` ⛔ C-02 — Service Type List Confirmed
+### `[x]` ✅ C-02 — Service Type List Confirmed
 
-**Status:** BLOCKER / ARCHITECT DECISION REQUIRED
+**Status:** RESOLVED — Founder decision applied (2026-05-28). Five canonical MVP service types confirmed.
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-02
 
-**What must happen:**
+**Resolution:** Five canonical MVP service types active at Sicily launch:
+- `cleaning`
+- `maintenance`
+- `laundry`
+- `transfers`
+- `experiences`
 
-1. The founder confirms which service types are active at Sicily launch:
-   - Option A: 5 types only (CLEANING, MAINTENANCE, LAUNDRY, TRANSFER, EXPERIENCE) — update `partner-assignment-model.md` to mark 4 types as Post-MVP
-   - Option B: All 9 types active at launch — update all onboarding and commercial documents to reflect the full list
-   - Option C: Some hybrid (e.g. 7 types) — document the exact list
+Post-MVP subtypes (`pool_maintenance`, `garden_maintenance`, `concierge_in_person`, `inspection`) are not active at Sicily launch. Pool and garden maintenance jobs are classified as `maintenance` at MVP. Changes applied to `partner-assignment-model.md`, `service-request-flow.md`, `partner-onboarding.md`, and `document-glossary.md`.
 
-2. Canonical enum values confirmed as singular SCREAMING_SNAKE_CASE: `CLEANING`, `MAINTENANCE`, `LAUNDRY`, `TRANSFER`, `EXPERIENCE` (not plural).
-
-3. The confirmed list is added as an appendix to `partner-assignment-model.md` as the single source of truth, with all other documents referencing it.
-
-**Documents requiring update:**
-- If Option A: `partner-assignment-model.md` — mark POOL_MAINTENANCE, GARDEN_MAINTENANCE, CONCIERGE_IN_PERSON, INSPECTION as Post-MVP
-- If Option B: `partner-onboarding.md`, `subscription-plans.md`, `partner-vetting.md`, `data-models.md` — add 4 new service types
-- All options: `data-models.md` Model 1 `partner_service_types` enum — update to match canonical list
-- All options: Standardise singular enum codes in all documents
-
-**Why this cannot be deferred:** The `PartnerAssignment` schema, partner registration form, vetting tiers, and dispatch logic all reference the service type enum. Building with one list and reconciling later requires schema migrations and data corrections.
-
-**Gate:** `[ ]` Decision documented. Canonical list defined in partner-assignment-model.md. All documents updated.
+**Gate:** `[x]` Decision documented. Canonical list defined in `partner-assignment-model.md`. All documents updated.
 
 ---
 
-## SECTION 2 — HIGH-PRIORITY NAMING CONFLICTS
+## SECTION 2 — HIGH-PRIORITY NAMING CONFLICTS — RESOLVED
 
-These are HIGH findings from [documentation-consistency-audit.md](documentation-consistency-audit.md). They are not launch blockers like C-01/C-02, but must be resolved before the affected components are implemented.
+These HIGH findings from [documentation-consistency-audit.md](documentation-consistency-audit.md) were resolved on 2026-05-28. They are recorded here for traceability. All four gates are confirmed closed.
 
 ### H-01 — Access Code Delivery Timing
 
-**Status:** `[ ]` Resolve before implementing KBB Step 5 (Access Gate)
-**Reference:** documentation-consistency-audit.md — Finding H-01
+**Status:** `[x]` RESOLVED — Decision E applied (2026-05-28). See [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding H-01.
 
-Three documents give conflicting rules for when access codes may be delivered to guests. The implementation must follow a single rule. Designate `whatsapp-session-anchor.md §8` as authoritative: access codes delivered when `session_phase = check_in_day AND current_time >= check_in_from`. Update the other two documents to reference this rule rather than re-stating it.
+Access code delivery gate: `session_phase = check_in AND current_time >= check_in_from`. Early delivery from midnight on `checkin_date` when `Property.early_access_code_delivery = true`. "Guest near property" is not a structural delivery trigger. `whatsapp-session-anchor.md §8` is the authoritative source.
 
-**Gate:** `[ ]` Single rule designated. `property-knowledge-schema.md` and `whatsapp-concierge-guidelines.md` updated to defer to `whatsapp-session-anchor.md §8`.
+**Gate:** `[x]` Single rule designated. Changes applied to `whatsapp-session-anchor.md §8` only.
 
 ---
 
 ### H-02 — Session Phase Naming Standardised
 
-**Status:** `[ ]` Resolve before implementing WhatsApp Session module
-**Reference:** documentation-consistency-audit.md — Finding H-02
+**Status:** `[x]` RESOLVED — Decision B applied (2026-05-28). See [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding H-02.
 
-Session phase values are expressed in three different formats across documents. Canonical values must be snake_case enum strings:
+Canonical session phase values (snake_case enum strings):
 
 ```
 pre_arrival
-check_in_day
+check_in
 in_stay
-checkout_day
-post_checkout
+check_out
+post_stay
 ```
 
-Update `whatsapp-session-anchor.md §3` (uses hyphenated lowercase), `knowledge-retrieval-model.md` (mixed formats), and any other document using the non-canonical format.
+Changes applied to `whatsapp-session-anchor.md §3` and `document-glossary.md`.
 
-**Gate:** `[ ]` All session phase values in all documents use the canonical snake_case set above.
+**Gate:** `[x]` All session phase values in all documents use the canonical snake_case set above.
 
 ---
 
 ### H-03 — recurring schedule auto_create_request Field Corrected
 
-**Status:** `[ ]` Resolve before implementing Partner dispatch recurring schedule
-**Reference:** documentation-consistency-audit.md — Finding H-03
+**Status:** `[x]` RESOLVED — Applied as part of H-03 sprint (2026-05-28). See [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding H-03.
 
-`partner-assignment-model.md` §3 recurring schedule defines `auto_create_request: Boolean // If true, PartnerRequest is auto-created on schedule`. This is incorrect — recurring schedules must auto-create a `ServiceRequest` first (demand side), which then triggers `PartnerRequest` dispatch (supply side). Skipping `ServiceRequest` bypasses urgency classification and routing logic.
+`partner-assignment-model.md §3` `auto_create_request` field comment corrected. Recurring schedules auto-create a `ServiceRequest` first (demand side), which then triggers `PartnerRequest` dispatch (supply side) via the normal routing pipeline.
 
-**Gate:** `[ ]` Field comment updated to `// If true, ServiceRequest is auto-created on schedule, which triggers PartnerRequest dispatch via normal routing`.
+**Gate:** `[x]` Field comment updated. `ServiceRequest` is auto-created on schedule; `PartnerRequest` dispatch follows via normal routing.
 
 ---
 
 ### H-04 — "Operator" Role Disambiguation
 
-**Status:** `[ ]` Resolve before implementing access control
-**Reference:** documentation-consistency-audit.md — Finding H-04
+**Status:** `[x]` RESOLVED — Decision D applied (2026-05-28). See [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding H-04.
 
-"Operator" appears in two conflicting meanings. For backend implementation, `Operator` (capital O) means Nauxica staff with elevated access. "rental operator" / "property operator" in homeowner-facing docs means homeowner. Any code that checks the `operator` role must only match Nauxica staff accounts. No homeowner account should ever receive an `operator` JWT role.
+`Operator` (capital O) is reserved exclusively for Nauxica staff with elevated system access. `OPERATOR` as a visibility scope has been removed — data formerly labelled OPERATOR is INT-scoped; operator access governed by RBAC. Homeowner-facing documentation uses "homeowner" throughout.
 
-**Gate:** `[ ]` Acknowledged. Access control middleware uses `operator` role = Nauxica staff only. Homeowner-facing documentation uses "homeowner" throughout.
+**Gate:** `[x]` Acknowledged. Access control middleware uses `operator` role = Nauxica staff only. Homeowner-facing documentation uses "homeowner" throughout.
 
 ---
 
@@ -178,16 +149,16 @@ Before backend implementation begins, these authoritative source documents must 
 
 | Document | Role | Current conflicts |
 |---|---|---|
-| `data-visibility-model.md` | Visibility scope taxonomy | Conflicts with data-models.md (C-01 — must be resolved) |
-| `data-models.md` | Canonical field definitions for all models | Uses System B scopes (C-01); duplicate model numbers present |
-| `partner-assignment-model.md` | Service type taxonomy; assignment lifecycle | 9 vs 5 service type conflict (C-02); auto_create_request error (H-03) |
-| `whatsapp-session-anchor.md` | Session resolution and phase logic | Session phase naming inconsistency (H-02) |
-| `ai-runtime-orchestration.md` | AI runtime pipeline | Ready — no known conflicts |
-| `knowledge-retrieval-model.md` | KBB specification | Mixed session phase format (H-02) |
-| `security-model.md` | Auth and access boundaries | Ready — no known conflicts |
-| `event-driven-architecture.md` | Event catalogue and broker spec | Ready — no known conflicts |
-| `service-request-flow.md` | ServiceRequest state machine | Ready — no known conflicts |
-| `notification-system.md` | Notification channels and SLAs | Ready — no known conflicts |
+| `data-visibility-model.md` | Visibility scope taxonomy | C-01 resolved — PUB/GST/PTR/INT canonical. `data-visibility-model.md` is the single authoritative source. |
+| `data-models.md` | Canonical field definitions for all models | C-01 resolved — scope system reconciled. ⚠️ Duplicate model numbers may still be present — verify before implementation. |
+| `partner-assignment-model.md` | Service type taxonomy; assignment lifecycle | C-02 resolved — 5 MVP service types confirmed. H-03 resolved — `auto_create_request` comment corrected. |
+| `whatsapp-session-anchor.md` | Session resolution and phase logic | H-02 resolved — canonical snake_case phase values applied to §3 and §8. |
+| `ai-runtime-orchestration.md` | AI runtime pipeline | Ready — no known conflicts. |
+| `knowledge-retrieval-model.md` | KBB specification | H-02 resolved — canonical snake_case phase values applied. |
+| `security-model.md` | Auth and access boundaries | Ready — no known conflicts. |
+| `event-driven-architecture.md` | Event catalogue and broker spec | Ready — no known conflicts. |
+| `service-request-flow.md` | ServiceRequest state machine | Ready — no known conflicts. |
+| `notification-system.md` | Notification channels and SLAs | Ready — no known conflicts. |
 
 **Gate:** `[ ]` All documents in the table above have their known conflicts resolved. No document has contradictory definitions in another document for the same concept.
 
@@ -248,18 +219,16 @@ These items must be initiated — not necessarily completed — before backend i
 
 | Section | Gates | Complete | Blocked |
 |---|---|---|---|
-| 1 — Critical architecture decisions | 2 | 0 | 2 |
-| 2 — High-priority naming conflicts | 4 | 0 | 0 |
+| 1 — Critical architecture decisions | 2 | 2 | 0 |
+| 2 — High-priority naming conflicts | 4 | 4 | 0 |
 | 3 — Tech stack | 1 | 0 | 0 |
 | 4 — Documentation completeness | 2 | 0 | 0 |
 | 5 — Legal and compliance | 7 | 0 | 0 |
 | 6 — Environment readiness | 9 | 0 | 0 |
 | 7 — Team and capacity | 4 | 0 | 0 |
-| **Total** | **29** | **0** | **2** |
+| **Total** | **29** | **6** | **0** |
 
-**Current status: BLOCKED — 2 critical architecture decisions outstanding.**
-
-The 2 BLOCKED items in Section 1 (C-01 and C-02) must be resolved before any backend implementation begins. All other items can be worked in parallel once the decision process is underway.
+**Current status: Architecture decisions resolved (2026-05-28). No architecture blockers remain. Remaining 23 gates are technical, environmental, and legal. Backend implementation may proceed once Phase 2 (Frontend Prototype Consistency) is complete and environment provisioning begins.**
 
 ---
 
@@ -269,5 +238,5 @@ The 2 BLOCKED items in Section 1 (C-01 and C-02) must be resolved before any bac
 - [implementation-roadmap.md](implementation-roadmap.md) — What to build and in what order (starts after this checklist is clear)
 - [documentation-consistency-audit.md](documentation-consistency-audit.md) — Full detail on all conflicts, blockers, and recommended corrections
 - [mvp-boundaries.md](mvp-boundaries.md) — What is in and out of scope for MVP
-- [data-visibility-model.md](data-visibility-model.md) — Visibility scope source of record (pending C-01 resolution)
-- [partner-assignment-model.md](partner-assignment-model.md) — Service type source of record (pending C-02 resolution)
+- [data-visibility-model.md](data-visibility-model.md) — Visibility scope source of record (C-01 resolved — PUB/GST/PTR/INT canonical)
+- [partner-assignment-model.md](partner-assignment-model.md) — Service type source of record (C-02 resolved — 5 MVP types confirmed)

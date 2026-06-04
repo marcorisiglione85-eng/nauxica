@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — platform scope definition
-**Last updated:** 2026-05-28
+**Last updated:** 2026-06-02
 **Related:** [launch-readiness.md](launch-readiness.md) · [implementation-roadmap.md](implementation-roadmap.md) · [pre-backend-checklist.md](pre-backend-checklist.md) · [documentation-consistency-audit.md](documentation-consistency-audit.md)
 
 ---
@@ -16,46 +16,27 @@ Without clear scope boundaries, implementation effort spreads into low-value or 
 
 ---
 
-## ⚠️ Unresolved Blockers Affecting Scope
+## ✅ Architecture Blockers — Resolved
 
-Before MVP boundaries can be finalised, two CRITICAL architecture conflicts must be resolved. These are documented in detail in [documentation-consistency-audit.md](documentation-consistency-audit.md).
+Both CRITICAL architecture conflicts were resolved on 2026-05-28 before any schema migration was written. MVP boundaries are now finalised. See [documentation-consistency-audit.md](documentation-consistency-audit.md) for full resolution detail.
 
 ---
 
-### BLOCKER — C-01: Visibility Scope Taxonomy
+### `[x]` ✅ C-01 — Visibility Scope Taxonomy Designated
 
-**Status:** BLOCKER / ARCHITECT DECISION REQUIRED
+**Status:** RESOLVED — Decision A applied (2026-05-28).
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-01
 
-Two incompatible visibility scope systems are in use across the documentation. The correct system must be designated before any field-level data model work begins.
-
-| | System A | System B |
-|---|---|---|
-| **Source** | `data-visibility-model.md` | `data-models.md`, `property-data-schema.md` |
-| **Scopes** | GUEST / PARTNER / OPERATOR / INTERNAL | PUB / GST / PTR / INT / AI |
-| **Conflict** | No PUB scope; INTERNAL = system only | No OPERATOR scope; INT = homeowner + staff |
-
-**Impact on MVP scope:** Every field in every model carries a visibility scope. No data model implementation can begin until this is resolved. If left unresolved, the AI concierge access boundary and the homeowner/operator data separation will be inconsistent.
-
-**Required action:** Founder/architect designates one system as authoritative and reconciles all documents to it before Sprint 1 of backend implementation.
+Canonical visibility scopes: PUB / GST / PTR / INT. `data-visibility-model.md` is the single authoritative source. OPERATOR removed as a visibility scope — operator access governed by RBAC role. All conflicting documents updated.
 
 ---
 
-### BLOCKER — C-02: Service Type Count
+### `[x]` ✅ C-02 — Service Type List Confirmed
 
-**Status:** BLOCKER / ARCHITECT DECISION REQUIRED
+**Status:** RESOLVED — Founder decision applied (2026-05-28).
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-02
 
-Two incompatible service type lists exist across the documentation:
-
-| | Onboarding/commercial docs | `partner-assignment-model.md` |
-|---|---|---|
-| **Count** | 5 types | 9 types |
-| **Defined types** | CLEANING, MAINTENANCE, LAUNDRY, TRANSFERS, EXPERIENCES | Adds: POOL_MAINTENANCE, GARDEN_MAINTENANCE, CONCIERGE_IN_PERSON, INSPECTION |
-
-**Impact on MVP scope:** Partner vetting, subscription plan pricing, assignment model, and partner registration all reference the service type list. An inconsistent list means partners register against a different set than the system dispatches against.
-
-**Required action:** Founder decision required — confirm which service types are active at Sicily launch. The decision gates partner-facing documentation, vetting flows, and the PartnerAssignment schema.
+Five canonical MVP service types active at Sicily launch: `cleaning`, `maintenance`, `laundry`, `transfers`, `experiences`. Post-MVP subtypes (`pool_maintenance`, `garden_maintenance`, `concierge_in_person`, `inspection`) are not active at Sicily launch. Pool and garden maintenance jobs are classified as `maintenance` at MVP. All conflicting documents updated.
 
 ---
 
@@ -124,9 +105,9 @@ Two incompatible service type lists exist across the documentation:
 | Proof-of-completion (photos) | Yes | Required for CLEANING and MAINTENANCE |
 | Partner performance scoring | Yes | Quality score: rating + completion + response + dispute |
 | Dispute handling | Yes | Basic dispute record creation and review |
-| In-person concierge service (CONCIERGE_IN_PERSON) | Depends on C-02 decision | Not in 5-type list. Status pending architect decision. |
-| Pool and garden maintenance service types | Depends on C-02 decision | Not in 5-type list. Status pending architect decision. |
-| Pre-activation inspection service type | Depends on C-02 decision | Not in 5-type list. Status pending architect decision. |
+| In-person concierge service (CONCIERGE_IN_PERSON) | No | Post-MVP subtype. Not active at Sicily launch. |
+| Pool and garden maintenance service types | No | Post-MVP subtypes. Not active at Sicily launch. Jobs classified as `maintenance` at MVP. |
+| Pre-activation inspection service type | No | Post-MVP subtype. Not active at Sicily launch. |
 
 ### Reservations and Guest Data
 

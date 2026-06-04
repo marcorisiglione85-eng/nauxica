@@ -3,7 +3,7 @@
 **Version:** 1.0
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — pre-launch gate checklist
-**Last updated:** 2026-05-28
+**Last updated:** 2026-06-02
 **Related:** [pre-backend-checklist.md](pre-backend-checklist.md) · [mvp-boundaries.md](mvp-boundaries.md) · [implementation-roadmap.md](implementation-roadmap.md) · [security-model.md](security-model.md) · [documentation-consistency-audit.md](documentation-consistency-audit.md) · [regulatory-compliance-checklist.md](../legal/regulatory-compliance-checklist.md)
 
 ---
@@ -30,66 +30,38 @@ This document does not set policy — it aggregates gates already defined in oth
 
 ---
 
-## PART 1 — CRITICAL ARCHITECTURE BLOCKERS
+## PART 1 — CRITICAL ARCHITECTURE BLOCKERS — RESOLVED
 
-These two items are CRITICAL findings from [documentation-consistency-audit.md](documentation-consistency-audit.md). No backend schema work can begin — and no launch can proceed — until both are resolved.
+Both CRITICAL findings from [documentation-consistency-audit.md](documentation-consistency-audit.md) were resolved on 2026-05-28 before any schema migration was written. All conflicting documents have been updated.
 
 ---
 
-### ⛔ BLOCKER C-01 — Visibility Scope Taxonomy Split
+### `[x]` ✅ C-01 — Visibility Scope Taxonomy Designated
 
-**Status:** `[DECISION]` BLOCKER / ARCHITECT DECISION REQUIRED
-**Blocks:** All data model implementation; KBB scope filter; access control layer; AI concierge security boundary
+**Status:** RESOLVED — Decision A applied (2026-05-28). PUB/GST/PTR/INT designated as canonical shortcodes. OPERATOR removed as a visibility scope and reclassified as an RBAC role. Changes applied to `data-visibility-model.md`, `data-models.md`, and `document-glossary.md`.
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-01
 
-**The conflict:**
-Two incompatible visibility scope systems exist across the documentation:
+**Resolution:** `data-visibility-model.md` is the single authoritative source. Canonical visibility scopes: PUB (pre-authentication public fields), GST (confirmed guest via AI concierge), PTR (partner-only), INT (internal homeowner/operator). OPERATOR scope removed — operator access governed by RBAC role.
 
-| System | Scopes | Source |
-|---|---|---|
-| System A | GUEST / PARTNER / OPERATOR / INTERNAL | `data-visibility-model.md` |
-| System B | PUB / GST / PTR / INT / AI | `data-models.md`, `property-data-schema.md`, `property-knowledge-schema.md` |
-
-These systems are not equivalent in boundary definition. A backend engineer implementing from System B will build different access control logic than one implementing from System A.
-
-**Decision required:**
-1. Designate one system as the canonical taxonomy (recommended: System A — `data-visibility-model.md`)
-2. If System A: add `PUBLIC` scope for pre-authentication fields; reconcile all System B documents
-3. If System B: reconcile `data-visibility-model.md` to match shortcode system and clarify OPERATOR vs INT
-4. Document the decision in `data-visibility-model.md` before any schema migration is written
-
-**Gate:** This item cannot be checked until the founder/architect makes and documents this decision and all conflicting documents are updated.
+**Gate:** `[x]` Decision documented. All conflicting documents updated. `data-visibility-model.md` is the single authoritative source.
 
 ---
 
-### ⛔ BLOCKER C-02 — Service Type Count Mismatch (5 vs 9)
+### `[x]` ✅ C-02 — Service Type List Confirmed
 
-**Status:** `[DECISION]` BLOCKER / ARCHITECT DECISION REQUIRED
-**Blocks:** PartnerAssignment schema; partner registration form; partner vetting tiers; subscription plan scope; dispatch service
+**Status:** RESOLVED — Founder decision applied (2026-05-28). Five canonical MVP service types confirmed.
 **Reference:** [documentation-consistency-audit.md](documentation-consistency-audit.md) — Finding C-02
 
-**The conflict:**
-Partner-facing and commercial documents define 5 service types. `partner-assignment-model.md` defines 9:
+**Resolution:** Five canonical MVP service types active at Sicily launch:
+- `cleaning`
+- `maintenance`
+- `laundry`
+- `transfers`
+- `experiences`
 
-| Onboarding + commercial (5) | `partner-assignment-model.md` (9) |
-|---|---|
-| CLEANING | CLEANING |
-| MAINTENANCE | MAINTENANCE |
-| LAUNDRY | LAUNDRY |
-| TRANSFERS | TRANSFER |
-| EXPERIENCES | EXPERIENCE |
-| — | POOL_MAINTENANCE |
-| — | GARDEN_MAINTENANCE |
-| — | CONCIERGE_IN_PERSON |
-| — | INSPECTION |
+Post-MVP subtypes (`pool_maintenance`, `garden_maintenance`, `concierge_in_person`, `inspection`) are not active at Sicily launch. Pool and garden maintenance jobs are classified as `maintenance` at MVP. Changes applied to `partner-assignment-model.md`, `service-request-flow.md`, `partner-onboarding.md`, and `document-glossary.md`.
 
-**Decision required:**
-1. Confirm which service types are active at Sicily launch
-2. If 5 types: update `partner-assignment-model.md` to mark the 4 additional types as "Post-MVP / defined but not activated"
-3. If more types: update all onboarding and commercial documents to reflect the full list
-4. Confirm canonical enum format (singular SCREAMING_SNAKE_CASE: `CLEANING`, `MAINTENANCE`, `TRANSFER`, `EXPERIENCE`, `LAUNDRY`)
-
-**Gate:** This item cannot be checked until the founder makes this decision and all documents are reconciled.
+**Gate:** `[x]` Decision documented. Canonical list defined in `partner-assignment-model.md`. All documents updated.
 
 ---
 
@@ -198,16 +170,16 @@ Platform content requirements that are not technical but must be in place before
 
 ---
 
-## PART 7 — OPEN ARCHITECTURE CONFLICTS
+## PART 7 — ARCHITECTURE CONFLICTS — RESOLVED
 
-These are HIGH findings from [documentation-consistency-audit.md](documentation-consistency-audit.md) that are not launch blockers but should be resolved before backend implementation of the affected areas.
+All HIGH findings from [documentation-consistency-audit.md](documentation-consistency-audit.md) were resolved on 2026-05-28. The table below records the resolution for each item.
 
-| # | Conflict | Blocks | Source |
-|---|---|---|---|
-| H-01 | Access code delivery timing — three documents give conflicting rules | Access code gating implementation | audit Finding H-01 |
-| H-02 | Session phase naming — hyphenated vs snake_case across docs | Session phase enum implementation | audit Finding H-02 |
-| H-03 | ServiceRequest vs PartnerRequest — used interchangeably in partner-assignment-model.md §3 | Recurring schedule auto-creation logic | audit Finding H-03 |
-| H-04 | "Operator" role — used to mean both Nauxica staff AND rental operators (homeowners) | Access control implementation | audit Finding H-04 |
+| # | Resolution | Authoritative source |
+|---|---|---|
+| H-01 | Access code delivery gate: `session_phase = check_in AND current_time >= check_in_from`. Early delivery from midnight on `checkin_date` when `Property.early_access_code_delivery = true`. | `whatsapp-session-anchor.md §8` |
+| H-02 | Canonical session phase enum (snake_case): `pre_arrival`, `check_in`, `in_stay`, `check_out`, `post_stay`. All documents updated. | `whatsapp-session-anchor.md §3` |
+| H-03 | `auto_create_request` on recurring schedules creates a `ServiceRequest` first (demand side); `PartnerRequest` dispatch follows via normal routing pipeline. | `partner-assignment-model.md §3` |
+| H-04 | `Operator` (capital O) = Nauxica staff with elevated system access only. Homeowner-facing documentation uses "homeowner" throughout. | `document-glossary.md` |
 
 ---
 
@@ -215,7 +187,7 @@ These are HIGH findings from [documentation-consistency-audit.md](documentation-
 
 | Category | Total gates | Complete | Blocked/Decision | Legal review needed |
 |---|---|---|---|---|
-| Critical architecture blockers | 2 | 0 | 2 | 0 |
+| Critical architecture blockers | 2 | 2 | 0 | 0 |
 | Security | 15 | 0 | 0 | 0 |
 | Legal / regulatory | 17 | 0 | 0 | 17 |
 | Operational (per property) | 10 | 0 | 0 | 0 |

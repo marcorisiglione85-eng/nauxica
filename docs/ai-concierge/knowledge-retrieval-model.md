@@ -305,8 +305,8 @@ an unhandled exception that leaves the session without a response path.
 | Failure condition | status returned | Behaviour |
 |---|---|---|
 | `property_id` not found | `"unavailable"` | Session falls to generic unknown-property response + operator alert |
-| Property lifecycle_state = `suspended` | `"unavailable"` | Operator and homeowner notified. Guest directed to Nauxica support. |
-| Property lifecycle_state not `active` (any other state) | `"degraded"` | Degraded block with only `emergency` + `summary` populated |
+| Property `platform_status` = `suspended` | `"unavailable"` | Operator and homeowner notified. Guest directed to Nauxica support. |
+| Property `platform_status` not `active` (any other state) | `"degraded"` | Degraded block with only `emergency` + `summary` populated |
 | EmergencyData.is_complete = false | `"degraded"` + `emergency_data_complete: false` | Emergency chunk populated with static constants only (no property-specific data). Trigger operator alert. |
 | Database read timeout (>500ms) | Return stale cached block if available, `"degraded"` if not | Log timeout. Alert if frequency exceeds threshold. |
 | Cache miss + database unavailable | `"unavailable"` | Use last known emergency chunk from emergency cache. If not available: static constants only. |
@@ -344,7 +344,7 @@ revenue_share_pct, maintenance_budget_limit_eur
 
 ### Step 2 — Activation Gate
 
-Check `Property.lifecycle_state`:
+Check `Property.platform_status`:
 
 - `active` → continue normally
 - any other value → set `status = "degraded"`, skip Steps 3–7 for non-emergency fields, build minimal block, return
@@ -530,7 +530,7 @@ stale in a live session.
 - Any write to `Property` record fields with scope `PUB` or `GST`
 - Any write to `Property.dynamic_instructions`
 - Any write to `EmergencyData` for this property
-- `Property.lifecycle_state` changes to `suspended` or `archived`
+- `Property.platform_status` changes to `suspended` or `archived`
 - Property knowledge block `is_complete` flag changes
 
 **On cache miss:** Run the full 7-step assembly pipeline. Do not serve partial results.
@@ -552,9 +552,9 @@ retrieval architecture.
 - Any write to `EmergencyData` record — **write-through** (cache is updated synchronously
   on every EmergencyData write, not on TTL expiry alone)
 - `EmergencyData.is_complete` changes to `true` (triggers re-validation)
-- `Property.lifecycle_state` changes to `suspended` (clears the cache entry)
+- `Property.platform_status` changes to `suspended` (clears the cache entry)
 
-**Warm-up:** On property activation (`lifecycle_state → active`), the emergency cache must
+**Warm-up:** On property activation (`platform_status → active`), the emergency cache must
 be pre-populated before activation is confirmed. A property cannot become ACTIVE with an
 empty emergency cache entry.
 
@@ -871,7 +871,7 @@ Every failure state has a defined response. There are no undefined paths.
 
 ### 13.1 Property Unavailable
 
-Cause: `property_id` not found, or `lifecycle_state` is `suspended` or `archived`.
+Cause: `property_id` not found, or `platform_status` is `suspended` or `archived`.
 
 Response to guest:
 > "I'm sorry, I'm unable to access the property information right now. Please contact
