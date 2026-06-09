@@ -438,12 +438,12 @@
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
       <span class="kpi-icon">💶</span>
-      <span class="kpi-trend positive">+12%</span>
+      <span class="kpi-trend neutral">This month</span>
     </div>
 
     <div class="kpi-label">Revenue</div>
-    <div class="kpi-value">Coming soon</div>
-    <div class="kpi-sub">monthly income</div>
+    <div class="kpi-value" id="kpiRevenueValue">—</div>
+    <div class="kpi-sub">booking revenue (EUR)</div>
   </div>
 
   <div class="kpi-card dashboard-card" id="kpiArrivals">
@@ -717,25 +717,12 @@
   <div class="card-heading-row">
     <div>
       <h3 class="dashboard-section-title">Revenue overview</h3>
-      <p class="dashboard-card-text">12 month performance</p>
+      <p class="dashboard-card-text">Booking revenue — trailing 12 months (EUR)</p>
     </div>
-    <strong class="revenue-total">€18,420</strong>
+    <strong class="revenue-total" id="revTotal">—</strong>
   </div>
 
-  <div class="monthly-chart" aria-label="Monthly revenue chart">
-    <div class="month-bar" style="height: 42%"><span>Jun</span></div>
-    <div class="month-bar" style="height: 55%"><span>Jul</span></div>
-    <div class="month-bar" style="height: 48%"><span>Aug</span></div>
-    <div class="month-bar" style="height: 68%"><span>Sep</span></div>
-    <div class="month-bar" style="height: 74%"><span>Oct</span></div>
-    <div class="month-bar" style="height: 61%"><span>Nov</span></div>
-    <div class="month-bar" style="height: 50%"><span>Dec</span></div>
-    <div class="month-bar" style="height: 58%"><span>Jan</span></div>
-    <div class="month-bar" style="height: 63%"><span>Feb</span></div>
-    <div class="month-bar" style="height: 79%"><span>Mar</span></div>
-    <div class="month-bar" style="height: 72%"><span>Apr</span></div>
-    <div class="month-bar current" style="height: 86%"><span>May</span></div>
-  </div>
+  <div class="monthly-chart" aria-label="Monthly revenue chart" id="monthlyChart"></div>
 </div>
 
         <div class="dashboard-card reviews" id="reviews">
@@ -1052,6 +1039,101 @@
       await refreshLiveTasks();
     })();
   </script>
+
+  <script type="module">
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var MON_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      function isoDate(d) {
+        return d.getFullYear() + '-' +
+          String(d.getMonth() + 1).padStart(2, '0') + '-' +
+          String(d.getDate()).padStart(2, '0');
+      }
+
+      function fmtEur(v) {
+        return '€' + parseFloat(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      function minBars(months) {
+        return months.map(function (m) {
+          return '<div class="month-bar' + (m.isCurrent ? ' current' : '') +
+            '" style="height:12%"><span>' + m.label + '</span></div>';
+        }).join('');
+      }
+
+      /* Build trailing-12-month key array: oldest at index 0, current at index 11 */
+      var now      = new Date();
+      var curYear  = now.getFullYear();
+      var curMonth = now.getMonth(); // 0-based
+
+      var months = [];
+      for (var i = 0; i < 12; i++) {
+        var d  = new Date(curYear, curMonth - (11 - i), 1);
+        var ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        months.push({ ym: ym, label: MON_LABELS[d.getMonth()], isCurrent: i === 11 });
+      }
+
+      var windowStart = isoDate(new Date(curYear, curMonth - 11, 1));
+      var windowEnd   = isoDate(new Date(curYear, curMonth + 1, 0));
+      var currentYM   = months[11].ym;
+
+      var totalEl  = document.getElementById('revTotal');
+      var chartEl  = document.getElementById('monthlyChart');
+      var kpiRevEl = document.getElementById('kpiRevenueValue');
+
+      var { data: rows, error } = await sb
+        .from('reservations')
+        .select('checkin_date, reservation_value_amount, reservation_value_currency')
+        .neq('reservation_status', 'cancelled')
+        .neq('reservation_status', 'no_show')
+        .gte('checkin_date', windowStart)
+        .lte('checkin_date', windowEnd);
+
+      if (error) {
+        console.error('[Revenue chart] query failed:', error);
+        if (totalEl)  totalEl.textContent  = '—';
+        if (kpiRevEl) kpiRevEl.textContent = '—';
+        if (chartEl)  chartEl.innerHTML    = minBars(months);
+        return;
+      }
+
+      /* Aggregate by YYYY-MM, EUR only */
+      var buckets = {};
+      months.forEach(function (m) { buckets[m.ym] = 0; });
+
+      (rows || []).forEach(function (r) {
+        var currency = r.reservation_value_currency || 'EUR';
+        if (currency !== 'EUR') return;
+        if (r.reservation_value_amount == null) return;
+        var ym = (r.checkin_date || '').slice(0, 7);
+        if (buckets[ym] !== undefined) {
+          buckets[ym] += parseFloat(r.reservation_value_amount);
+        }
+      });
+
+      var total12     = months.reduce(function (s, m) { return s + buckets[m.ym]; }, 0);
+      var curMonthVal = buckets[currentYM] || 0;
+      var maxVal      = months.reduce(function (mx, m) { return Math.max(mx, buckets[m.ym]); }, 0);
+
+      if (totalEl)  totalEl.textContent  = total12 > 0 ? fmtEur(total12) : '—';
+      if (kpiRevEl) kpiRevEl.textContent = curMonthVal > 0 ? fmtEur(curMonthVal) : '—';
+
+      if (chartEl) {
+        chartEl.innerHTML = months.map(function (m) {
+          var height = maxVal > 0
+            ? Math.max(12, Math.round((buckets[m.ym] / maxVal) * 100))
+            : 12;
+          return '<div class="month-bar' + (m.isCurrent ? ' current' : '') +
+            '" style="height:' + height + '%"><span>' + m.label + '</span></div>';
+        }).join('');
+      }
+    })();
+  </script>
+
 <div class="action-panel-overlay" id="actionPanelOverlay"></div>
 
 <aside class="action-panel" id="actionPanel">

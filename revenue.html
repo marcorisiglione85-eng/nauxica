@@ -6,6 +6,253 @@
     <title>Revenue — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── Period filter strip ───────────────────────────────── */
+      .nau-rev-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .nau-rev-filter-btn {
+        padding: 7px 14px;
+        border-radius: 99px;
+        border: 1.5px solid rgba(15,23,42,0.12);
+        background: transparent;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--stone);
+        cursor: pointer;
+        transition: background .15s, color .15s, border-color .15s;
+      }
+
+      .nau-rev-filter-btn.active,
+      .nau-rev-filter-btn:hover {
+        background: var(--terracotta);
+        color: #fff;
+        border-color: var(--terracotta);
+      }
+
+      /* ── KPI strip ─────────────────────────────────────────── */
+      .nau-rev-kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .nau-rev-kpi {
+        padding: 16px 18px;
+        border-radius: 13px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.07);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .nau-rev-kpi-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      .nau-rev-kpi-value {
+        font-size: 1.55rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        line-height: 1;
+      }
+
+      .nau-rev-kpi-value.is-positive { color: #15803d; }
+      .nau-rev-kpi-value.is-null     { color: var(--stone); font-size: 1.1rem; }
+
+      .nau-rev-kpi-sub {
+        font-size: 0.77rem;
+        color: var(--stone);
+      }
+
+      /* ── Section heading ───────────────────────────────────── */
+      .nau-rev-section-head {
+        font-size: 0.78rem;
+        font-weight: 900;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 22px 0 10px;
+      }
+
+      /* ── Reservation revenue rows ──────────────────────────── */
+      .nau-rev-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+      }
+
+      .nau-rev-row:last-child { border-bottom: none; }
+
+      .nau-rev-row-left {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .nau-rev-row-label {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--charcoal);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .nau-rev-row-meta {
+        font-size: 0.78rem;
+        color: var(--stone);
+      }
+
+      .nau-rev-row-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+
+      .nau-rev-row-gross {
+        font-size: 0.95rem;
+        font-weight: 900;
+        color: var(--charcoal);
+      }
+
+      .nau-rev-row-gross.is-missing {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #b45309;
+      }
+
+      .nau-rev-row-cost {
+        font-size: 0.78rem;
+        color: var(--stone);
+      }
+
+      /* ── Property breakdown table ──────────────────────────── */
+      .nau-rev-prop-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+      }
+
+      .nau-rev-prop-table th {
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        padding: 0 8px 8px 0;
+        border-bottom: 1.5px solid rgba(15,23,42,0.08);
+      }
+
+      .nau-rev-prop-table th:not(:first-child) { text-align: right; }
+
+      .nau-rev-prop-table td {
+        padding: 11px 8px 11px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.05);
+        vertical-align: middle;
+        color: var(--charcoal);
+      }
+
+      .nau-rev-prop-table td:not(:first-child) {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .nau-rev-prop-table tr:last-child td { border-bottom: none; }
+
+      .nau-rev-prop-name {
+        font-weight: 800;
+      }
+
+      .nau-rev-margin-positive { color: #15803d; font-weight: 800; }
+      .nau-rev-margin-negative { color: #b91c1c; font-weight: 800; }
+      .nau-rev-margin-null     { color: var(--stone); }
+
+      /* ── Notice blocks ─────────────────────────────────────── */
+      .nau-rev-notice {
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #fffbeb;
+        border: 1px solid rgba(180,83,9,0.2);
+        font-size: 0.82rem;
+        color: #92400e;
+        margin-top: 18px;
+        line-height: 1.5;
+      }
+
+      .nau-rev-notice strong { font-weight: 800; }
+
+      .nau-rev-attribution {
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(15,23,42,0.03);
+        border: 1px solid rgba(15,23,42,0.07);
+        font-size: 0.78rem;
+        color: var(--stone);
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+
+      /* ── Right column summary card ─────────────────────────── */
+      .nau-rev-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+        font-size: 0.85rem;
+      }
+
+      .nau-rev-summary-row:last-child { border-bottom: none; }
+
+      .nau-rev-summary-row .label { color: var(--stone); font-weight: 600; }
+      .nau-rev-summary-row .value { font-weight: 800; color: var(--charcoal); font-variant-numeric: tabular-nums; }
+      .nau-rev-summary-row .value.is-positive { color: #15803d; }
+      .nau-rev-summary-row .value.is-missing  { color: #b45309; }
+
+      .nau-rev-divider {
+        border: none;
+        border-top: 1.5px solid rgba(15,23,42,0.08);
+        margin: 6px 0;
+      }
+
+      /* ── Currency flag ─────────────────────────────────────── */
+      .nau-rev-currency-notice {
+        font-size: 0.78rem;
+        color: #b45309;
+        background: #fffbeb;
+        border: 1px solid rgba(180,83,9,0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 12px;
+      }
+
+      /* ── Responsive ────────────────────────────────────────── */
+      @media (max-width: 860px) {
+        .nau-rev-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 540px) {
+        .nau-rev-kpi-strip { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
   </head>
   <body class="homeowner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -39,11 +286,11 @@
           <div class="topbar-left">
             <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
             <h1 class="dashboard-title">Revenue</h1>
-            <div class="topbar-sub">Earnings, payouts and financial performance</div>
+            <div class="topbar-sub">Booking revenue, operational costs and property performance</div>
           </div>
           <div class="topbar-right">
             <div class="topbar-search">
-              <input type="search" placeholder="Search revenue, payouts, properties" id="globalSearch" />
+              <input type="search" placeholder="Search reservations, properties" id="globalSearch" />
             </div>
             <div class="topbar-controls">
               <button class="icon-btn" aria-label="Notifications">🔔</button>
@@ -65,22 +312,73 @@
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Revenue overview</h2>
-                  <p class="dashboard-card-text">Track your financial performance and payout history</p>
+                  <h2 class="dashboard-section-title">Booking revenue</h2>
+                  <p class="dashboard-card-text">Gross revenue and operational costs across your properties</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Revenue tracking coming soon</h3>
-                <p>Payout history, monthly earnings breakdowns, platform fees and financial summaries per property will be available here.</p>
+
+              <!-- Period filters -->
+              <div class="nau-rev-filters" id="periodFilters">
+                <button class="nau-rev-filter-btn active" data-period="month">This month</button>
+                <button class="nau-rev-filter-btn" data-period="3months">Last 3 months</button>
+                <button class="nau-rev-filter-btn" data-period="year">This year</button>
+                <button class="nau-rev-filter-btn" data-period="all">All time</button>
+              </div>
+
+              <!-- KPI strip -->
+              <div class="nau-rev-kpi-strip" id="kpiStrip">
+                <div class="nau-rev-kpi">
+                  <div class="nau-rev-kpi-label">Gross Revenue</div>
+                  <div class="nau-rev-kpi-value is-null" id="kpiRevenue">—</div>
+                  <div class="nau-rev-kpi-sub" id="kpiRevenueSub">Loading…</div>
+                </div>
+                <div class="nau-rev-kpi">
+                  <div class="nau-rev-kpi-label">Operational Cost</div>
+                  <div class="nau-rev-kpi-value is-null" id="kpiCost">—</div>
+                  <div class="nau-rev-kpi-sub" id="kpiCostSub">Loading…</div>
+                </div>
+                <div class="nau-rev-kpi">
+                  <div class="nau-rev-kpi-label">Gross Margin</div>
+                  <div class="nau-rev-kpi-value is-null" id="kpiMargin">—</div>
+                  <div class="nau-rev-kpi-sub" id="kpiMarginSub">Loading…</div>
+                </div>
+                <div class="nau-rev-kpi">
+                  <div class="nau-rev-kpi-label">Margin %</div>
+                  <div class="nau-rev-kpi-value is-null" id="kpiMarginPct">—</div>
+                  <div class="nau-rev-kpi-sub" id="kpiMarginPctSub">Loading…</div>
+                </div>
+              </div>
+
+              <!-- Reservation revenue list -->
+              <div class="nau-rev-section-head">Reservations</div>
+              <div id="reservationList">
+                <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
+              </div>
+
+              <!-- Missing values notice (shown only when relevant) -->
+              <div id="missingValuesNotice" style="display:none"></div>
+
+              <!-- Attribution note -->
+              <div class="nau-rev-attribution">
+                Revenue is attributed to the check-in date month. Multi-month stays are not prorated — the full booking value is counted in the check-in month. This may cause month-to-month variance for long stays.
               </div>
             </div>
           </div>
+
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">This month</h3>
-              <p class="dashboard-card-text">Financial summary for the current period</p>
-              <div class="empty-state-card">
-                <p>Financial data coming soon.</p>
+              <h3 class="dashboard-section-title">Period summary</h3>
+              <p class="dashboard-card-text" id="periodSummaryLabel">Current period at a glance</p>
+              <div id="periodSummary">
+                <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card" style="margin-top:16px">
+              <h3 class="dashboard-section-title">Property breakdown</h3>
+              <p class="dashboard-card-text">Gross revenue and margin per property</p>
+              <div id="propertyBreakdown">
+                <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
               </div>
             </div>
           </div>
@@ -91,19 +389,374 @@
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
-    <script>
-      (function () {
-        const accountType = NauxicaShared.resolveAccountType();
-        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
-        NauxicaShared.setActivePage('revenue');
-        NauxicaShared.updateTopbar(accountType);
+    <script type="module">
 
-        const chip = document.getElementById('date-chip');
-        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      /* ── Auth guard ─────────────────────────────────────────── */
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+      const { data: profile } = await window.NauxicaSupabase
+        .from('users').select('account_type, full_name').eq('id', sessData.session.user.id).single();
+      if (!profile || profile.account_type !== 'homeowner') {
+        window.location.replace('login.html'); throw 0;
+      }
+      localStorage.setItem('accountType', 'homeowner');
 
-        document.getElementById('logout-button')
-          ?.addEventListener('click', NauxicaShared.handleLogout);
-      })();
+      /* ── Shared setup ───────────────────────────────────────── */
+      const accountType = NauxicaShared.resolveAccountType();
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+      NauxicaShared.setActivePage('revenue');
+      NauxicaShared.updateTopbar(accountType);
+
+      const chip = document.getElementById('date-chip');
+      if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      document.getElementById('logout-button')?.addEventListener('click', async function () {
+        await window.NauxicaSupabase.auth.signOut();
+        localStorage.removeItem('accountType');
+        window.location.replace('login.html');
+      });
+
+      /* ── HTML escape ────────────────────────────────────────── */
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      /* ── Period filter state ────────────────────────────────── */
+      var activePeriod = 'month';
+
+      function periodBounds(period) {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = now.getMonth(); // 0-based
+        if (period === 'month') {
+          var from = new Date(y, m, 1);
+          var to   = new Date(y, m + 1, 0);
+          return { from: isoDate(from), to: isoDate(to), label: monthLabel(y, m) };
+        }
+        if (period === '3months') {
+          var from = new Date(y, m - 2, 1);
+          var to   = new Date(y, m + 1, 0);
+          return { from: isoDate(from), to: isoDate(to), label: 'Last 3 months' };
+        }
+        if (period === 'year') {
+          return { from: y + '-01-01', to: y + '-12-31', label: 'Year ' + y };
+        }
+        return { from: null, to: null, label: 'All time' };
+      }
+
+      function isoDate(d) {
+        return d.getFullYear() + '-' +
+          String(d.getMonth() + 1).padStart(2, '0') + '-' +
+          String(d.getDate()).padStart(2, '0');
+      }
+
+      function monthLabel(y, m) {
+        var months = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+        return months[m] + ' ' + y;
+      }
+
+      function fmtEur(v) {
+        if (v == null) return '—';
+        return '€' + parseFloat(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      function fmtPct(v) {
+        if (v == null) return '—';
+        return parseFloat(v).toFixed(1) + '%';
+      }
+
+      function fmtDate(d) {
+        if (!d) return '—';
+        var parts = d.slice(0, 10).split('-');
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+      }
+
+      /* ── Supabase data ──────────────────────────────────────── */
+      var allReservations = [];
+      var taskCostByReservation = new Map(); // reservation_id → { total: float, hasMixed: bool }
+
+      async function fetchAll() {
+        const [resResult, taskResult] = await Promise.all([
+          window.NauxicaSupabase
+            .from('reservations')
+            .select('id, property_id, checkin_date, checkout_date, reservation_value_amount, reservation_value_currency, booking_source, reservation_status, properties(display_name)')
+            .order('checkin_date', { ascending: false }),
+          window.NauxicaSupabase
+            .from('tasks')
+            .select('id, reservation_id, task_value_amount, task_value_currency, status')
+            .not('reservation_id', 'is', null)
+            .neq('status', 'cancelled')
+        ]);
+
+        if (resResult.error) {
+          document.getElementById('reservationList').innerHTML =
+            '<p style="color:#b91c1c;font-size:0.88rem;margin:0">Failed to load reservation data. Please refresh.</p>';
+          document.getElementById('propertyBreakdown').innerHTML =
+            '<p style="color:#b91c1c;font-size:0.88rem;margin:0">Failed to load data.</p>';
+          return;
+        }
+
+        allReservations = resResult.data || [];
+
+        /* Build task cost map keyed by reservation_id */
+        (taskResult.data || []).forEach(function (t) {
+          if (!t.reservation_id || t.task_value_amount == null) return;
+          var entry = taskCostByReservation.get(t.reservation_id) || { total: 0, hasMixed: false };
+          if (t.task_value_currency && t.task_value_currency !== 'EUR') {
+            entry.hasMixed = true;
+          } else {
+            entry.total += parseFloat(t.task_value_amount);
+          }
+          taskCostByReservation.set(t.reservation_id, entry);
+        });
+
+        renderAll();
+      }
+
+      /* ── Filter reservations by period ─────────────────────── */
+      function filterReservations(period) {
+        var bounds = periodBounds(period);
+        if (!bounds.from) return allReservations.slice(); // all time
+        return allReservations.filter(function (r) {
+          var ci = (r.checkin_date || '').slice(0, 10);
+          return ci >= bounds.from && ci <= bounds.to;
+        });
+      }
+
+      /* ── Render all sections ────────────────────────────────── */
+      function renderAll() {
+        var filtered   = filterReservations(activePeriod);
+        var bounds     = periodBounds(activePeriod);
+
+        /* Separate EUR-only reservations for KPI calculation */
+        var nonEurReservations   = filtered.filter(function (r) { return r.reservation_value_currency && r.reservation_value_currency !== 'EUR'; });
+        var eurReservations      = filtered.filter(function (r) { return !r.reservation_value_currency || r.reservation_value_currency === 'EUR'; });
+        var withRevenue          = eurReservations.filter(function (r) { return r.reservation_value_amount != null; });
+        var missingRevCount      = filtered.filter(function (r) { return r.reservation_value_amount == null; }).length;
+
+        /* Aggregate KPIs */
+        var grossRevenue = withRevenue.reduce(function (sum, r) { return sum + parseFloat(r.reservation_value_amount); }, 0);
+        var opCost = 0;
+        withRevenue.forEach(function (r) {
+          var entry = taskCostByReservation.get(r.id);
+          if (entry) opCost += entry.total;
+        });
+        var grossMargin = grossRevenue - opCost;
+        var marginPct   = grossRevenue > 0 ? (grossMargin / grossRevenue * 100) : null;
+
+        var hasAnyRevenue = withRevenue.length > 0;
+
+        renderKPIs(hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? opCost : null, hasAnyRevenue ? grossMargin : null, marginPct);
+        renderReservationList(filtered, missingRevCount, nonEurReservations.length);
+        renderPeriodSummary(bounds.label, filtered.length, withRevenue.length, missingRevCount, hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? grossMargin : null, marginPct);
+        renderPropertyBreakdown(filtered);
+      }
+
+      /* ── KPI strip ──────────────────────────────────────────── */
+      function renderKPIs(grossRevenue, opCost, grossMargin, marginPct) {
+        var revEl       = document.getElementById('kpiRevenue');
+        var revSub      = document.getElementById('kpiRevenueSub');
+        var costEl      = document.getElementById('kpiCost');
+        var costSub     = document.getElementById('kpiCostSub');
+        var margEl      = document.getElementById('kpiMargin');
+        var margSub     = document.getElementById('kpiMarginSub');
+        var margPctEl   = document.getElementById('kpiMarginPct');
+        var margPctSub  = document.getElementById('kpiMarginPctSub');
+
+        if (grossRevenue == null) {
+          revEl.className      = 'nau-rev-kpi-value is-null';
+          costEl.className     = 'nau-rev-kpi-value is-null';
+          margEl.className     = 'nau-rev-kpi-value is-null';
+          margPctEl.className  = 'nau-rev-kpi-value is-null';
+          revEl.textContent    = '—';
+          costEl.textContent   = '—';
+          margEl.textContent   = '—';
+          margPctEl.textContent= '—';
+          revSub.textContent   = 'No revenue values recorded';
+          costSub.textContent  = 'No linked task costs';
+          margSub.textContent  = 'Requires revenue values';
+          margPctSub.textContent = 'Requires revenue values';
+          return;
+        }
+
+        revEl.className      = 'nau-rev-kpi-value';
+        revEl.textContent    = fmtEur(grossRevenue);
+        revSub.textContent   = 'EUR reservations only';
+
+        costEl.className     = 'nau-rev-kpi-value';
+        costEl.textContent   = fmtEur(opCost);
+        costSub.textContent  = 'Linked non-cancelled tasks';
+
+        margEl.className     = 'nau-rev-kpi-value' + (grossMargin >= 0 ? ' is-positive' : '');
+        margEl.textContent   = fmtEur(grossMargin);
+        margSub.textContent  = 'Revenue minus operational cost';
+
+        margPctEl.className  = 'nau-rev-kpi-value' + (marginPct != null && marginPct >= 0 ? ' is-positive' : '');
+        margPctEl.textContent = marginPct != null ? fmtPct(marginPct) : '—';
+        margPctSub.textContent = marginPct != null ? 'Of gross revenue' : 'Requires revenue values';
+      }
+
+      /* ── Reservation list ───────────────────────────────────── */
+      function renderReservationList(filtered, missingRevCount, nonEurCount) {
+        var list = document.getElementById('reservationList');
+        var noticeEl = document.getElementById('missingValuesNotice');
+
+        if (!filtered.length) {
+          list.innerHTML = '<div class="empty-state-card"><p>No reservations in this period.</p></div>';
+          noticeEl.style.display = 'none';
+          return;
+        }
+
+        var rows = filtered.map(function (r) {
+          var propName = (r.properties && r.properties.display_name) ? r.properties.display_name : 'Unknown property';
+          var source   = r.booking_source ? r.booking_source.replace(/_/g,' ') : '—';
+          var status   = r.reservation_status || '—';
+          var ci       = fmtDate(r.checkin_date);
+          var co       = fmtDate(r.checkout_date);
+          var taskEntry = taskCostByReservation.get(r.id);
+          var costStr  = taskEntry ? fmtEur(taskEntry.total) : '—';
+
+          var grossHtml;
+          if (r.reservation_value_amount == null) {
+            grossHtml = '<div class="nau-rev-row-gross is-missing">Missing value</div>';
+          } else if (r.reservation_value_currency && r.reservation_value_currency !== 'EUR') {
+            grossHtml = '<div class="nau-rev-row-gross is-missing">' + esc(r.reservation_value_currency) + ' ' + esc(parseFloat(r.reservation_value_amount).toFixed(2)) + '</div>';
+          } else {
+            grossHtml = '<div class="nau-rev-row-gross">' + esc(fmtEur(r.reservation_value_amount)) + '</div>';
+          }
+
+          return '<div class="nau-rev-row">' +
+            '<div class="nau-rev-row-left">' +
+              '<div class="nau-rev-row-label">' + esc(propName) + '</div>' +
+              '<div class="nau-rev-row-meta">' + esc(ci) + ' → ' + esc(co) + ' · ' + esc(source) + ' · ' + esc(status) + '</div>' +
+            '</div>' +
+            '<div class="nau-rev-row-right">' +
+              grossHtml +
+              (costStr !== '—' ? '<div class="nau-rev-row-cost">Cost: ' + esc(costStr) + '</div>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        list.innerHTML = rows;
+
+        /* Missing values notice */
+        if (missingRevCount > 0 || nonEurCount > 0) {
+          var lines = [];
+          if (missingRevCount > 0) {
+            lines.push('<strong>' + missingRevCount + ' reservation' + (missingRevCount > 1 ? 's' : '') + '</strong> ' +
+              (missingRevCount > 1 ? 'are' : 'is') + ' missing a booking value. Add a value in Reservations to include ' +
+              (missingRevCount > 1 ? 'them' : 'it') + ' in revenue calculations.');
+          }
+          if (nonEurCount > 0) {
+            lines.push('<strong>' + nonEurCount + ' reservation' + (nonEurCount > 1 ? 's' : '') + '</strong> ' +
+              'use a non-EUR currency and are excluded from EUR totals.');
+          }
+          noticeEl.className = 'nau-rev-notice';
+          noticeEl.innerHTML = lines.join('<br>');
+          noticeEl.style.display = '';
+        } else {
+          noticeEl.style.display = 'none';
+        }
+      }
+
+      /* ── Period summary (right column) ─────────────────────── */
+      function renderPeriodSummary(label, totalCount, withRevCount, missingCount, grossRevenue, grossMargin, marginPct) {
+        document.getElementById('periodSummaryLabel').textContent = label;
+        var el = document.getElementById('periodSummary');
+
+        if (!totalCount) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No reservations in this period.</p>';
+          return;
+        }
+
+        var revenueVal    = grossRevenue != null ? fmtEur(grossRevenue) : '—';
+        var marginVal     = grossMargin != null ? fmtEur(grossMargin) : '—';
+        var marginClass   = grossMargin != null && grossMargin >= 0 ? 'is-positive' : '';
+        var marginPctVal  = marginPct != null ? fmtPct(marginPct) : '—';
+        var missingNote   = missingCount > 0 ? '<span class="is-missing">(' + missingCount + ' missing)</span>' : '';
+
+        el.innerHTML =
+          '<div class="nau-rev-summary-row"><span class="label">Reservations</span><span class="value">' + esc(String(totalCount)) + '</span></div>' +
+          '<div class="nau-rev-summary-row"><span class="label">With revenue value</span><span class="value">' + esc(String(withRevCount)) + ' ' + missingNote + '</span></div>' +
+          '<hr class="nau-rev-divider">' +
+          '<div class="nau-rev-summary-row"><span class="label">Gross revenue</span><span class="value">' + esc(revenueVal) + '</span></div>' +
+          '<div class="nau-rev-summary-row"><span class="label">Gross margin</span><span class="value ' + marginClass + '">' + esc(marginVal) + '</span></div>' +
+          '<div class="nau-rev-summary-row"><span class="label">Margin %</span><span class="value ' + marginClass + '">' + esc(marginPctVal) + '</span></div>';
+      }
+
+      /* ── Property breakdown ─────────────────────────────────── */
+      function renderPropertyBreakdown(filtered) {
+        var el = document.getElementById('propertyBreakdown');
+        if (!filtered.length) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No reservations in this period.</p>';
+          return;
+        }
+
+        /* Aggregate by property_id */
+        var propMap = new Map(); // property_id → { name, revenue, cost, count, missingCount }
+        filtered.forEach(function (r) {
+          var pid = r.property_id || '__unknown__';
+          var name = (r.properties && r.properties.display_name) ? r.properties.display_name : 'Unknown';
+          var entry = propMap.get(pid) || { name: name, revenue: 0, cost: 0, count: 0, missingCount: 0 };
+          entry.count++;
+          if (r.reservation_value_amount != null && (!r.reservation_value_currency || r.reservation_value_currency === 'EUR')) {
+            entry.revenue += parseFloat(r.reservation_value_amount);
+            var taskEntry = taskCostByReservation.get(r.id);
+            if (taskEntry) entry.cost += taskEntry.total;
+          } else {
+            entry.missingCount++;
+          }
+          propMap.set(pid, entry);
+        });
+
+        if (!propMap.size) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No property data available.</p>';
+          return;
+        }
+
+        var rows = [];
+        propMap.forEach(function (p) {
+          var margin    = p.revenue - p.cost;
+          var marginPct = p.revenue > 0 ? (margin / p.revenue * 100) : null;
+          var pctStr    = marginPct != null ? fmtPct(marginPct) : '—';
+          var pctClass  = marginPct == null ? 'nau-rev-margin-null' : (marginPct >= 0 ? 'nau-rev-margin-positive' : 'nau-rev-margin-negative');
+          var missingTag = p.missingCount > 0 ? ' <span style="font-size:0.73rem;color:#b45309">(' + p.missingCount + ' missing)</span>' : '';
+          rows.push(
+            '<tr>' +
+              '<td><span class="nau-rev-prop-name">' + esc(p.name) + '</span>' + missingTag + '</td>' +
+              '<td>' + esc(fmtEur(p.revenue)) + '</td>' +
+              '<td>' + esc(fmtEur(p.cost)) + '</td>' +
+              '<td class="' + pctClass + '">' + esc(pctStr) + '</td>' +
+            '</tr>'
+          );
+        });
+
+        el.innerHTML =
+          '<table class="nau-rev-prop-table">' +
+            '<thead><tr>' +
+              '<th>Property</th>' +
+              '<th>Revenue</th>' +
+              '<th>Cost</th>' +
+              '<th>Margin</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows.join('') + '</tbody>' +
+          '</table>';
+      }
+
+      /* ── Period filter wiring ───────────────────────────────── */
+      document.getElementById('periodFilters').addEventListener('click', function (e) {
+        var btn = e.target.closest('.nau-rev-filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('.nau-rev-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        activePeriod = btn.dataset.period;
+        renderAll();
+      });
+
+      /* ── Boot ───────────────────────────────────────────────── */
+      fetchAll();
+
     </script>
   </body>
 </html>
