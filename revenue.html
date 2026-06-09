@@ -345,6 +345,7 @@
         height: 100%;
         position: relative;
         min-width: 0;
+        cursor: pointer;
       }
 
       /* Bar is 68% of column width — the 32% gap + column gap creates clear bar separation */
@@ -383,6 +384,45 @@
       .nau-chart-bar.is-cost              { background: rgba(71, 85, 105, 0.42); }
       .nau-chart-bar.is-cost.is-current   { background: #475569; }
       .nau-chart-bar.is-cost:hover        { background: #475569 !important; }
+
+      /* Month click-filter visual states */
+      .nau-chart-col.is-dimmed .nau-chart-bar             { opacity: 0.28; }
+      .nau-chart-col.is-selected .nau-chart-bar           { background: var(--terracotta) !important; }
+      .nau-chart-col.is-selected .nau-chart-bar.is-positive { background: #15803d !important; }
+      .nau-chart-col.is-selected .nau-chart-bar.is-negative { background: #b91c1c !important; }
+      .nau-chart-col.is-selected .nau-chart-bar.is-cost   { background: #475569 !important; }
+      .nau-chart-col.is-selected .nau-chart-month-label   { color: var(--charcoal); font-weight: 800; }
+
+      /* Active month filter chip — above reservation list */
+      .nau-rev-filter-active-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(232, 93, 4, 0.08);
+        border: 1px solid rgba(232, 93, 4, 0.25);
+        border-radius: 99px;
+        padding: 4px 10px 4px 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--terracotta);
+        margin-bottom: 10px;
+      }
+
+      .nau-rev-filter-chip-clear {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        color: var(--terracotta);
+        opacity: 0.7;
+        display: flex;
+        align-items: center;
+      }
+
+      .nau-rev-filter-chip-clear:hover { opacity: 1; }
 
       /* Value label inside bar — visible only on tall bars */
       .nau-chart-bar-label {
@@ -655,6 +695,7 @@
 
               <!-- Reservation revenue list -->
               <div class="nau-rev-section-head">Reservations</div>
+              <div id="chartMonthFilterChip" style="display:none"></div>
               <div id="reservationList">
                 <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
               </div>
@@ -736,10 +777,11 @@
       }
 
       /* ── Period filter state ────────────────────────────────── */
-      var activePeriod     = 'month';
-      var chartMetric      = 'revenue';
-      var chartProperty    = 'all';
-      var chartTooltipData = new Map();
+      var activePeriod       = 'month';
+      var chartMetric        = 'revenue';
+      var chartProperty      = 'all';
+      var chartTooltipData   = new Map();
+      var selectedChartMonth = null;
 
       function periodBounds(period) {
         var now = new Date();
@@ -867,7 +909,14 @@
 
         /* HOMEOWNER PAGE — never reference commission, payout, partner earning, or Nauxica fee. */
         renderKPIs(hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? opCost : null, hasAnyRevenue ? grossMargin : null, marginPct);
-        renderReservationList(filtered, missingRevCount, nonEurReservations.length);
+
+        /* Apply chart month filter to reservation list only — KPIs reflect the full period */
+        var listFiltered        = selectedChartMonth
+          ? filtered.filter(function (r) { return (r.checkin_date || '').slice(0, 7) === selectedChartMonth; })
+          : filtered;
+        var listMissingRevCount = listFiltered.filter(function (r) { return r.reservation_value_amount == null; }).length;
+        var listNonEurCount     = listFiltered.filter(function (r) { return r.reservation_value_currency && r.reservation_value_currency !== 'EUR'; }).length;
+        renderReservationList(listFiltered, listMissingRevCount, listNonEurCount);
         renderPeriodSummary(bounds.label, filtered.length, withRevenue.length, missingRevCount, hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? grossMargin : null, marginPct);
         renderPropertyBreakdown(filtered);
         renderAnalyticsChart();
@@ -922,6 +971,20 @@
       function renderReservationList(filtered, missingRevCount, nonEurCount) {
         var list = document.getElementById('reservationList');
         var noticeEl = document.getElementById('missingValuesNotice');
+
+        /* Render active month filter chip */
+        var chipEl = document.getElementById('chartMonthFilterChip');
+        if (chipEl) {
+          if (selectedChartMonth) {
+            var chipLabel = ymToFullLabel(selectedChartMonth);
+            chipEl.innerHTML = '<div class="nau-rev-filter-active-chip">Filtered by ' + esc(chipLabel) +
+              ' <button class="nau-rev-filter-chip-clear" aria-label="Clear month filter">&#215;</button></div>';
+            chipEl.style.display = '';
+          } else {
+            chipEl.innerHTML = '';
+            chipEl.style.display = 'none';
+          }
+        }
 
         if (!filtered.length) {
           list.innerHTML = '<div class="empty-state-card"><p>No reservations in this period.</p></div>';
@@ -1286,7 +1349,8 @@
             var cvCls = 'nau-chart-bar is-cost' + (cv === 0 ? ' is-zero' : '') + (mk.isCurrent ? ' is-current' : '');
             var rvLbl = hrv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(rv, 'revenue')) + '</span>' : '';
             var cvLbl = hcv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(cv, 'cost'))    + '</span>' : '';
-            return '<div class="nau-chart-col" data-ym="' + esc(mk.ym) + '">' +
+            var rcSelCls = selectedChartMonth ? (mk.ym === selectedChartMonth ? ' is-selected' : ' is-dimmed') : '';
+            return '<div class="nau-chart-col' + rcSelCls + '" data-ym="' + esc(mk.ym) + '">' +
               '<div class="nau-chart-pair-wrap">' +
                 '<div class="' + rvCls + '" style="height:' + hrv + '%" title="' + esc('Revenue: ' + fmtChartVal(rv, 'revenue')) + '">' + rvLbl + '</div>' +
                 '<div class="' + cvCls + '" style="height:' + hcv + '%" title="' + esc('Cost: '    + fmtChartVal(cv, 'cost'))    + '">' + cvLbl + '</div>' +
@@ -1319,7 +1383,8 @@
             }
             if (mk.isCurrent) cls += ' is-current';
             var lbl = h >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(raw, chartMetric)) + '</span>' : '';
-            return '<div class="nau-chart-col" data-ym="' + esc(mk.ym) + '">' +
+            var smSelCls = selectedChartMonth ? (mk.ym === selectedChartMonth ? ' is-selected' : ' is-dimmed') : '';
+            return '<div class="nau-chart-col' + smSelCls + '" data-ym="' + esc(mk.ym) + '">' +
               '<div class="' + cls + '" style="height:' + h + '%" title="' + esc(fmtChartVal(raw, chartMetric)) + '">' + lbl + '</div>' +
               '<span class="nau-chart-month-label">' + esc(mk.label) + '</span>' +
             '</div>';
@@ -1395,6 +1460,7 @@
         document.querySelectorAll('#periodFilters .nau-rev-filter-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activePeriod = btn.dataset.period;
+        selectedChartMonth = null;
         renderAll();
       });
 
@@ -1418,7 +1484,15 @@
       /* ── Chart property selector wiring ─────────────────────── */
       document.getElementById('chartPropertySel').addEventListener('change', function () {
         chartProperty = this.value;
+        var hadMonthFilter = !!selectedChartMonth;
+        selectedChartMonth = null;
         renderAnalyticsChart();
+        if (hadMonthFilter) {
+          var base = filterReservations(activePeriod);
+          var mrc  = base.filter(function (r) { return r.reservation_value_amount == null; }).length;
+          var nec  = base.filter(function (r) { return r.reservation_value_currency && r.reservation_value_currency !== 'EUR'; }).length;
+          renderReservationList(base, mrc, nec);
+        }
       });
 
       /* ── Chart tooltip wiring ───────────────────────────────── */
@@ -1459,6 +1533,38 @@
           lastYm = null;
         });
       }());
+
+      /* ── Chart month click wiring ───────────────────────────── */
+      (function () {
+        var area = document.getElementById('analyticsChartArea');
+        if (!area) return;
+
+        area.addEventListener('click', function (e) {
+          var col = e.target.closest('[data-ym]');
+          if (!col) return;
+          var ym = col.dataset.ym;
+          selectedChartMonth = (selectedChartMonth === ym) ? null : ym;
+          renderAnalyticsChart();
+          var base = filterReservations(activePeriod);
+          var lf   = selectedChartMonth
+            ? base.filter(function (r) { return (r.checkin_date || '').slice(0, 7) === selectedChartMonth; })
+            : base;
+          var mrc  = lf.filter(function (r) { return r.reservation_value_amount == null; }).length;
+          var nec  = lf.filter(function (r) { return r.reservation_value_currency && r.reservation_value_currency !== 'EUR'; }).length;
+          renderReservationList(lf, mrc, nec);
+        });
+      }());
+
+      /* ── Chart month chip clear wiring ──────────────────────── */
+      document.getElementById('chartMonthFilterChip').addEventListener('click', function (e) {
+        if (!e.target.closest('.nau-rev-filter-chip-clear')) return;
+        selectedChartMonth = null;
+        renderAnalyticsChart();
+        var base = filterReservations(activePeriod);
+        var mrc  = base.filter(function (r) { return r.reservation_value_amount == null; }).length;
+        var nec  = base.filter(function (r) { return r.reservation_value_currency && r.reservation_value_currency !== 'EUR'; }).length;
+        renderReservationList(base, mrc, nec);
+      });
 
       /* ── Boot ───────────────────────────────────────────────── */
       fetchAll();
