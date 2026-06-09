@@ -437,6 +437,95 @@
         font-style: italic;
       }
 
+      /* ── Chart legend ──────────────────────────────────────── */
+      .nau-chart-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin-bottom: 12px;
+      }
+
+      .nau-chart-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--stone);
+        font-weight: 600;
+      }
+
+      .nau-chart-legend-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+
+      /* ── Chart y-axis ticks and guide lines ────────────────── */
+      /* Tick labels: absolutely positioned inside .nau-chart-bars (position:relative) */
+      .nau-chart-ytick {
+        position: absolute;
+        left: 0;
+        width: 36px;
+        text-align: right;
+        font-size: 0.58rem;
+        font-weight: 600;
+        color: rgba(15, 23, 42, 0.3);
+        transform: translateY(50%);
+        line-height: 1;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      /* Guide lines extend from y-axis zone (left:42px) to chart right edge */
+      .nau-chart-guideline {
+        position: absolute;
+        left: 42px;
+        right: 8px;
+        height: 1px;
+        background: rgba(15, 23, 42, 0.05);
+        pointer-events: none;
+      }
+
+      /* ── Chart rich tooltip ────────────────────────────────── */
+      .nau-chart-tooltip {
+        position: fixed;
+        z-index: 9999;
+        pointer-events: none;
+        visibility: hidden;
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+        min-width: 180px;
+        font-size: 0.78rem;
+      }
+
+      .nau-chart-tooltip.is-visible { visibility: visible; }
+
+      .nau-chart-tooltip-month {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--charcoal);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+
+      .nau-chart-tooltip-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        padding: 2px 0;
+      }
+
+      .nau-chart-tooltip-label { color: var(--stone); font-weight: 600; font-size: 0.78rem; }
+      .nau-chart-tooltip-value { font-weight: 800; color: var(--charcoal); font-variant-numeric: tabular-nums; }
+      .nau-chart-tooltip-value.is-positive { color: #15803d; }
+      .nau-chart-tooltip-value.is-negative { color: #b91c1c; }
+
       /* ── Top Performing Property card ──────────────────────── */
       .nau-top-prop-name {
         font-size: 1rem;
@@ -557,6 +646,7 @@
                     <option value="all">All properties</option>
                   </select>
                 </div>
+                <div id="chartLegend" class="nau-chart-legend"></div>
                 <div class="nau-chart-bars is-empty" id="analyticsChartArea">
                   <span class="nau-chart-empty-msg">Loading…</span>
                 </div>
@@ -608,6 +698,8 @@
       </section>
     </main>
 
+    <div id="chartTooltip" class="nau-chart-tooltip" role="tooltip" aria-hidden="true"></div>
+
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
@@ -644,9 +736,10 @@
       }
 
       /* ── Period filter state ────────────────────────────────── */
-      var activePeriod  = 'month';
-      var chartMetric   = 'revenue';
-      var chartProperty = 'all';
+      var activePeriod     = 'month';
+      var chartMetric      = 'revenue';
+      var chartProperty    = 'all';
+      var chartTooltipData = new Map();
 
       function periodBounds(period) {
         var now = new Date();
@@ -1067,28 +1160,114 @@
         return v < 0 ? '−' + str : str;
       }
 
+      function ymToFullLabel(ym) {
+        var p = ym.split('-');
+        return monthLabel(parseInt(p[0], 10), parseInt(p[1], 10) - 1);
+      }
+
+      function buildLegendHTML(metric) {
+        var defs;
+        if (metric === 'revcost') {
+          defs = [{ color: 'var(--terracotta)', label: 'Revenue' }, { color: '#475569', label: 'Cost' }];
+        } else if (metric === 'revenue') {
+          defs = [{ color: 'var(--terracotta)', label: 'Revenue' }];
+        } else if (metric === 'cost') {
+          defs = [{ color: '#475569', label: 'Operational Cost' }];
+        } else if (metric === 'margin') {
+          defs = [{ color: '#15803d', label: 'Gross Margin — positive' }, { color: '#b91c1c', label: 'Gross Margin — negative' }];
+        } else if (metric === 'marginpct') {
+          defs = [{ color: '#15803d', label: 'Margin % — positive' }, { color: '#b91c1c', label: 'Margin % — negative' }];
+        } else { return ''; }
+        return defs.map(function (d) {
+          return '<div class="nau-chart-legend-item">' +
+            '<span class="nau-chart-legend-swatch" style="background:' + esc(d.color) + '"></span>' +
+            '<span>' + esc(d.label) + '</span></div>';
+        }).join('');
+      }
+
+      function buildYAxisHTML(maxVal, metric) {
+        /* Pixel positions match .nau-chart-bars { height:170px; padding:12px 8px 26px } */
+        if (!maxVal || maxVal <= 0) return '';
+        var BOTTOM_PAD = 26;
+        var CONTENT_H  = 132; // 170 - 12 - 26
+        var parts = [];
+        [0, 0.25, 0.5, 0.75, 1.0].forEach(function (t) {
+          var v   = maxVal * t;
+          var bpx = BOTTOM_PAD + Math.round(t * CONTENT_H);
+          var lbl = metric === 'marginpct'
+            ? parseFloat(v).toFixed(0) + '%'
+            : '€' + Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          if (t > 0) parts.push('<div class="nau-chart-guideline" style="bottom:' + bpx + 'px"></div>');
+          parts.push('<span class="nau-chart-ytick" style="bottom:' + bpx + 'px">' + esc(lbl) + '</span>');
+        });
+        return parts.join('');
+      }
+
+      function buildTooltipHTML(data) {
+        if (!data) return '';
+        var mCls  = data.margin >= 0 ? 'is-positive' : 'is-negative';
+        var mpCls = (data.marginpct != null && data.marginpct >= 0) ? 'is-positive' : 'is-negative';
+        var mpStr = data.marginpct != null ? fmtChartVal(data.marginpct, 'marginpct') : '—';
+        return '<div class="nau-chart-tooltip-month">' + esc(data.label) + '</div>' +
+          '<div class="nau-chart-tooltip-row"><span class="nau-chart-tooltip-label">Revenue</span>' +
+            '<span class="nau-chart-tooltip-value">' + esc(fmtChartVal(data.rev, 'revenue')) + '</span></div>' +
+          '<div class="nau-chart-tooltip-row"><span class="nau-chart-tooltip-label">Cost</span>' +
+            '<span class="nau-chart-tooltip-value">' + esc(fmtChartVal(data.cost, 'cost')) + '</span></div>' +
+          '<div class="nau-chart-tooltip-row"><span class="nau-chart-tooltip-label">Gross Margin</span>' +
+            '<span class="nau-chart-tooltip-value ' + mCls + '">' + esc(fmtChartVal(data.margin, 'margin')) + '</span></div>' +
+          '<div class="nau-chart-tooltip-row"><span class="nau-chart-tooltip-label">Margin %</span>' +
+            '<span class="nau-chart-tooltip-value ' + mpCls + '">' + esc(mpStr) + '</span></div>';
+      }
+
       function renderAnalyticsChart() {
         var chartEl   = document.getElementById('analyticsChartArea');
         var summaryEl = document.getElementById('chartSummary');
+        var legendEl  = document.getElementById('chartLegend');
         if (!chartEl) return;
+
         var base      = filterReservations(activePeriod);
         var res       = chartProperty === 'all' ? base : base.filter(function (r) { return r.property_id === chartProperty; });
         var monthKeys = genMonthKeys(activePeriod);
+
         if (!monthKeys.length) {
+          chartEl.style.paddingLeft = '';
           chartEl.className = 'nau-chart-bars is-empty';
           chartEl.innerHTML = '<span class="nau-chart-empty-msg">No data available.</span>';
           if (summaryEl) summaryEl.textContent = '';
+          if (legendEl)  legendEl.innerHTML    = '';
           return;
         }
 
         var metricLabels = { revenue: 'Revenue', cost: 'Operational Cost', margin: 'Gross Margin', marginpct: 'Margin %', revcost: 'Revenue vs Cost' };
         var periodLabels = { month: 'This month', '3months': 'Last 3 months', year: 'This year', all: 'All time' };
+
+        /* Legend */
+        if (legendEl) legendEl.innerHTML = buildLegendHTML(chartMetric);
+
+        /* Pre-compute all 4 metric buckets once — tooltip reads from this map */
+        var ttRev  = buildMonthBuckets(res, 'revenue');
+        var ttCost = buildMonthBuckets(res, 'cost');
+        chartTooltipData = new Map();
+        monthKeys.forEach(function (mk) {
+          var rev    = ttRev[mk.ym]  || 0;
+          var cost   = ttCost[mk.ym] || 0;
+          var margin = rev - cost;
+          chartTooltipData.set(mk.ym, {
+            label:     ymToFullLabel(mk.ym),
+            rev:       rev,
+            cost:      cost,
+            margin:    margin,
+            marginpct: rev > 0 ? (margin / rev * 100) : null
+          });
+        });
+
         chartEl.className = 'nau-chart-bars';
+        var yAxis = '';
 
         if (chartMetric === 'revcost') {
           /* ── Revenue vs Cost: two bars per month ─────────────── */
-          var revBuckets  = buildMonthBuckets(res, 'revenue');
-          var costBuckets = buildMonthBuckets(res, 'cost');
+          var revBuckets  = ttRev;
+          var costBuckets = ttCost;
           var maxRV = 0;
           monthKeys.forEach(function (mk) {
             var rv = revBuckets[mk.ym]  || 0;
@@ -1096,6 +1275,8 @@
             if (rv > maxRV) maxRV = rv;
             if (cv > maxRV) maxRV = cv;
           });
+          if (maxRV > 0) { yAxis = buildYAxisHTML(maxRV, 'revenue'); chartEl.style.paddingLeft = '42px'; }
+          else { chartEl.style.paddingLeft = '8px'; }
           var rcCols = monthKeys.map(function (mk) {
             var rv  = revBuckets[mk.ym]  || 0;
             var cv  = costBuckets[mk.ym] || 0;
@@ -1105,7 +1286,7 @@
             var cvCls = 'nau-chart-bar is-cost' + (cv === 0 ? ' is-zero' : '') + (mk.isCurrent ? ' is-current' : '');
             var rvLbl = hrv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(rv, 'revenue')) + '</span>' : '';
             var cvLbl = hcv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(cv, 'cost'))    + '</span>' : '';
-            return '<div class="nau-chart-col">' +
+            return '<div class="nau-chart-col" data-ym="' + esc(mk.ym) + '">' +
               '<div class="nau-chart-pair-wrap">' +
                 '<div class="' + rvCls + '" style="height:' + hrv + '%" title="' + esc('Revenue: ' + fmtChartVal(rv, 'revenue')) + '">' + rvLbl + '</div>' +
                 '<div class="' + cvCls + '" style="height:' + hcv + '%" title="' + esc('Cost: '    + fmtChartVal(cv, 'cost'))    + '">' + cvLbl + '</div>' +
@@ -1113,7 +1294,7 @@
               '<span class="nau-chart-month-label">' + esc(mk.label) + '</span>' +
             '</div>';
           });
-          chartEl.innerHTML = rcCols.join('');
+          chartEl.innerHTML = yAxis + rcCols.join('');
 
         } else {
           /* ── Single-metric mode ──────────────────────────────── */
@@ -1124,6 +1305,8 @@
             var v = Math.abs(buckets[mk.ym] || 0);
             if (v > maxSM) maxSM = v;
           });
+          if (maxSM > 0) { yAxis = buildYAxisHTML(maxSM, chartMetric); chartEl.style.paddingLeft = '42px'; }
+          else { chartEl.style.paddingLeft = '8px'; }
           var smCols = monthKeys.map(function (mk) {
             var raw = buckets[mk.ym];
             var abs = Math.abs(raw || 0);
@@ -1136,12 +1319,12 @@
             }
             if (mk.isCurrent) cls += ' is-current';
             var lbl = h >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(raw, chartMetric)) + '</span>' : '';
-            return '<div class="nau-chart-col">' +
+            return '<div class="nau-chart-col" data-ym="' + esc(mk.ym) + '">' +
               '<div class="' + cls + '" style="height:' + h + '%" title="' + esc(fmtChartVal(raw, chartMetric)) + '">' + lbl + '</div>' +
               '<span class="nau-chart-month-label">' + esc(mk.label) + '</span>' +
             '</div>';
           });
-          chartEl.innerHTML = smCols.join('');
+          chartEl.innerHTML = yAxis + smCols.join('');
         }
 
         /* Summary line */
@@ -1237,6 +1420,45 @@
         chartProperty = this.value;
         renderAnalyticsChart();
       });
+
+      /* ── Chart tooltip wiring ───────────────────────────────── */
+      (function () {
+        var tooltipEl = document.getElementById('chartTooltip');
+        if (!tooltipEl) return;
+        var lastYm = null;
+        var area   = document.getElementById('analyticsChartArea');
+        if (!area) return;
+
+        area.addEventListener('mousemove', function (e) {
+          var col = e.target.closest('[data-ym]');
+          if (!col) {
+            tooltipEl.classList.remove('is-visible');
+            lastYm = null;
+            return;
+          }
+          var ym = col.dataset.ym;
+          if (ym !== lastYm) {
+            var data = chartTooltipData.get(ym);
+            if (!data) { tooltipEl.classList.remove('is-visible'); return; }
+            tooltipEl.innerHTML = buildTooltipHTML(data);
+            lastYm = ym;
+          }
+          var tx = e.clientX + 16;
+          var ty = e.clientY - 10;
+          var tw = tooltipEl.offsetWidth  || 190;
+          var th = tooltipEl.offsetHeight || 110;
+          if (tx + tw > window.innerWidth  - 8) tx = e.clientX - tw - 12;
+          if (ty + th > window.innerHeight - 8) ty = e.clientY - th - 4;
+          tooltipEl.style.left = tx + 'px';
+          tooltipEl.style.top  = ty + 'px';
+          tooltipEl.classList.add('is-visible');
+        });
+
+        area.addEventListener('mouseleave', function () {
+          tooltipEl.classList.remove('is-visible');
+          lastYm = null;
+        });
+      }());
 
       /* ── Boot ───────────────────────────────────────────────── */
       fetchAll();
