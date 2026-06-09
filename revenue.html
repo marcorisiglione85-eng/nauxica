@@ -148,7 +148,7 @@
       .nau-rev-prop-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.84rem;
+        font-size: 0.80rem;
       }
 
       .nau-rev-prop-table th {
@@ -252,6 +252,199 @@
       @media (max-width: 540px) {
         .nau-rev-kpi-strip { grid-template-columns: 1fr 1fr; }
       }
+
+      /* ── Clickable reservation rows ────────────────────────── */
+      .nau-rev-row.is-clickable {
+        cursor: pointer;
+        border-radius: 8px;
+        margin: 0 -8px;
+        padding-left: 8px;
+        padding-right: 8px;
+        transition: background .12s;
+      }
+
+      .nau-rev-row.is-clickable:hover {
+        background: rgba(15,23,42,0.03);
+      }
+
+      /* ── Add booking value CTA link ────────────────────────── */
+      .nau-rev-cta-link {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: rgba(180,83,9,0.45);
+      }
+
+      .nau-rev-cta-link:hover {
+        text-decoration-color: #b45309;
+      }
+
+      /* ── Property breakdown — Margin € column ─────────────── */
+      @media (max-width: 700px) {
+        .nau-rev-col-margin-eur { display: none; }
+      }
+
+      /* ── Analytics chart ───────────────────────────────────── */
+      .nau-chart-section { margin-bottom: 24px; }
+
+      .nau-chart-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .nau-chart-select {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1.5px solid rgba(15,23,42,0.12);
+        background: transparent;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--charcoal);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      /* Chart container — cream background, bottom border as x-axis baseline */
+      .nau-chart-bars {
+        height: 170px;
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        padding: 12px 8px 26px;
+        position: relative;
+        background: #faf9f7;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,0.06);
+        border-bottom: 2px solid rgba(15,23,42,0.1);
+      }
+
+      .nau-chart-bars.is-empty {
+        height: 80px;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1.5px dashed rgba(15,23,42,0.1);
+        border-radius: 10px;
+        padding: 0;
+      }
+
+      .nau-chart-empty-msg {
+        font-size: 0.85rem;
+        color: var(--stone);
+      }
+
+      .nau-chart-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        position: relative;
+        min-width: 0;
+      }
+
+      /* Bar is 68% of column width — the 32% gap + column gap creates clear bar separation */
+      .nau-chart-bar {
+        width: 68%;
+        background: rgba(232, 93, 4, 0.38);
+        border-radius: 4px 4px 0 0;
+        transition: background .15s;
+        min-height: 3px;
+        position: relative;
+      }
+
+      /* Current month: full terracotta */
+      .nau-chart-bar.is-current {
+        background: var(--terracotta);
+      }
+
+      /* Empty/zero months: near-invisible */
+      .nau-chart-bar.is-zero {
+        background: rgba(232, 93, 4, 0.1);
+      }
+
+      .nau-chart-bar:hover { background: var(--terracotta) !important; }
+
+      /* Positive margin bars: green */
+      .nau-chart-bar.is-positive              { background: rgba(21, 128, 61, 0.42); }
+      .nau-chart-bar.is-positive.is-current   { background: #15803d; }
+      .nau-chart-bar.is-positive:hover        { background: #15803d !important; }
+
+      /* Negative margin bars: red */
+      .nau-chart-bar.is-negative              { background: rgba(185, 28, 28, 0.42); }
+      .nau-chart-bar.is-negative.is-current   { background: #b91c1c; }
+      .nau-chart-bar.is-negative:hover        { background: #b91c1c !important; }
+
+      /* Cost bar — Revenue vs Cost mode */
+      .nau-chart-bar.is-cost              { background: rgba(71, 85, 105, 0.42); }
+      .nau-chart-bar.is-cost.is-current   { background: #475569; }
+      .nau-chart-bar.is-cost:hover        { background: #475569 !important; }
+
+      /* Value label inside bar — visible only on tall bars */
+      .nau-chart-bar-label {
+        position: absolute;
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.88);
+        white-space: nowrap;
+        pointer-events: none;
+        line-height: 1;
+      }
+
+      /* Pair container — Revenue vs Cost mode, one per month column */
+      .nau-chart-pair-wrap {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 88%;
+        height: calc(100% - 18px);
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+      }
+
+      /* Bars inside pair fill width equally; override the 68% single-bar width */
+      .nau-chart-pair-wrap .nau-chart-bar {
+        flex: 1;
+        width: auto;
+      }
+
+      .nau-chart-month-label {
+        position: absolute;
+        bottom: 0;
+        font-size: 0.67rem;
+        font-weight: 600;
+        color: var(--stone);
+        text-align: center;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .nau-chart-summary {
+        font-size: 0.75rem;
+        color: var(--stone);
+        margin-top: 8px;
+        font-style: italic;
+      }
+
+      /* ── Top Performing Property card ──────────────────────── */
+      .nau-top-prop-name {
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        margin-bottom: 12px;
+        word-break: break-word;
+      }
     </style>
   </head>
   <body class="homeowner-dashboard-page">
@@ -349,6 +542,27 @@
                 </div>
               </div>
 
+              <!-- Analytics chart -->
+              <div class="nau-chart-section">
+                <div class="nau-rev-section-head" style="margin-top:4px">Revenue Analytics</div>
+                <div class="nau-chart-controls">
+                  <div class="nau-rev-filters" id="chartMetricPills" style="margin-bottom:0;flex:1">
+                    <button class="nau-rev-filter-btn active" data-metric="revenue">Revenue</button>
+                    <button class="nau-rev-filter-btn" data-metric="cost">Operational Cost</button>
+                    <button class="nau-rev-filter-btn" data-metric="margin">Gross Margin</button>
+                    <button class="nau-rev-filter-btn" data-metric="marginpct">Margin %</button>
+                    <button class="nau-rev-filter-btn" data-metric="revcost">Revenue vs Cost</button>
+                  </div>
+                  <select class="nau-chart-select" id="chartPropertySel">
+                    <option value="all">All properties</option>
+                  </select>
+                </div>
+                <div class="nau-chart-bars is-empty" id="analyticsChartArea">
+                  <span class="nau-chart-empty-msg">Loading…</span>
+                </div>
+                <div class="nau-chart-summary" id="chartSummary"></div>
+              </div>
+
               <!-- Reservation revenue list -->
               <div class="nau-rev-section-head">Reservations</div>
               <div id="reservationList">
@@ -378,6 +592,14 @@
               <h3 class="dashboard-section-title">Property breakdown</h3>
               <p class="dashboard-card-text">Gross revenue and margin per property</p>
               <div id="propertyBreakdown">
+                <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card" style="margin-top:16px">
+              <h3 class="dashboard-section-title">Top Performing Property</h3>
+              <p class="dashboard-card-text">Highest-revenue property in this period</p>
+              <div id="topPropertyCard">
                 <p style="color:var(--stone);font-size:0.88rem;margin:0">Loading…</p>
               </div>
             </div>
@@ -422,7 +644,9 @@
       }
 
       /* ── Period filter state ────────────────────────────────── */
-      var activePeriod = 'month';
+      var activePeriod  = 'month';
+      var chartMetric   = 'revenue';
+      var chartProperty = 'all';
 
       function periodBounds(period) {
         var now = new Date();
@@ -498,6 +722,7 @@
         }
 
         allReservations = resResult.data || [];
+        populatePropertySelector();
 
         /* Build task cost map keyed by reservation_id */
         (taskResult.data || []).forEach(function (t) {
@@ -547,10 +772,13 @@
 
         var hasAnyRevenue = withRevenue.length > 0;
 
+        /* HOMEOWNER PAGE — never reference commission, payout, partner earning, or Nauxica fee. */
         renderKPIs(hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? opCost : null, hasAnyRevenue ? grossMargin : null, marginPct);
         renderReservationList(filtered, missingRevCount, nonEurReservations.length);
         renderPeriodSummary(bounds.label, filtered.length, withRevenue.length, missingRevCount, hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? grossMargin : null, marginPct);
         renderPropertyBreakdown(filtered);
+        renderAnalyticsChart();
+        renderTopProperty(filtered);
       }
 
       /* ── KPI strip ──────────────────────────────────────────── */
@@ -609,24 +837,28 @@
         }
 
         var rows = filtered.map(function (r) {
-          var propName = (r.properties && r.properties.display_name) ? r.properties.display_name : 'Unknown property';
-          var source   = r.booking_source ? r.booking_source.replace(/_/g,' ') : '—';
-          var status   = r.reservation_status || '—';
-          var ci       = fmtDate(r.checkin_date);
-          var co       = fmtDate(r.checkout_date);
+          var propName  = (r.properties && r.properties.display_name) ? r.properties.display_name : 'Unknown property';
+          var source    = r.booking_source ? r.booking_source.replace(/_/g,' ') : '—';
+          var status    = r.reservation_status || '—';
+          var ci        = fmtDate(r.checkin_date);
+          var co        = fmtDate(r.checkout_date);
           var taskEntry = taskCostByReservation.get(r.id);
-          var costStr  = taskEntry ? fmtEur(taskEntry.total) : '—';
+          var costStr   = taskEntry ? fmtEur(taskEntry.total) : '—';
+          var detailUrl = 'guest-detail.html?id=' + r.id;
 
           var grossHtml;
           if (r.reservation_value_amount == null) {
-            grossHtml = '<div class="nau-rev-row-gross is-missing">Missing value</div>';
+            var ariaLabel = esc('Add booking value for ' + propName + ', check-in ' + ci);
+            grossHtml = '<div class="nau-rev-row-gross is-missing">' +
+              '<a href="' + esc(detailUrl) + '" class="nau-rev-cta-link" aria-label="' + ariaLabel + '">Add booking value</a>' +
+              '</div>';
           } else if (r.reservation_value_currency && r.reservation_value_currency !== 'EUR') {
             grossHtml = '<div class="nau-rev-row-gross is-missing">' + esc(r.reservation_value_currency) + ' ' + esc(parseFloat(r.reservation_value_amount).toFixed(2)) + '</div>';
           } else {
             grossHtml = '<div class="nau-rev-row-gross">' + esc(fmtEur(r.reservation_value_amount)) + '</div>';
           }
 
-          return '<div class="nau-rev-row">' +
+          return '<div class="nau-rev-row is-clickable" data-detail-url="' + esc(detailUrl) + '">' +
             '<div class="nau-rev-row-left">' +
               '<div class="nau-rev-row-label">' + esc(propName) + '</div>' +
               '<div class="nau-rev-row-meta">' + esc(ci) + ' → ' + esc(co) + ' · ' + esc(source) + ' · ' + esc(status) + '</div>' +
@@ -721,12 +953,14 @@
           var marginPct = p.revenue > 0 ? (margin / p.revenue * 100) : null;
           var pctStr    = marginPct != null ? fmtPct(marginPct) : '—';
           var pctClass  = marginPct == null ? 'nau-rev-margin-null' : (marginPct >= 0 ? 'nau-rev-margin-positive' : 'nau-rev-margin-negative');
+          var eurClass  = margin >= 0 ? 'nau-rev-margin-positive' : 'nau-rev-margin-negative';
           var missingTag = p.missingCount > 0 ? ' <span style="font-size:0.73rem;color:#b45309">(' + p.missingCount + ' missing)</span>' : '';
           rows.push(
             '<tr>' +
               '<td><span class="nau-rev-prop-name">' + esc(p.name) + '</span>' + missingTag + '</td>' +
               '<td>' + esc(fmtEur(p.revenue)) + '</td>' +
               '<td>' + esc(fmtEur(p.cost)) + '</td>' +
+              '<td class="nau-rev-col-margin-eur ' + eurClass + '">' + esc(fmtEur(margin)) + '</td>' +
               '<td class="' + pctClass + '">' + esc(pctStr) + '</td>' +
             '</tr>'
           );
@@ -738,20 +972,270 @@
               '<th>Property</th>' +
               '<th>Revenue</th>' +
               '<th>Cost</th>' +
-              '<th>Margin</th>' +
+              '<th class="nau-rev-col-margin-eur">Margin €</th>' +
+              '<th>Margin %</th>' +
             '</tr></thead>' +
             '<tbody>' + rows.join('') + '</tbody>' +
           '</table>';
+      }
+
+      /* ── Analytics chart helpers ────────────────────────────── */
+      var MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      function genMonthKeys(period) {
+        var now  = new Date();
+        var curY = now.getFullYear();
+        var curM = now.getMonth();
+        var curYm = curY + '-' + String(curM + 1).padStart(2, '0');
+        var keys = [];
+
+        if (period === 'month') {
+          keys.push({ ym: curYm, label: MON_SHORT[curM], isCurrent: true });
+          return keys;
+        }
+        if (period === '3months') {
+          for (var i = 2; i >= 0; i--) {
+            var d  = new Date(curY, curM - i, 1);
+            var ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            keys.push({ ym: ym, label: MON_SHORT[d.getMonth()], isCurrent: i === 0 });
+          }
+          return keys;
+        }
+        if (period === 'year') {
+          for (var mo = 0; mo < 12; mo++) {
+            var ym = curY + '-' + String(mo + 1).padStart(2, '0');
+            keys.push({ ym: ym, label: MON_SHORT[mo], isCurrent: mo === curM });
+          }
+          return keys;
+        }
+        /* all — from earliest checkin to current month, capped at 24 */
+        if (!allReservations.length) return [];
+        var minYm = null;
+        allReservations.forEach(function (r) {
+          if (r.checkin_date) {
+            var ym = r.checkin_date.slice(0, 7);
+            if (!minYm || ym < minYm) minYm = ym;
+          }
+        });
+        if (!minYm) return [];
+        var ptr = minYm;
+        while (ptr <= curYm) {
+          var p = ptr.split('-');
+          var py = parseInt(p[0], 10);
+          var pm = parseInt(p[1], 10) - 1;
+          keys.push({ ym: ptr, label: MON_SHORT[pm], isCurrent: ptr === curYm });
+          pm++;
+          if (pm > 11) { pm = 0; py++; }
+          ptr = py + '-' + String(pm + 1).padStart(2, '0');
+        }
+        if (keys.length > 24) keys = keys.slice(keys.length - 24);
+        return keys;
+      }
+
+      function buildMonthBuckets(reservations, metric) {
+        var revByMonth  = {};
+        var costByMonth = {};
+        reservations.forEach(function (r) {
+          if (!r.checkin_date) return;
+          var ym = r.checkin_date.slice(0, 7);
+          if (!revByMonth[ym])  revByMonth[ym]  = 0;
+          if (!costByMonth[ym]) costByMonth[ym] = 0;
+          if (r.reservation_value_amount != null && (!r.reservation_value_currency || r.reservation_value_currency === 'EUR')) {
+            revByMonth[ym] += parseFloat(r.reservation_value_amount);
+          }
+          var te = taskCostByReservation.get(r.id);
+          if (te) costByMonth[ym] += te.total;
+        });
+        var result = {};
+        Object.keys(revByMonth).forEach(function (ym) {
+          var rev  = revByMonth[ym]  || 0;
+          var cost = costByMonth[ym] || 0;
+          var mar  = rev - cost;
+          if (metric === 'revenue')        result[ym] = rev;
+          else if (metric === 'cost')      result[ym] = cost;
+          else if (metric === 'margin')    result[ym] = mar;
+          else if (metric === 'marginpct') result[ym] = rev > 0 ? (mar / rev * 100) : 0;
+        });
+        return result;
+      }
+
+      function fmtChartVal(v, metric) {
+        if (v == null) return '—';
+        if (metric === 'marginpct') return parseFloat(v).toFixed(1) + '%';
+        var abs = Math.abs(v);
+        var str = '€' + Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return v < 0 ? '−' + str : str;
+      }
+
+      function renderAnalyticsChart() {
+        var chartEl   = document.getElementById('analyticsChartArea');
+        var summaryEl = document.getElementById('chartSummary');
+        if (!chartEl) return;
+        var base      = filterReservations(activePeriod);
+        var res       = chartProperty === 'all' ? base : base.filter(function (r) { return r.property_id === chartProperty; });
+        var monthKeys = genMonthKeys(activePeriod);
+        if (!monthKeys.length) {
+          chartEl.className = 'nau-chart-bars is-empty';
+          chartEl.innerHTML = '<span class="nau-chart-empty-msg">No data available.</span>';
+          if (summaryEl) summaryEl.textContent = '';
+          return;
+        }
+
+        var metricLabels = { revenue: 'Revenue', cost: 'Operational Cost', margin: 'Gross Margin', marginpct: 'Margin %', revcost: 'Revenue vs Cost' };
+        var periodLabels = { month: 'This month', '3months': 'Last 3 months', year: 'This year', all: 'All time' };
+        chartEl.className = 'nau-chart-bars';
+
+        if (chartMetric === 'revcost') {
+          /* ── Revenue vs Cost: two bars per month ─────────────── */
+          var revBuckets  = buildMonthBuckets(res, 'revenue');
+          var costBuckets = buildMonthBuckets(res, 'cost');
+          var maxRV = 0;
+          monthKeys.forEach(function (mk) {
+            var rv = revBuckets[mk.ym]  || 0;
+            var cv = costBuckets[mk.ym] || 0;
+            if (rv > maxRV) maxRV = rv;
+            if (cv > maxRV) maxRV = cv;
+          });
+          var rcCols = monthKeys.map(function (mk) {
+            var rv  = revBuckets[mk.ym]  || 0;
+            var cv  = costBuckets[mk.ym] || 0;
+            var hrv = maxRV > 0 ? Math.max(4, Math.round((rv / maxRV) * 100)) : 4;
+            var hcv = maxRV > 0 ? Math.max(4, Math.round((cv / maxRV) * 100)) : 4;
+            var rvCls = 'nau-chart-bar' + (rv === 0 ? ' is-zero' : '') + (mk.isCurrent ? ' is-current' : '');
+            var cvCls = 'nau-chart-bar is-cost' + (cv === 0 ? ' is-zero' : '') + (mk.isCurrent ? ' is-current' : '');
+            var rvLbl = hrv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(rv, 'revenue')) + '</span>' : '';
+            var cvLbl = hcv >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(cv, 'cost'))    + '</span>' : '';
+            return '<div class="nau-chart-col">' +
+              '<div class="nau-chart-pair-wrap">' +
+                '<div class="' + rvCls + '" style="height:' + hrv + '%" title="' + esc('Revenue: ' + fmtChartVal(rv, 'revenue')) + '">' + rvLbl + '</div>' +
+                '<div class="' + cvCls + '" style="height:' + hcv + '%" title="' + esc('Cost: '    + fmtChartVal(cv, 'cost'))    + '">' + cvLbl + '</div>' +
+              '</div>' +
+              '<span class="nau-chart-month-label">' + esc(mk.label) + '</span>' +
+            '</div>';
+          });
+          chartEl.innerHTML = rcCols.join('');
+
+        } else {
+          /* ── Single-metric mode ──────────────────────────────── */
+          var buckets        = buildMonthBuckets(res, chartMetric);
+          var isMarginMetric = chartMetric === 'margin' || chartMetric === 'marginpct';
+          var maxSM          = 0;
+          monthKeys.forEach(function (mk) {
+            var v = Math.abs(buckets[mk.ym] || 0);
+            if (v > maxSM) maxSM = v;
+          });
+          var smCols = monthKeys.map(function (mk) {
+            var raw = buckets[mk.ym];
+            var abs = Math.abs(raw || 0);
+            var h   = maxSM > 0 ? Math.max(4, Math.round((abs / maxSM) * 100)) : 4;
+            var cls = 'nau-chart-bar';
+            if (raw == null || raw === 0) {
+              cls += ' is-zero';
+            } else if (isMarginMetric) {
+              cls += raw >= 0 ? ' is-positive' : ' is-negative';
+            }
+            if (mk.isCurrent) cls += ' is-current';
+            var lbl = h >= 35 ? '<span class="nau-chart-bar-label">' + esc(fmtChartVal(raw, chartMetric)) + '</span>' : '';
+            return '<div class="nau-chart-col">' +
+              '<div class="' + cls + '" style="height:' + h + '%" title="' + esc(fmtChartVal(raw, chartMetric)) + '">' + lbl + '</div>' +
+              '<span class="nau-chart-month-label">' + esc(mk.label) + '</span>' +
+            '</div>';
+          });
+          chartEl.innerHTML = smCols.join('');
+        }
+
+        /* Summary line */
+        if (summaryEl) {
+          var propLabel = 'All properties';
+          if (chartProperty !== 'all') {
+            var match = allReservations.find(function (r) { return r.property_id === chartProperty; });
+            if (match && match.properties && match.properties.display_name) propLabel = match.properties.display_name;
+          }
+          summaryEl.textContent = 'Showing ' + (metricLabels[chartMetric] || chartMetric) + ' for ' + propLabel + ' — ' + (periodLabels[activePeriod] || activePeriod);
+        }
+      }
+
+      function populatePropertySelector() {
+        var sel = document.getElementById('chartPropertySel');
+        if (!sel) return;
+        var seen = new Set();
+        var opts = ['<option value="all">All properties</option>'];
+        allReservations.forEach(function (r) {
+          if (r.property_id && !seen.has(r.property_id)) {
+            seen.add(r.property_id);
+            var name = (r.properties && r.properties.display_name) ? r.properties.display_name : r.property_id;
+            opts.push('<option value="' + esc(r.property_id) + '">' + esc(name) + '</option>');
+          }
+        });
+        sel.innerHTML = opts.join('');
+      }
+
+      function renderTopProperty(filtered) {
+        var el = document.getElementById('topPropertyCard');
+        if (!el) return;
+        if (!filtered.length) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No reservations in this period.</p>';
+          return;
+        }
+        var propMap = new Map();
+        filtered.forEach(function (r) {
+          var pid  = r.property_id || '__unknown__';
+          var name = (r.properties && r.properties.display_name) ? r.properties.display_name : 'Unknown';
+          var e    = propMap.get(pid) || { name: name, revenue: 0, cost: 0 };
+          if (r.reservation_value_amount != null && (!r.reservation_value_currency || r.reservation_value_currency === 'EUR')) {
+            e.revenue += parseFloat(r.reservation_value_amount);
+            var te = taskCostByReservation.get(r.id);
+            if (te) e.cost += te.total;
+          }
+          propMap.set(pid, e);
+        });
+        var top = null;
+        propMap.forEach(function (p) { if (!top || p.revenue > top.revenue) top = p; });
+        if (!top || top.revenue === 0) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No revenue values recorded for this period.</p>';
+          return;
+        }
+        var margin = top.revenue - top.cost;
+        var mPct   = top.revenue > 0 ? (margin / top.revenue * 100) : null;
+        var mClass = margin >= 0 ? 'nau-rev-margin-positive' : 'nau-rev-margin-negative';
+        el.innerHTML =
+          '<div class="nau-top-prop-name">' + esc(top.name) + '</div>' +
+          '<div class="nau-rev-summary-row"><span class="label">Revenue</span><span class="value">' + esc(fmtEur(top.revenue)) + '</span></div>' +
+          '<div class="nau-rev-summary-row"><span class="label">Gross margin</span><span class="value ' + mClass + '">' + esc(fmtEur(margin)) + '</span></div>' +
+          '<div class="nau-rev-summary-row"><span class="label">Margin %</span><span class="value ' + mClass + '">' + esc(fmtPct(mPct)) + '</span></div>';
       }
 
       /* ── Period filter wiring ───────────────────────────────── */
       document.getElementById('periodFilters').addEventListener('click', function (e) {
         var btn = e.target.closest('.nau-rev-filter-btn');
         if (!btn) return;
-        document.querySelectorAll('.nau-rev-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        document.querySelectorAll('#periodFilters .nau-rev-filter-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activePeriod = btn.dataset.period;
         renderAll();
+      });
+
+      /* ── Reservation list click delegation ─────────────────── */
+      document.getElementById('reservationList').addEventListener('click', function (e) {
+        if (e.target.closest('a')) return;
+        var row = e.target.closest('[data-detail-url]');
+        if (row) window.location.href = row.dataset.detailUrl;
+      });
+
+      /* ── Chart metric pill wiring ───────────────────────────── */
+      document.getElementById('chartMetricPills').addEventListener('click', function (e) {
+        var btn = e.target.closest('.nau-rev-filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('#chartMetricPills .nau-rev-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        chartMetric = btn.dataset.metric;
+        renderAnalyticsChart();
+      });
+
+      /* ── Chart property selector wiring ─────────────────────── */
+      document.getElementById('chartPropertySel').addEventListener('change', function () {
+        chartProperty = this.value;
+        renderAnalyticsChart();
       });
 
       /* ── Boot ───────────────────────────────────────────────── */
