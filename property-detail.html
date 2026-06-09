@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Property Detail — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── Property identity header ──────────────────────────── */
+      .nau-detail-header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .nau-detail-code-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .nau-prop-code {
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: var(--terracotta);
+        background: rgba(197,104,61,0.1);
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .nau-prop-type-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--stone);
+        background: rgba(15,23,42,0.06);
+        padding: 3px 9px;
+        border-radius: 999px;
+        text-transform: capitalize;
+        white-space: nowrap;
+      }
+
+      .nau-detail-name {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      .nau-detail-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      /* ── Status badges ─────────────────────────────────────── */
+      .nau-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .nau-badge-draft      { background: rgba(100,100,110,0.1);  color: #555; }
+      .nau-badge-onboarding { background: rgba(59,130,246,0.12);  color: #2563eb; }
+      .nau-badge-pending    { background: rgba(217,119,6,0.14);   color: #b45309; }
+      .nau-badge-active     { background: rgba(22,163,74,0.13);   color: #15803d; }
+      .nau-badge-suspended  { background: rgba(220,38,38,0.12);   color: #b91c1c; }
+      .nau-badge-archived   { background: rgba(100,100,110,0.1);  color: #555; }
+      .nau-badge-avail      { background: rgba(22,163,74,0.1);    color: #15803d; }
+      .nau-badge-unavail    { background: rgba(220,38,38,0.1);    color: #b91c1c; }
+      .nau-badge-maint      { background: rgba(217,119,6,0.12);   color: #b45309; }
+      .nau-badge-soon       { background: rgba(100,100,110,0.08); color: var(--stone); }
+
+      /* ── Breadcrumb ────────────────────────────────────────── */
+      .nau-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: var(--stone);
+        margin-bottom: 2px;
+      }
+      .nau-breadcrumb a {
+        color: var(--terracotta);
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .nau-breadcrumb a:hover { text-decoration: underline; }
+      .nau-breadcrumb-sep { color: rgba(15,23,42,0.3); }
+
+      /* ── Property summary info rows ────────────────────────── */
+      .nau-info-grid { display: grid; gap: 8px; }
+
+      .nau-info-row {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.05);
+        align-items: start;
+      }
+
+      .nau-info-label {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding-top: 1px;
+      }
+
+      .nau-info-value {
+        font-size: 0.86rem;
+        color: var(--charcoal);
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .nau-info-empty {
+        color: rgba(15,23,42,0.3);
+        font-style: italic;
+      }
+
+      /* ── Locked module sections ────────────────────────────── */
+      .nau-module-locked {
+        padding: 24px 20px;
+        border-radius: 12px;
+        background: rgba(15,23,42,0.02);
+        border: 1.5px dashed rgba(15,23,42,0.1);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nau-module-locked-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 900;
+        color: var(--stone);
+        letter-spacing: 0;
+      }
+
+      .nau-module-locked p {
+        margin: 0;
+        color: var(--stone);
+        font-size: 0.84rem;
+        line-height: 1.5;
+        max-width: 300px;
+      }
+
+      .nau-module-locked-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.06);
+        color: rgba(15,23,42,0.35);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        border: 1px solid rgba(15,23,42,0.08);
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      /* ── Back button ───────────────────────────────────────── */
+      .nau-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--terracotta);
+        text-decoration: none;
+        padding: 5px 0;
+      }
+      .nau-back-link:hover { text-decoration: underline; }
+
+      /* ── Not-found state ───────────────────────────────────── */
+      .nau-not-found {
+        padding: 40px 24px;
+        text-align: center;
+        border-radius: 14px;
+        background: #fffaf6;
+        border: 1px solid rgba(15,23,42,0.06);
+      }
+      .nau-not-found h3 { margin: 0 0 8px; color: var(--charcoal); }
+      .nau-not-found p  { margin: 0 0 18px; color: var(--stone); font-size: 0.88rem; }
+
+      /* ── Section label (for info groupings) ────────────────── */
+      .nau-section-label {
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--terracotta);
+        margin: 14px 0 6px;
+      }
+      .nau-section-label:first-child { margin-top: 0; }
+
+      /* ── Guest list ───────────────────────────────────────── */
+      .nau-guest-list { display: grid; gap: 8px; }
+
+      .nau-guest-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.06);
+        cursor: pointer;
+        transition: background .12s, box-shadow .12s;
+      }
+
+      .nau-guest-row:hover {
+        background: #fff7ed;
+        box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+      }
+
+      .nau-guest-info { flex: 1; min-width: 0; }
+
+      .nau-guest-name {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--charcoal);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .nau-guest-dates {
+        display: block;
+        font-size: 0.76rem;
+        color: var(--stone);
+        margin-top: 2px;
+      }
+
+      .nau-guest-empty {
+        padding: 20px 0;
+        text-align: center;
+        color: var(--stone);
+        font-size: 0.84rem;
+      }
+
+      .nau-badge-upcoming    { background: rgba(59,130,246,0.12);  color: #2563eb; }
+      .nau-badge-in-house    { background: rgba(22,163,74,0.13);   color: #15803d; }
+      .nau-badge-checked-out { background: rgba(100,100,110,0.1);  color: #555; }
+    </style>
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="nau-breadcrumb">
+              <a href="properties.html">Properties</a>
+              <span class="nau-breadcrumb-sep">/</span>
+              <span id="breadcrumbName">Loading…</span>
+            </div>
+            <h1 class="dashboard-title" id="pageTitle">Property</h1>
+            <div class="topbar-sub" id="pageSub">Loading property details…</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input type="search" placeholder="Search" id="globalSearch" />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip" id="date-chip">Today</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid" id="mainGrid">
+          <!-- Populated by JS -->
+          <div class="col-left">
+            <div class="dashboard-card">
+              <p class="dashboard-card-text">Loading…</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script src="nauxica-wizard.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
+    <script type="module">
+
+      /* ── Auth guard ─────────────────────────────────────────── */
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+      const { data: authProfile } = await window.NauxicaSupabase
+        .from('users').select('account_type').eq('id', sessData.session.user.id).single();
+      if (!authProfile || authProfile.account_type !== 'homeowner') {
+        window.location.replace('login.html'); throw 0;
+      }
+      localStorage.setItem('accountType', 'homeowner');
+
+      /* ── Shared setup ───────────────────────────────────────── */
+      const accountType = NauxicaShared.resolveAccountType();
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+      NauxicaShared.setActivePage('properties');
+      NauxicaShared.updateTopbar(accountType);
+
+      const chip = document.getElementById('date-chip');
+      if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      document.getElementById('logout-button')?.addEventListener('click', async function () {
+        await window.NauxicaSupabase.auth.signOut();
+        localStorage.removeItem('accountType');
+        window.location.replace('login.html');
+      });
+
+      /* ── Resolve property from URL ──────────────────────────── */
+      const params     = new URLSearchParams(window.location.search);
+      const propertyId = params.get('id');
+
+      function showNotFound() {
+        document.getElementById('breadcrumbName').textContent = 'Not found';
+        document.getElementById('pageTitle').textContent      = 'Property not found';
+        document.getElementById('pageSub').textContent        = '';
+        document.getElementById('mainGrid').innerHTML =
+          '<div class="col-left">' +
+            '<div class="nau-not-found">' +
+              '<h3>Property not found</h3>' +
+              '<p>This property may have been removed, or the link is invalid.</p>' +
+              '<a href="properties.html" class="nau-back-link">&#8592; Back to Properties</a>' +
+            '</div>' +
+          '</div>';
+      }
+
+      if (!propertyId) { showNotFound(); throw 0; }
+
+      const { data: prop, error: propError } = await window.NauxicaSupabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+
+      if (propError || !prop) { showNotFound(); throw 0; }
+
+      /* ── Unpack dynamic_instructions ───────────────────────── */
+      const di   = prop.dynamic_instructions || {};
+      const diLoc = di.location   || {};
+      const diCk  = di.checkin    || {};
+      const diRl  = di.rules      || {};
+
+      /* ── Helpers ────────────────────────────────────────────── */
+      function esc(s) {
+        if (s == null) return '';
+        return String(s)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function prettyType(t) {
+        if (!t) return null;
+        return t.replace(/_/g,' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      }
+
+      function prettyEnum(t) {
+        if (!t) return null;
+        return t.replace(/_/g,' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      }
+
+      const PLATFORM_STATUS_LABELS = {
+        draft:              'Draft',
+        onboarding:         'Onboarding',
+        pending_activation: 'Pending activation',
+        active:             'Active',
+        suspended:          'Suspended',
+        archived:           'Archived'
+      };
+      const PLATFORM_STATUS_CLASS = {
+        draft:              'nau-badge-draft',
+        onboarding:         'nau-badge-onboarding',
+        pending_activation: 'nau-badge-pending',
+        active:             'nau-badge-active',
+        suspended:          'nau-badge-suspended',
+        archived:           'nau-badge-archived'
+      };
+      const AVAIL_LABELS = { available: 'Available', unavailable: 'Not available', maintenance: 'Maintenance' };
+      const AVAIL_CLASS  = { available: 'nau-badge-avail', unavailable: 'nau-badge-unavail', maintenance: 'nau-badge-maint' };
+
+      function infoRow(label, value) {
+        const display = value
+          ? '<span class="nau-info-value">' + esc(value) + '</span>'
+          : '<span class="nau-info-value nau-info-empty">Not set</span>';
+        return '<div class="nau-info-row"><span class="nau-info-label">' + esc(label) + '</span>' + display + '</div>';
+      }
+
+      function lockedModule(title, description, buttonLabel) {
+        return '<div class="dashboard-card">' +
+          '<div class="card-heading-row">' +
+            '<div>' +
+              '<h3 class="dashboard-section-title">' + esc(title) + '</h3>' +
+              '<p class="dashboard-card-text">' + esc(description) + '</p>' +
+            '</div>' +
+            '<span class="nau-badge nau-badge-soon">Coming soon</span>' +
+          '</div>' +
+          '<div class="nau-module-locked">' +
+            '<div class="nau-module-locked-icon">—</div>' +
+            '<p>This module is not yet available. It will be enabled in a future update.</p>' +
+            '<button class="nau-module-locked-btn" disabled>' + esc(buttonLabel) + '</button>' +
+          '</div>' +
+        '</div>';
+      }
+
+      /* ── Populate topbar ────────────────────────────────────── */
+      const propName = prop.display_name || 'Property';
+      document.getElementById('breadcrumbName').textContent = propName;
+      document.getElementById('pageTitle').textContent      = propName;
+      document.getElementById('pageSub').textContent        =
+        (prop.property_code || '') + (prop.address_city ? ' · ' + prop.address_city : '');
+      document.title = propName + ' — Nauxica';
+
+      /* ── Build identity header card ─────────────────────────── */
+      const ps = prop.platform_status    || 'draft';
+      const av = prop.availability_status || 'available';
+
+      const identityCard =
+        '<div class="dashboard-card">' +
+          '<div class="card-heading-row">' +
+            '<a href="properties.html" class="nau-back-link">&#8592; All properties</a>' +
+            '<button class="nau-edit-btn" id="editPropertyBtn">Edit Property</button>' +
+          '</div>' +
+          '<div class="nau-detail-header">' +
+            '<div class="nau-detail-code-row">' +
+              '<span class="nau-prop-code">' + esc(prop.property_code || '—') + '</span>' +
+              (prop.property_type ? '<span class="nau-prop-type-pill">' + esc(prettyType(prop.property_type)) + '</span>' : '') +
+            '</div>' +
+            '<h2 class="nau-detail-name">' + esc(propName) + '</h2>' +
+            '<div class="nau-detail-badges">' +
+              '<span class="nau-badge ' + (PLATFORM_STATUS_CLASS[ps] || 'nau-badge-draft') + '">' +
+                esc(PLATFORM_STATUS_LABELS[ps] || ps) +
+              '</span>' +
+              '<span class="nau-badge ' + (AVAIL_CLASS[av] || 'nau-badge-avail') + '">' +
+                esc(AVAIL_LABELS[av] || av) +
+              '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      /* ── Build property summary card ────────────────────────── */
+      const addressParts = [
+        prop.address_street,
+        diLoc.locality,
+        prop.address_city && prop.address_province
+          ? prop.address_city + ', ' + prop.address_province
+          : (prop.address_city || prop.address_province || null),
+        prop.address_postal_code
+      ].filter(Boolean);
+      const addressStr = addressParts.join(', ') || null;
+
+      const capacityParts = [
+        prop.max_guests != null ? prop.max_guests + ' guests'   : null,
+        prop.bedrooms   != null ? prop.bedrooms   + ' bedrooms'  : null,
+        prop.bathrooms  != null ? prop.bathrooms  + ' bathrooms' : null
+      ].filter(Boolean);
+      const capacityStr = capacityParts.join(' · ') || null;
+
+      const bedsDesc = prop.beds_configuration && prop.beds_configuration.description
+        ? prop.beds_configuration.description
+        : (typeof prop.beds_configuration === 'string' ? prop.beds_configuration : '');
+
+      const checkinStr  = prop.checkin_time || null;
+      const minStay     = diRl.min_stay_nights;
+
+      const createdStr = prop.created_at
+        ? new Date(prop.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+        : null;
+
+      const summaryCard =
+        '<div class="dashboard-card">' +
+          '<div class="card-heading-row">' +
+            '<div>' +
+              '<h3 class="dashboard-section-title">Property summary</h3>' +
+              '<p class="dashboard-card-text">Key details for this property</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="nau-info-grid">' +
+            '<p class="nau-section-label">Location</p>' +
+            infoRow('Address', addressStr) +
+            '<p class="nau-section-label">Capacity</p>' +
+            infoRow('Guests & beds', capacityStr) +
+            (bedsDesc ? infoRow('Bed layout', bedsDesc) : '') +
+            '<p class="nau-section-label">Check-in</p>' +
+            infoRow('Check-in', checkinStr) +
+            infoRow('Check-out', prop.checkout_time || null) +
+            infoRow('Access', prettyEnum(prop.access_method)) +
+            '<p class="nau-section-label">House rules</p>' +
+            infoRow('Pets', prettyEnum(diRl.pet_policy)) +
+            infoRow('Smoking', prettyEnum(diRl.smoking_policy)) +
+            infoRow('Events', prettyEnum(diRl.party_policy)) +
+            infoRow('Min. stay', minStay != null ? minStay + ' night' + (minStay !== 1 ? 's' : '') : null) +
+            (createdStr ? '<p class="nau-section-label">Record</p>' + infoRow('Created', createdStr) : '') +
+          '</div>' +
+        '</div>';
+
+      /* ── Locked modules ─────────────────────────────────────── */
+      const guestsCard =
+        '<div class="dashboard-card">' +
+          '<div class="card-heading-row">' +
+            '<div>' +
+              '<h3 class="dashboard-section-title">Guest Management</h3>' +
+              '<p class="dashboard-card-text">Track guests, stays, and arrivals</p>' +
+            '</div>' +
+            '<button class="nau-edit-btn" id="addGuestBtn">+ Add Guest</button>' +
+          '</div>' +
+          '<div id="guestsSection"></div>' +
+        '</div>';
+
+      const knowledgeCard = lockedModule(
+        'Knowledge Base',
+        'AI concierge content and property knowledge',
+        'Configure Knowledge Base'
+      );
+
+      const emergencyCard = lockedModule(
+        'Emergency Data',
+        'Emergency contacts and utility shutoff locations',
+        'Set up Emergency Data'
+      );
+
+      const availabilityCard = lockedModule(
+        'Availability Calendar',
+        'Manage availability blocks and booking windows',
+        'Configure Availability'
+      );
+
+      const conciergeCard = lockedModule(
+        'Concierge Settings',
+        'AI concierge behaviour and response configuration',
+        'Configure Concierge'
+      );
+
+      /* ── Activity card placeholder (populated below) ───────── */
+      const activityCard =
+        '<div class="dashboard-card" id="propertyActivityCard">' +
+          '<h3 class="dashboard-section-title">Recent Activity</h3>' +
+          '<p class="dashboard-card-text">Latest events for this property</p>' +
+          '<div id="propertyActivityList"><p style="color:var(--stone);font-size:0.85rem;margin:4px 0">Loading…</p></div>' +
+        '</div>';
+
+      /* ── Assemble grid ──────────────────────────────────────── */
+      document.getElementById('mainGrid').innerHTML =
+        '<div class="col-left">' +
+          identityCard +
+          guestsCard +
+          knowledgeCard +
+          emergencyCard +
+        '</div>' +
+        '<div class="col-right">' +
+          summaryCard +
+          availabilityCard +
+          conciergeCard +
+          activityCard +
+        '</div>';
+
+      /* ── Guests section (Supabase reservations) ─────────────── */
+      const STATUS_LABELS = {
+        confirmed:    'Upcoming',
+        pre_arrival:  'Pre-arrival',
+        checked_in:   'In house',
+        checked_out:  'Checked out',
+        cancelled:    'Cancelled',
+        no_show:      'No show'
+      };
+      const STATUS_CLASS = {
+        confirmed:    'nau-badge-upcoming',
+        pre_arrival:  'nau-badge-upcoming',
+        checked_in:   'nau-badge-in-house',
+        checked_out:  'nau-badge-checked-out',
+        cancelled:    'nau-badge-checked-out',
+        no_show:      'nau-badge-checked-out'
+      };
+
+      function fmtDateShort(d) {
+        if (!d) return '—';
+        return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      }
+
+      async function renderGuestsSection(propId) {
+        const section = document.getElementById('guestsSection');
+        if (!section) return;
+        section.innerHTML = '<p class="nau-guest-empty" style="color:var(--stone)">Loading…</p>';
+
+        const { data: reservations, error } = await window.NauxicaSupabase
+          .from('reservations')
+          .select('id, guest_name, guest_phone, checkin_date, checkout_date, guest_count, reservation_status')
+          .eq('property_id', propId)
+          .order('checkin_date', { ascending: false });
+
+        if (error) {
+          section.innerHTML = '<p class="nau-guest-empty" style="color:var(--danger)">Could not load guests.</p>';
+          return;
+        }
+
+        if (!reservations || !reservations.length) {
+          section.innerHTML = '<p class="nau-guest-empty">No guests yet. Add your first guest to get started.</p>';
+          return;
+        }
+
+        const rows = reservations.map(function (r) {
+          const status = r.reservation_status || 'confirmed';
+          const name   = esc(r.guest_name || 'Guest');
+          let dates    = fmtDateShort(r.checkin_date) + ' – ' + fmtDateShort(r.checkout_date);
+          if (r.guest_count) dates += ' · ' + r.guest_count + (r.guest_count === 1 ? ' guest' : ' guests');
+          return '<div class="nau-guest-row" data-guest-id="' + esc(r.id) + '">' +
+            '<div class="nau-guest-info">' +
+              '<span class="nau-guest-name">' + name + '</span>' +
+              '<span class="nau-guest-dates">' + esc(dates) + '</span>' +
+            '</div>' +
+            '<span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' + esc(STATUS_LABELS[status] || status) + '</span>' +
+          '</div>';
+        });
+
+        section.innerHTML = '<div class="nau-guest-list">' + rows.join('') + '</div>';
+      }
+
+      renderGuestsSection(propertyId);
+
+      document.getElementById('guestsSection').addEventListener('click', function (e) {
+        const row = e.target.closest('[data-guest-id]');
+        if (!row) return;
+        const id = row.getAttribute('data-guest-id');
+        if (id) window.location.href = 'guest-detail.html?id=' + encodeURIComponent(id);
+      });
+
+      document.getElementById('addGuestBtn').addEventListener('click', function () {
+        NauxicaWizard.openGuest(propertyId, function () {
+          renderGuestsSection(propertyId);
+        });
+      });
+
+      /* ── Edit Property button ────────────────────────────────── */
+      document.getElementById('editPropertyBtn').addEventListener('click', async function () {
+        const { data: freshRow } = await window.NauxicaSupabase
+          .from('properties')
+          .select('*')
+          .eq('id', propertyId)
+          .single();
+        NauxicaWizard.fromSupabase(freshRow || prop, function () {
+          window.location.reload();
+        });
+      });
+
+      /* ── Recent Activity card ────────────────────────────────── */
+      (async function loadPropertyActivity() {
+        const actEl = document.getElementById('propertyActivityList');
+        if (!actEl) return;
+
+        const ACTIVITY_LABELS = {
+          task_created: 'Task', task_assigned: 'Assigned', task_accepted: 'Accepted',
+          task_declined: 'Declined', task_started: 'Started', task_completed: 'Completed',
+          task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message'
+        };
+        const ACTIVITY_CLASS = {
+          task_completed: 'positive', task_accepted: 'positive',
+          task_started: 'neutral', task_assigned: 'neutral', task_created: 'neutral',
+          task_declined: 'warning', task_cancelled: 'warning',
+          conversation_created: 'neutral', message_sent: 'neutral'
+        };
+
+        function escAct(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function relTime(iso) {
+          const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+          if (diff < 60)    return 'Just now';
+          if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+          if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+          return Math.floor(diff / 86400) + 'd ago';
+        }
+
+        const { data: events, error } = await window.NauxicaSupabase
+          .from('timeline_events')
+          .select('id, event_type, event_title, event_description, created_at')
+          .eq('property_id', propertyId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) {
+          actEl.innerHTML = '<p style="color:var(--stone);font-size:0.85rem;margin:4px 0">Unable to load activity.</p>';
+          return;
+        }
+
+        if (!events || !events.length) {
+          actEl.innerHTML = '<p style="color:var(--stone);font-size:0.85rem;margin:4px 0">No activity recorded yet.</p>';
+          return;
+        }
+
+        actEl.innerHTML = events.map(function(ev) {
+          const cls   = ACTIVITY_CLASS[ev.event_type]  || 'neutral';
+          const label = ACTIVITY_LABELS[ev.event_type] || ev.event_type;
+          return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(15,23,42,0.06)">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-weight:600;font-size:0.85rem;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escAct(ev.event_title) + '</div>' +
+              (ev.event_description ? '<div style="font-size:0.79rem;color:var(--stone);margin-top:2px">' + escAct(ev.event_description) + '</div>' : '') +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">' +
+              '<span class="kpi-trend ' + cls + '" style="font-size:0.7rem;padding:2px 8px;border-radius:999px">' + escAct(label) + '</span>' +
+              '<small style="color:var(--stone);font-size:0.73rem;white-space:nowrap">' + escAct(relTime(ev.created_at)) + '</small>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      })();
+
+    </script>
+  </body>
+</html>

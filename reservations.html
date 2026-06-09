@@ -6,6 +6,129 @@
     <title>Reservations — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── Stats strip ───────────────────────────────────────── */
+      .nau-res-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .nau-res-stat {
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .nau-res-stat-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        line-height: 1;
+      }
+      .nau-res-stat-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+      .nau-res-stat.is-active  .nau-res-stat-value { color: #15803d; }
+      .nau-res-stat.is-today   .nau-res-stat-value { color: var(--terracotta); }
+
+      /* ── Filters row ───────────────────────────────────────── */
+      .nau-res-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 16px;
+      }
+      .nau-res-filter-select {
+        padding: 7px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,0.1);
+        background: #fffaf4;
+        font: inherit;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        cursor: pointer;
+      }
+      .nau-res-filter-select:focus { outline: none; border-color: var(--terracotta); }
+      .nau-res-search {
+        flex: 1;
+        min-width: 160px;
+        padding: 7px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,0.1);
+        background: #fffaf4;
+        font: inherit;
+        font-size: 0.84rem;
+        color: var(--charcoal);
+      }
+      .nau-res-search:focus { outline: none; border-color: var(--terracotta); }
+
+      /* ── Table ─────────────────────────────────────────────── */
+      .nau-res-table { margin-top: 12px; }
+      .nau-rt-row {
+        display: grid;
+        grid-template-columns: 1.6fr 1.2fr 0.9fr 0.9fr 0.9fr 0.9fr;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        align-items: center;
+        font-size: 0.84rem;
+      }
+      .nau-rt-header {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding-bottom: 4px;
+      }
+      .nau-rt-row:not(.nau-rt-header) {
+        border: 1px solid rgba(15,23,42,0.06);
+        background: #fffaf4;
+        cursor: pointer;
+        transition: background .12s;
+      }
+      .nau-rt-row:not(.nau-rt-header):hover { background: #fff5eb; }
+      .nau-rt-guest-name { font-weight: 700; color: var(--charcoal); }
+      .nau-rt-conf { font-size: 0.72rem; color: var(--stone); margin-top: 2px; font-family: monospace; }
+      .nau-rt-prop-code {
+        font-size: 0.68rem; font-weight: 900; letter-spacing: 0.06em;
+        color: var(--terracotta); background: rgba(197,104,61,0.1);
+        padding: 2px 7px; border-radius: 999px; display: inline-block; margin-bottom: 3px;
+      }
+      .nau-rt-prop-name { font-size: 0.78rem; color: var(--stone); }
+      .nau-rt-date { color: var(--charcoal); }
+      .nau-res-result-count {
+        font-size: 0.78rem; font-weight: 700; color: var(--stone);
+        margin-top: 10px; margin-bottom: 2px;
+      }
+
+      /* ── Right panel ───────────────────────────────────────── */
+      .nau-stat-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+      .nau-stat-row {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.84rem; padding: 8px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+      }
+      .nau-stat-label { color: var(--stone); font-weight: 600; }
+      .nau-stat-value { font-weight: 800; color: var(--charcoal); }
+      .nau-next-arrival {
+        display: flex; flex-direction: column; gap: 3px;
+        padding: 10px 0; border-top: 1px solid rgba(15,23,42,0.06); margin-top: 4px;
+      }
+      .nau-next-arrival-label { font-size: 0.72rem; font-weight: 800; color: var(--stone); text-transform: uppercase; letter-spacing: 0.06em; }
+      .nau-next-arrival-name  { font-weight: 700; font-size: 0.9rem; color: var(--charcoal); }
+      .nau-next-arrival-date  { font-size: 0.78rem; color: var(--stone); }
+    </style>
   </head>
   <body class="homeowner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -42,9 +165,6 @@
             <div class="topbar-sub">Active bookings and guest stay management</div>
           </div>
           <div class="topbar-right">
-            <div class="topbar-search">
-              <input type="search" placeholder="Search reservations, guests, properties" id="globalSearch" />
-            </div>
             <div class="topbar-controls">
               <button class="icon-btn" aria-label="Notifications">🔔</button>
               <button class="icon-btn" aria-label="Help">⌘</button>
@@ -65,23 +185,44 @@
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Upcoming reservations</h2>
-                  <p class="dashboard-card-text">Manage guest bookings across all properties</p>
+                  <h2 class="dashboard-section-title">Reservations</h2>
+                  <p class="dashboard-card-text">Guest bookings across all properties</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Reservations coming soon</h3>
-                <p>Full booking management with guest details, check-in dates and stay history will be available here.</p>
+
+              <div class="nau-res-stats" id="resStats">
+                <div class="nau-res-stat"><span class="nau-res-stat-value">—</span><span class="nau-res-stat-label">Total</span></div>
+                <div class="nau-res-stat is-today"><span class="nau-res-stat-value">—</span><span class="nau-res-stat-label">Today</span></div>
+                <div class="nau-res-stat is-active"><span class="nau-res-stat-value">—</span><span class="nau-res-stat-label">In house</span></div>
+                <div class="nau-res-stat"><span class="nau-res-stat-value">—</span><span class="nau-res-stat-label">Upcoming</span></div>
               </div>
+
+              <div class="nau-res-filters">
+                <select class="nau-res-filter-select" id="filterProperty" aria-label="Filter by property">
+                  <option value="">All properties</option>
+                </select>
+                <select class="nau-res-filter-select" id="filterStatus" aria-label="Filter by status">
+                  <option value="">All statuses</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pre_arrival">Pre-arrival</option>
+                  <option value="checked_in">Checked in</option>
+                  <option value="checked_out">Checked out</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="no_show">No show</option>
+                </select>
+                <input type="search" class="nau-res-search" id="resSearch" placeholder="Search guest, property, reference…" />
+              </div>
+
+              <div class="nau-res-result-count" id="resResultCount"></div>
+              <div id="resTable"></div>
             </div>
           </div>
+
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">Quick stats</h3>
-              <p class="dashboard-card-text">Booking overview for today</p>
-              <div class="empty-state-card">
-                <p>No stats available yet.</p>
-              </div>
+              <h3 class="dashboard-section-title">Overview</h3>
+              <p class="dashboard-card-text">Booking summary</p>
+              <div id="resRightPanel"><p style="color:var(--stone);font-size:0.84rem">Loading…</p></div>
             </div>
           </div>
         </section>
@@ -90,19 +231,239 @@
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
-    <script>
-      (function () {
-        const accountType = NauxicaShared.resolveAccountType();
-        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
-        NauxicaShared.setActivePage('reservations');
-        NauxicaShared.updateTopbar(accountType);
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module">
+    (async () => {
+      /* ── Nav / topbar ─────────────────────────────────────── */
+      const accountType = NauxicaShared.resolveAccountType();
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+      NauxicaShared.setActivePage('reservations');
+      NauxicaShared.updateTopbar(accountType);
+      const chip = document.getElementById('date-chip');
+      if (chip) chip.textContent = NauxicaShared.formatDateChip();
 
-        const chip = document.getElementById('date-chip');
-        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      document.getElementById('logout-button')?.addEventListener('click', async () => {
+        await window.NauxicaSupabase.auth.signOut();
+        localStorage.clear();
+        window.location.href = 'login.html';
+      });
 
-        document.getElementById('logout-button')
-          ?.addEventListener('click', NauxicaShared.handleLogout);
-      })();
+      /* ── Auth guard ──────────────────────────────────────── */
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+      /* ── Helpers ─────────────────────────────────────────── */
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function fmtDateShort(d) {
+        if (!d) return '—';
+        return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      }
+      function fmtDate(d) {
+        if (!d) return '—';
+        return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+      function fmtValue(amount, currency) {
+        if (amount == null) return null;
+        var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : (currency || 'EUR') + ' ';
+        return sym + parseFloat(amount).toFixed(2);
+      }
+
+      const STATUS_LABEL = {
+        confirmed:   'Confirmed',
+        pre_arrival: 'Pre-arrival',
+        checked_in:  'In house',
+        checked_out: 'Checked out',
+        cancelled:   'Cancelled',
+        no_show:     'No show'
+      };
+      const STATUS_CLASS = {
+        confirmed:   'nau-badge-upcoming',
+        pre_arrival: 'nau-badge-upcoming',
+        checked_in:  'nau-badge-in-house',
+        checked_out: 'nau-badge-checked-out',
+        cancelled:   'nau-badge-checked-out',
+        no_show:     'nau-badge-checked-out'
+      };
+
+      /* ── Fetch ───────────────────────────────────────────── */
+      const today = new Date().toISOString().split('T')[0];
+
+      const [resResult, propsResult] = await Promise.all([
+        window.NauxicaSupabase
+          .from('reservations')
+          .select('id, guest_name, guest_phone, checkin_date, checkout_date, guest_count, reservation_status, booking_source, confirmation_number, internal_notes, special_requests, property_id, reservation_value_amount, reservation_value_currency, properties(display_name, property_code)')
+          .order('checkin_date', { ascending: false }),
+        window.NauxicaSupabase
+          .from('properties')
+          .select('id, display_name, property_code')
+          .order('display_name')
+      ]);
+
+      const ownedProps = propsResult.data || [];
+      let _allRes = (resResult.data || []).map(function (r) {
+        const prop = r.properties || {};
+        return Object.assign({}, r, {
+          _prop_name: prop.display_name || 'Unknown property',
+          _prop_code: prop.property_code || '—'
+        });
+      });
+
+      /* ── Populate property filter dropdown ────────────────── */
+      const propSel = document.getElementById('filterProperty');
+      ownedProps.forEach(function (p) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = (p.property_code ? p.property_code + ' · ' : '') + (p.display_name || 'Property');
+        propSel.appendChild(opt);
+      });
+
+      /* ── Filter state ────────────────────────────────────── */
+      const filters = { propertyId: '', status: '', search: '' };
+
+      function applyFilters(all) {
+        let result = all;
+        if (filters.propertyId) result = result.filter(r => r.property_id === filters.propertyId);
+        if (filters.status)     result = result.filter(r => r.reservation_status === filters.status);
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          result = result.filter(function (r) {
+            return (r.guest_name           || '').toLowerCase().includes(q) ||
+                   (r._prop_name           || '').toLowerCase().includes(q) ||
+                   (r._prop_code           || '').toLowerCase().includes(q) ||
+                   (r.confirmation_number  || '').toLowerCase().includes(q) ||
+                   (r.internal_notes       || '').toLowerCase().includes(q);
+          });
+        }
+        return result;
+      }
+
+      /* ── Render stats ────────────────────────────────────── */
+      function renderStats(all) {
+        const total    = all.length;
+        const inHouse  = all.filter(r => r.reservation_status === 'checked_in').length;
+        const upcoming = all.filter(r => r.reservation_status === 'confirmed' || r.reservation_status === 'pre_arrival').length;
+        const todayCI  = all.filter(r => r.checkin_date === today).length;
+        document.getElementById('resStats').innerHTML =
+          '<div class="nau-res-stat"><span class="nau-res-stat-value">' + total    + '</span><span class="nau-res-stat-label">Total</span></div>' +
+          '<div class="nau-res-stat is-today"><span class="nau-res-stat-value">' + todayCI  + '</span><span class="nau-res-stat-label">Today</span></div>' +
+          '<div class="nau-res-stat is-active"><span class="nau-res-stat-value">' + inHouse  + '</span><span class="nau-res-stat-label">In house</span></div>' +
+          '<div class="nau-res-stat"><span class="nau-res-stat-value">' + upcoming + '</span><span class="nau-res-stat-label">Upcoming</span></div>';
+      }
+
+      /* ── Render right panel ──────────────────────────────── */
+      function renderRightPanel(all) {
+        const inHouse    = all.filter(r => r.reservation_status === 'checked_in').length;
+        const upcoming   = all.filter(r => r.reservation_status === 'confirmed' || r.reservation_status === 'pre_arrival');
+        const nextArrival = upcoming
+          .filter(r => r.checkin_date)
+          .sort((a, b) => a.checkin_date.localeCompare(b.checkin_date))[0];
+
+        function statRow(label, value) {
+          return '<div class="nau-stat-row"><span class="nau-stat-label">' + esc(label) + '</span><span class="nau-stat-value">' + esc(String(value)) + '</span></div>';
+        }
+
+        let nextHTML = '';
+        if (nextArrival) {
+          nextHTML =
+            '<div class="nau-next-arrival">' +
+              '<span class="nau-next-arrival-label">Next arrival</span>' +
+              '<span class="nau-next-arrival-name">' + esc(nextArrival.guest_name || 'Guest') + '</span>' +
+              '<span class="nau-next-arrival-date">' + esc(fmtDate(nextArrival.checkin_date)) + ' · ' + esc(nextArrival._prop_name) + '</span>' +
+            '</div>';
+        } else {
+          nextHTML =
+            '<div class="nau-next-arrival"><span class="nau-next-arrival-label">Next arrival</span>' +
+            '<span class="nau-next-arrival-date" style="color:var(--stone);font-style:italic">No upcoming arrivals</span></div>';
+        }
+
+        document.getElementById('resRightPanel').innerHTML =
+          '<div class="nau-stat-grid">' +
+            statRow('Properties', ownedProps.length) +
+            statRow('Total reservations', all.length) +
+            statRow('Currently in house', inHouse) +
+            statRow('Upcoming', upcoming.length) +
+            nextHTML +
+          '</div>';
+      }
+
+      /* ── Render table ────────────────────────────────────── */
+      function renderTable(filtered) {
+        const container = document.getElementById('resTable');
+        document.getElementById('resResultCount').textContent =
+          filtered.length + (filtered.length === 1 ? ' reservation' : ' reservations');
+
+        if (!filtered.length) {
+          container.innerHTML =
+            '<div class="nau-ops-empty">' +
+              '<p class="nau-ops-empty-title">' + (filters.propertyId || filters.status || filters.search ? 'No reservations match your filters' : 'No reservations yet') + '</p>' +
+              '<p class="nau-ops-empty-sub">' + (filters.propertyId || filters.status || filters.search ? 'Try adjusting your filters.' : 'Add guests from a Property Detail page.') + '</p>' +
+            '</div>';
+          return;
+        }
+
+        const header =
+          '<div class="nau-rt-row nau-rt-header" aria-hidden="true">' +
+            '<div>Guest</div><div>Property</div><div>Check-in</div><div>Check-out</div><div>Status</div><div>Value</div>' +
+          '</div>';
+
+        const rows = filtered.map(function (r) {
+          const status = r.reservation_status || 'confirmed';
+          return '<div class="nau-rt-row" data-res-id="' + esc(r.id) + '">' +
+            '<div>' +
+              '<div class="nau-rt-guest-name">' + esc(r.guest_name || 'Guest') + '</div>' +
+              (r.confirmation_number ? '<div class="nau-rt-conf">' + esc(r.confirmation_number) + '</div>' : '') +
+            '</div>' +
+            '<div>' +
+              '<div><span class="nau-rt-prop-code">' + esc(r._prop_code) + '</span></div>' +
+              '<div class="nau-rt-prop-name">' + esc(r._prop_name) + '</div>' +
+            '</div>' +
+            '<div class="nau-rt-date">' + esc(fmtDateShort(r.checkin_date)) + '</div>' +
+            '<div class="nau-rt-date">' + esc(fmtDateShort(r.checkout_date)) + '</div>' +
+            '<div><span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' + esc(STATUS_LABEL[status] || status) + '</span></div>' +
+            '<div>' + (fmtValue(r.reservation_value_amount, r.reservation_value_currency)
+              ? '<span style="font-weight:700;color:#15803d">' + esc(fmtValue(r.reservation_value_amount, r.reservation_value_currency)) + '</span>'
+              : '<span style="color:rgba(15,23,42,0.3)">—</span>') + '</div>' +
+          '</div>';
+        });
+
+        container.innerHTML = '<div class="nau-res-table">' + header + rows.join('') + '</div>';
+      }
+
+      /* ── Master render ───────────────────────────────────── */
+      function render() {
+        const filtered = applyFilters(_allRes);
+        renderStats(_allRes);
+        renderRightPanel(_allRes);
+        renderTable(filtered);
+      }
+
+      /* ── Wire filters ────────────────────────────────────── */
+      document.getElementById('filterProperty').addEventListener('change', function () {
+        filters.propertyId = this.value;
+        renderTable(applyFilters(_allRes));
+      });
+      document.getElementById('filterStatus').addEventListener('change', function () {
+        filters.status = this.value;
+        renderTable(applyFilters(_allRes));
+      });
+      document.getElementById('resSearch').addEventListener('input', function () {
+        filters.search = this.value.trim();
+        renderTable(applyFilters(_allRes));
+      });
+
+      /* ── Row click → guest detail ─────────────────────────── */
+      document.getElementById('resTable').addEventListener('click', function (e) {
+        const row = e.target.closest('[data-res-id]');
+        if (!row) return;
+        const id = row.getAttribute('data-res-id');
+        if (id) window.location.href = 'guest-detail.html?id=' + encodeURIComponent(id);
+      });
+
+      render();
+    })();
     </script>
   </body>
 </html>

@@ -727,6 +727,7 @@
                   </div>
                 </section>
 
+                <p id="registrationError" hidden style="color:#c0392b;font-size:0.92rem;margin:0 0 8px;"></p>
                 <div class="registration-actions">
                   <button type="button" class="btn-ghost" id="backButton">
                     Back
@@ -744,13 +745,9 @@
   <div class="success-icon">✓</div>
 
   <div>
-    <h2>Your Nauxica account has been created.</h2>
-    <p>We are preparing your dashboard.</p>
+    <h2>Check your email to verify your account.</h2>
+    <p>We've sent a verification link to your email address. Click it to activate your Nauxica account.</p>
   </div>
-
-  <a class="success-dashboard-btn" id="continueToDashboard" href="dashboard-homeowner.html">
-    Continue to dashboard
-  </a>
 </div>
 
             </div>
@@ -778,6 +775,7 @@
       </div>
     </footer>
 
+    <script type="module" src="supabase-client.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
@@ -1068,7 +1066,7 @@
           `;
           } else {
             const businessName =
-              document.getElementById("businessName").value || "Not provided";
+              (document.getElementById("businessName").value || document.getElementById("companyName").value || "").trim() || "Not provided";
             const serviceArea =
               document.getElementById("serviceArea").value || "Not provided";
             const partnerCategory =
@@ -1147,6 +1145,14 @@
           updateRoleVisibility();
           updateSuggestedPlan();
 
+          if (currentStep === 3 && getAccountType() === 'partner') {
+            var bEl = document.getElementById('businessName');
+            var cEl = document.getElementById('companyName');
+            if (bEl && cEl && !bEl.value.trim() && cEl.value.trim()) {
+              bEl.value = cEl.value.trim();
+            }
+          }
+
           if (currentStep === 6) {
             updateReview();
           }
@@ -1201,7 +1207,7 @@
           }
         });
 
-        form.addEventListener("submit", function (event) {
+        form.addEventListener("submit", async function (event) {
           event.preventDefault();
           hasTriedSubmit = true;
           // final validation of review consents
@@ -1239,29 +1245,60 @@
             return;
           }
 
-          // show success state before redirecting
-const accountType = getAccountType();
-const dashboardUrl =
-  accountType === "partner"
-    ? "dashboard-partner.html"
-    : "dashboard-homeowner.html";
+          const errorEl = document.getElementById('registrationError');
+          errorEl.hidden = true;
+          submitButton.disabled = true;
+          submitButton.textContent = 'Creating account…';
 
-const successPanel = document.getElementById("registrationSuccess");
-const continueButton = document.getElementById("continueToDashboard");
-const formPanel = document.querySelector(".registration-card, .register-card, .registration-form, form");
+          const CATEGORY_TO_SERVICE_TYPE = {
+            'Cleaning company':            'cleaning',
+            'Transfer provider':           'transfers',
+            'Tour or experience provider': 'experiences',
+            'Maintenance specialist':      'maintenance',
+            'Laundry service':             'laundry',
+          };
 
-if (continueButton) {
-  continueButton.href = dashboardUrl;
-}
+          const accountType = getAccountType();
+          const metadata = {
+            account_type:      accountType,
+            full_name:         document.getElementById('fullName').value.trim(),
+            phone:             document.getElementById('phone').value.trim(),
+            nauxica_plan_tier: 'starter',
+          };
 
-if (successPanel) {
-  successPanel.hidden = false;
-  successPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-}
+          if (accountType === 'partner') {
+            const businessName = (document.getElementById('businessName').value || document.getElementById('companyName').value || '').trim();
+            if (businessName) metadata.display_name = businessName;
 
-if (formPanel && successPanel) {
-  formPanel.style.display = "none";
-}
+            const categoryVal  = document.getElementById('partnerCategory').value;
+            const serviceType  = CATEGORY_TO_SERVICE_TYPE[categoryVal];
+            if (serviceType) metadata.partner_service_types = [serviceType];
+          }
+
+          const { error } = await window.NauxicaSupabase.auth.signUp({
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value,
+            options: { data: metadata }
+          });
+
+          if (error) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Create account';
+            errorEl.textContent = error.message;
+            errorEl.hidden = false;
+            return;
+          }
+
+          const successPanel = document.getElementById('registrationSuccess');
+          if (successPanel) {
+            successPanel.hidden = false;
+            successPanel.style.display = 'block';
+            successPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.log('Registration success panel shown');
+          }
+          // Hide the form only — not the outer panel container,
+          // which is the parent of successPanel.
+          form.style.display = 'none';
         });
 
         // initialize

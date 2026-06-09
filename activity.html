@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Activity — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── KPI row ─────────────────────────────────────────────────────── */
+      .activity-kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      @media (max-width: 900px) { .activity-kpis { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 520px)  { .activity-kpis { grid-template-columns: 1fr; } }
+
+      /* ── Quick filter chips ──────────────────────────────────────────── */
+      .quick-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .quick-chip {
+        padding: 6px 16px;
+        border-radius: 999px;
+        border: 1.5px solid rgba(0,0,0,0.11);
+        background: #fff;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--charcoal);
+        line-height: 1;
+        transition: background 0.12s, border-color 0.12s, color 0.12s;
+      }
+      .quick-chip.active {
+        background: var(--terracotta, #c0532a);
+        border-color: var(--terracotta, #c0532a);
+        color: #fff;
+      }
+
+      /* ── Search ──────────────────────────────────────────────────────── */
+      .act-search-wrap { margin-bottom: 12px; position: relative; }
+      .act-search-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 12px 8px 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.12);
+        background: #fff;
+        font-size: 0.83rem;
+        color: var(--charcoal);
+        transition: border-color 0.15s;
+      }
+      .act-search-input::placeholder { color: rgba(15,23,42,0.38); }
+      .act-search-input:focus { outline: none; border-color: rgba(0,0,0,0.28); }
+      .act-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(15,23,42,0.38);
+        pointer-events: none;
+        font-size: 0.8rem;
+      }
+
+      /* ── Sticky filter bar ───────────────────────────────────────────── */
+      .activity-filter-bar {
+        position: sticky;
+        top: 72px;
+        z-index: 20;
+        background: #fffaf2;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-end;
+      }
+      .activity-filter-bar label {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 0.69rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .activity-filter-bar select {
+        font-size: 0.81rem;
+        padding: 5px 9px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.12);
+        background: #fff;
+        cursor: pointer;
+        min-width: 108px;
+      }
+
+      /* ── Timeline ────────────────────────────────────────────────────── */
+      .timeline-day-group { margin-bottom: 4px; }
+      .timeline-day-group + .timeline-day-group { margin-top: 22px; }
+      .timeline-events-list { padding-top: 2px; }
+
+      .timeline-day-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: rgba(15,23,42,0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(15,23,42,0.09);
+        margin-bottom: 2px;
+      }
+      .tl-day-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(15,23,42,0.22);
+        flex-shrink: 0;
+      }
+
+      .timeline-event-item {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+      }
+      .tl-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        width: 18px;
+        padding-top: 9px;
+      }
+      .tl-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--terracotta, #c0532a);
+        flex-shrink: 0;
+        transition: transform 0.12s;
+      }
+      /* Dot colours by event type */
+      .tl-dot[data-etype="task_completed"]   { background: #16a34a; }
+      .tl-dot[data-etype="task_accepted"]    { background: #16a34a; }
+      .tl-dot[data-etype="task_started"]     { background: #2563eb; }
+      .tl-dot[data-etype="task_cancelled"]   { background: #dc2626; }
+      .tl-dot[data-etype="task_declined"]    { background: #dc2626; }
+      .tl-dot[data-etype="task_assigned"]    { background: #64748b; }
+      .tl-dot[data-etype="task_created"]     { background: #94a3b8; }
+      .tl-dot[data-etype^="conversation_"]  { background: #7c3aed; }
+      .tl-dot[data-etype^="message_"]       { background: #7c3aed; }
+      .tl-dot[data-etype^="reservation_"]   { background: #ea580c; }
+
+      .tl-line {
+        width: 2px;
+        flex: 1;
+        background: rgba(15,23,42,0.12);
+        margin-top: 5px;
+        border-radius: 1px;
+      }
+      .timeline-event-item:hover .tl-dot { transform: scale(1.3); }
+
+      .tl-card {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(247,244,241,0.9);
+        border: 1px solid rgba(15,23,32,0.05);
+        margin-bottom: 10px;
+        transition: background 0.12s, box-shadow 0.12s, transform 0.12s;
+      }
+      .tl-card.is-clickable { cursor: pointer; }
+      .tl-card.is-clickable:hover {
+        background: rgba(236,229,220,0.97);
+        border-color: rgba(15,23,32,0.09);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+      }
+
+      .tl-card-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 3px;
+      }
+      /* ── Status badge colour system ──────────────────────────────────── */
+      .tl-badge {
+        font-size: 0.67rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 800;
+        flex-shrink: 0;
+        line-height: 1.6;
+      }
+      .tl-badge-created     { background: rgba(148,163,184,0.15); color: #64748b; }
+      .tl-badge-assigned    { background: rgba(100,116,139,0.12); color: #475569; }
+      .tl-badge-accepted    { background: rgba(22,163,74,0.12);   color: #16a34a; }
+      .tl-badge-started     { background: rgba(37,99,235,0.10);   color: #2563eb; }
+      .tl-badge-completed   { background: rgba(22,163,74,0.15);   color: #15803d; }
+      .tl-badge-cancelled   { background: rgba(220,38,38,0.10);   color: #dc2626; }
+      .tl-badge-declined    { background: rgba(220,38,38,0.10);   color: #dc2626; }
+      .tl-badge-message     { background: rgba(124,58,237,0.10);  color: #7c3aed; }
+      .tl-badge-reservation { background: rgba(234,88,12,0.11);   color: #ea580c; }
+
+      .tl-time {
+        font-size: 0.71rem;
+        color: var(--stone);
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+      .tl-title {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--charcoal);
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tl-value-row {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #15803d;
+        margin-bottom: 3px;
+        line-height: 1.4;
+      }
+      .tl-desc {
+        font-size: 0.76rem;
+        color: var(--stone);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+      }
+      .tl-meta {
+        font-size: 0.71rem;
+        color: var(--stone);
+      }
+
+      /* ── States ──────────────────────────────────────────────────────── */
+      .act-state {
+        padding: 30px 16px;
+        text-align: center;
+        color: var(--stone);
+        font-size: 0.85rem;
+      }
+      .act-state strong {
+        display: block;
+        font-size: 0.95rem;
+        color: var(--charcoal);
+        margin-bottom: 4px;
+      }
+
+      /* ── Right column summary ────────────────────────────────────────── */
+      .act-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+        font-size: 0.83rem;
+      }
+      .act-summary-row:last-child { border-bottom: none; }
+      .act-summary-row strong { font-size: 0.95rem; font-weight: 900; }
+    </style>
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <h1 class="dashboard-title">Activity Timeline</h1>
+            <div class="topbar-sub">Operational audit centre for your portfolio</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input type="search" placeholder="Search events, properties, partners" id="globalSearch" />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip" id="date-chip">Today</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI row -->
+        <section class="activity-kpis">
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-top">
+              <span class="kpi-icon">✓</span>
+              <span class="kpi-trend neutral" id="kpiActiveTasksTrend">—</span>
+            </div>
+            <div class="kpi-label">Active tasks</div>
+            <div class="kpi-value" id="kpiActiveTasks">—</div>
+            <div class="kpi-sub">open · assigned · in progress</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-top">
+              <span class="kpi-icon">🏁</span>
+              <span class="kpi-trend positive" id="kpiCompletedTodayTrend">Today</span>
+            </div>
+            <div class="kpi-label">Completed today</div>
+            <div class="kpi-value" id="kpiCompletedToday">—</div>
+            <div class="kpi-sub">tasks finished today</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-top">
+              <span class="kpi-icon">🤝</span>
+              <span class="kpi-trend neutral" id="kpiActivePartnersTrend">—</span>
+            </div>
+            <div class="kpi-label">Active partners</div>
+            <div class="kpi-value" id="kpiActivePartners">—</div>
+            <div class="kpi-sub">with assigned work</div>
+          </div>
+          <div class="kpi-card dashboard-card">
+            <div class="kpi-top">
+              <span class="kpi-icon">💶</span>
+              <span class="kpi-trend positive" id="kpiValueTrend">Filtered</span>
+            </div>
+            <div class="kpi-label">Value processed</div>
+            <div class="kpi-value" id="kpiValueProcessed">€0</div>
+            <div class="kpi-sub">completed task value in view</div>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h2 class="dashboard-section-title">Events</h2>
+                  <p class="dashboard-card-text">All logged activity across your properties</p>
+                </div>
+                <span class="dashboard-pill" id="activityCount">—</span>
+              </div>
+
+              <!-- Search -->
+              <div class="act-search-wrap">
+                <span class="act-search-icon">⌕</span>
+                <input
+                  type="search"
+                  id="activitySearch"
+                  class="act-search-input"
+                  placeholder="Search events, tasks, properties or partners…"
+                  autocomplete="off"
+                />
+              </div>
+
+              <!-- Quick filter chips -->
+              <div class="quick-chips" id="quickChips">
+                <button class="quick-chip active" type="button" data-chip="all">All</button>
+                <button class="quick-chip" type="button" data-chip="task">Tasks</button>
+                <button class="quick-chip" type="button" data-chip="reservation">Reservations</button>
+                <button class="quick-chip" type="button" data-chip="message">Messages</button>
+                <button class="quick-chip" type="button" data-chip="partner">Partners</button>
+              </div>
+
+              <!-- Sticky dropdown filters -->
+              <div class="activity-filter-bar" id="activityFilterBar">
+                <label>Date
+                  <select id="filterDateRange">
+                    <option value="all">All time</option>
+                    <option value="today">Today</option>
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                  </select>
+                </label>
+                <label>Category
+                  <select id="filterCategory">
+                    <option value="all">All categories</option>
+                    <option value="task">Task</option>
+                    <option value="conversation">Conversation</option>
+                    <option value="message">Message</option>
+                    <option value="reservation">Reservation</option>
+                    <option value="property">Property</option>
+                  </select>
+                </label>
+                <label>Property
+                  <select id="filterProperty">
+                    <option value="all">All properties</option>
+                  </select>
+                </label>
+                <label>Status
+                  <select id="filterStatus">
+                    <option value="all">All statuses</option>
+                    <option value="created">Created</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="started">Started</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="declined">Declined</option>
+                  </select>
+                </label>
+                <label>Partner
+                  <select id="filterPartner">
+                    <option value="all">All partners</option>
+                  </select>
+                </label>
+              </div>
+
+              <!-- States -->
+              <div id="activityLoading" class="act-state">
+                <strong>Loading activity…</strong>
+              </div>
+              <div id="activityError" class="act-state" style="display:none">
+                <strong>Unable to load activity</strong>
+                Check your connection and try again.
+              </div>
+              <div id="activityEmpty" class="act-state" style="display:none">
+                <strong>No activity matches your filters</strong>
+                Try adjusting the filters above.
+              </div>
+
+              <!-- Timeline -->
+              <div id="activityTimeline" style="display:none"></div>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div class="dashboard-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 class="dashboard-section-title" style="margin:0">Breakdown</h3>
+                <span class="dashboard-pill" id="activityCountRight">—</span>
+              </div>
+              <div id="activityBreakdown">
+                <p style="color:var(--stone);font-size:0.85rem;margin:4px 0">Loading…</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script>
+      (function () {
+        var accountType = NauxicaShared.resolveAccountType();
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+        NauxicaShared.setActivePage('activity');
+        NauxicaShared.updateTopbar(accountType);
+        var chip = document.getElementById('date-chip');
+        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+        document.getElementById('logout-button')
+          ?.addEventListener('click', NauxicaShared.handleLogout);
+      })();
+    </script>
+    <script type="module">
+      (async () => {
+        var sb = window.NauxicaSupabase;
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+        var { data: profile } = await sb
+          .from('users').select('account_type').eq('id', sessData.session.user.id).single();
+        if (!profile || profile.account_type !== 'homeowner') {
+          window.location.replace('login.html'); throw 0;
+        }
+
+        /* ── helpers ──────────────────────────────────────────────────── */
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function fmtTime(iso) {
+          return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function dayKey(iso) {
+          return new Date(iso).toISOString().split('T')[0];
+        }
+
+        function dayLabel(key) {
+          var d = new Date(key + 'T00:00:00');
+          var today = new Date(); today.setHours(0,0,0,0);
+          var yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+          var formatted = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          if (d.getTime() === today.getTime())     return 'Today — ' + formatted;
+          if (d.getTime() === yesterday.getTime()) return 'Yesterday — ' + formatted;
+          return formatted;
+        }
+
+        function eventHref(ev) {
+          if (ev.task_id && ev.event_type && ev.event_type.startsWith('task_'))
+            return 'tasks.html?id=' + ev.task_id;
+          if (ev.reservation_id)
+            return 'reservations.html?id=' + ev.reservation_id;
+          if (ev.conversation_id)
+            return 'messages.html?conversation=' + ev.conversation_id;
+          if (ev.property_id && ev.event_type && ev.event_type.startsWith('property_'))
+            return 'property-detail.html?id=' + ev.property_id;
+          return null;
+        }
+
+        function eventValue(ev) {
+          if (!ev.metadata) return null;
+          var amount = ev.metadata.task_value_amount != null
+            ? ev.metadata.task_value_amount
+            : ev.metadata.reservation_value_amount != null
+              ? ev.metadata.reservation_value_amount
+              : null;
+          if (amount == null || amount === '') return null;
+          var f = parseFloat(amount);
+          if (!f) return null;
+          var currency = ev.metadata.task_value_currency || ev.metadata.reservation_value_currency || 'EUR';
+          var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : currency + ' ';
+          return sym + f.toFixed(2);
+        }
+
+        function computeValueProcessed(events) {
+          var total = 0;
+          events.forEach(function(ev) {
+            if (ev.event_type === 'task_completed' && ev.metadata && ev.metadata.task_value_amount) {
+              total += parseFloat(ev.metadata.task_value_amount) || 0;
+            }
+          });
+          return total;
+        }
+
+        /* ── lookups ──────────────────────────────────────────────────── */
+
+        var EVENT_LABELS = {
+          task_created:         'Task created',
+          task_assigned:        'Assigned',
+          task_accepted:        'Accepted',
+          task_started:         'Started',
+          task_completed:       'Completed',
+          task_cancelled:       'Cancelled',
+          task_declined:        'Declined',
+          conversation_created: 'Conversation',
+          message_sent:         'Message'
+        };
+
+        /* Maps event_type to the tl-badge-* CSS class */
+        var EVENT_BADGE_CLASS = {
+          task_created:         'tl-badge-created',
+          task_assigned:        'tl-badge-assigned',
+          task_accepted:        'tl-badge-accepted',
+          task_started:         'tl-badge-started',
+          task_completed:       'tl-badge-completed',
+          task_cancelled:       'tl-badge-cancelled',
+          task_declined:        'tl-badge-declined',
+          conversation_created: 'tl-badge-message',
+          message_sent:         'tl-badge-message',
+          reservation_created:  'tl-badge-reservation',
+          reservation_updated:  'tl-badge-reservation',
+          reservation_cancelled:'tl-badge-cancelled'
+        };
+
+        var STATUS_EVENT_TYPES = {
+          created:   ['task_created', 'conversation_created'],
+          assigned:  ['task_assigned'],
+          accepted:  ['task_accepted'],
+          started:   ['task_started'],
+          completed: ['task_completed'],
+          cancelled: ['task_cancelled'],
+          declined:  ['task_declined']
+        };
+
+        /* ── module state ─────────────────────────────────────────────── */
+
+        var propMap    = {};
+        var partnerMap = {};
+        var lastFetchedEvents = [];
+        var searchQuery = '';
+        var searchTimer = null;
+
+        var currentFilters = {
+          quickChip: 'all',
+          dateRange: 'all',
+          category:  'all',
+          property:  'all',
+          status:    'all',
+          partner:   'all'
+        };
+
+        /* ── UI state helpers ─────────────────────────────────────────── */
+
+        function showLoading() {
+          document.getElementById('activityLoading').style.display  = '';
+          document.getElementById('activityError').style.display    = 'none';
+          document.getElementById('activityEmpty').style.display    = 'none';
+          document.getElementById('activityTimeline').style.display = 'none';
+        }
+
+        function showError() {
+          document.getElementById('activityLoading').style.display  = 'none';
+          document.getElementById('activityError').style.display    = '';
+          document.getElementById('activityEmpty').style.display    = 'none';
+          document.getElementById('activityTimeline').style.display = 'none';
+        }
+
+        function showEmpty() {
+          document.getElementById('activityLoading').style.display  = 'none';
+          document.getElementById('activityError').style.display    = 'none';
+          document.getElementById('activityEmpty').style.display    = '';
+          document.getElementById('activityTimeline').style.display = 'none';
+        }
+
+        function showTimeline() {
+          document.getElementById('activityLoading').style.display  = 'none';
+          document.getElementById('activityError').style.display    = 'none';
+          document.getElementById('activityEmpty').style.display    = 'none';
+          document.getElementById('activityTimeline').style.display = '';
+        }
+
+        /* ── search ───────────────────────────────────────────────────── */
+
+        function applySearch(events) {
+          if (!searchQuery) return events;
+          var q = searchQuery;
+          return events.filter(function(ev) {
+            var title = (ev.event_title      || '').toLowerCase();
+            var desc  = (ev.event_description|| '').toLowerCase();
+            var prop  = ev.property_id  ? (propMap[ev.property_id]     || '').toLowerCase() : '';
+            var actor = (ev.actor_type === 'partner' && ev.actor_id)
+                          ? (partnerMap[ev.actor_id] || '').toLowerCase() : '';
+            return title.includes(q) || desc.includes(q) || prop.includes(q) || actor.includes(q);
+          });
+        }
+
+        /* ── server-side query builder ────────────────────────────────── */
+
+        function buildQuery() {
+          var query = sb.from('timeline_events')
+            .select('id, property_id, reservation_id, task_id, conversation_id, actor_id, actor_type, event_type, event_title, event_description, metadata, created_at')
+            .order('created_at', { ascending: false })
+            .limit(200);
+
+          /* Date range */
+          if (currentFilters.dateRange !== 'all') {
+            var now = new Date();
+            var start;
+            if (currentFilters.dateRange === 'today') {
+              start = new Date(now); start.setHours(0, 0, 0, 0);
+            } else if (currentFilters.dateRange === '7d') {
+              start = new Date(now); start.setDate(now.getDate() - 7);
+            } else if (currentFilters.dateRange === '30d') {
+              start = new Date(now); start.setDate(now.getDate() - 30);
+            }
+            if (start) query = query.gte('created_at', start.toISOString());
+          }
+
+          /* Quick chip — takes precedence over category dropdown */
+          if (currentFilters.quickChip === 'task') {
+            query = query.like('event_type', 'task_%');
+          } else if (currentFilters.quickChip === 'reservation') {
+            query = query.like('event_type', 'reservation_%');
+          } else if (currentFilters.quickChip === 'message') {
+            query = query.or('event_type.like.message_%,event_type.like.conversation_%');
+          } else if (currentFilters.quickChip === 'partner') {
+            query = query.eq('actor_type', 'partner');
+          } else {
+            /* Category dropdown */
+            if (currentFilters.category === 'task') {
+              query = query.like('event_type', 'task_%');
+            } else if (currentFilters.category === 'conversation') {
+              query = query.like('event_type', 'conversation_%');
+            } else if (currentFilters.category === 'message') {
+              query = query.or('event_type.like.message_%,event_type.like.conversation_%');
+            } else if (currentFilters.category === 'reservation') {
+              query = query.like('event_type', 'reservation_%');
+            } else if (currentFilters.category === 'property') {
+              query = query.like('event_type', 'property_%');
+            }
+          }
+
+          /* Property */
+          if (currentFilters.property !== 'all') {
+            query = query.eq('property_id', currentFilters.property);
+          }
+
+          /* Status → event_type list */
+          if (currentFilters.status !== 'all') {
+            var types = STATUS_EVENT_TYPES[currentFilters.status] || [];
+            if (types.length) query = query.in('event_type', types);
+          }
+
+          /* Partner user */
+          if (currentFilters.partner !== 'all') {
+            query = query.eq('actor_id', currentFilters.partner);
+          }
+
+          return query;
+        }
+
+        /* ── rendering ────────────────────────────────────────────────── */
+
+        function renderTimeline(events) {
+          var timelineEl   = document.getElementById('activityTimeline');
+          var countEl      = document.getElementById('activityCount');
+          var countRightEl = document.getElementById('activityCountRight');
+          if (!timelineEl) return;
+
+          var n = events.length;
+          var countText = n + ' event' + (n !== 1 ? 's' : '');
+          if (countEl)      countEl.textContent      = countText;
+          if (countRightEl) countRightEl.textContent = countText;
+
+          /* Group by day */
+          var groups = [];
+          var seen   = {};
+          events.forEach(function(ev) {
+            var k = dayKey(ev.created_at);
+            if (!seen[k]) {
+              seen[k] = { key: k, label: dayLabel(k), events: [] };
+              groups.push(seen[k]);
+            }
+            seen[k].events.push(ev);
+          });
+
+          timelineEl.innerHTML = groups.map(function(g) {
+            var eventsHtml = g.events.map(function(ev, idx) {
+              var badgeCls = EVENT_BADGE_CLASS[ev.event_type] || 'tl-badge-created';
+              var label    = EVENT_LABELS[ev.event_type] || ev.event_type.replace(/_/g, ' ');
+              var propName = ev.property_id ? propMap[ev.property_id] : null;
+              var actor    = (ev.actor_type === 'partner' && ev.actor_id) ? partnerMap[ev.actor_id] : null;
+              var metaParts = [];
+              if (propName) metaParts.push(esc(propName));
+              if (actor)    metaParts.push('Partner: ' + esc(actor));
+              var valStr  = eventValue(ev);
+              var href    = eventHref(ev);
+              var isLast  = idx === g.events.length - 1;
+
+              return '<div class="timeline-event-item"' + (href ? ' data-href="' + esc(href) + '"' : '') + '>' +
+                '<div class="tl-node">' +
+                  '<span class="tl-dot" data-etype="' + esc(ev.event_type) + '"></span>' +
+                  (isLast ? '' : '<span class="tl-line"></span>') +
+                '</div>' +
+                '<div class="tl-card' + (href ? ' is-clickable' : '') + '">' +
+                  '<div class="tl-card-top">' +
+                    '<span class="tl-badge ' + esc(badgeCls) + '">' + esc(label) + '</span>' +
+                    '<span class="tl-time">' + esc(fmtTime(ev.created_at)) + '</span>' +
+                  '</div>' +
+                  '<div class="tl-title">' + esc(ev.event_title) + '</div>' +
+                  (valStr ? '<div class="tl-value-row">' + esc(valStr) + '</div>' : '') +
+                  (ev.event_description ? '<div class="tl-desc">' + esc(ev.event_description) + '</div>' : '') +
+                  (metaParts.length ? '<div class="tl-meta">' + metaParts.join(' \xb7 ') + '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }).join('');
+
+            return '<div class="timeline-day-group">' +
+              '<div class="timeline-day-label">' +
+                '<span class="tl-day-dot"></span>' +
+                esc(g.label) +
+              '</div>' +
+              '<div class="timeline-events-list">' + eventsHtml + '</div>' +
+            '</div>';
+          }).join('');
+        }
+
+        function renderBreakdown(events) {
+          var breakdownEl = document.getElementById('activityBreakdown');
+          if (!breakdownEl) return;
+
+          var taskCount    = events.filter(function(ev) { return ev.event_type && ev.event_type.startsWith('task_'); }).length;
+          var msgCount     = events.filter(function(ev) { return ev.event_type && (ev.event_type.startsWith('message_') || ev.event_type.startsWith('conversation_')); }).length;
+          var partnerCount = events.filter(function(ev) { return ev.actor_type === 'partner'; }).length;
+          var otherCount   = events.length - taskCount - msgCount;
+
+          breakdownEl.innerHTML = [
+            ['Task events',    taskCount],
+            ['Message events', msgCount],
+            ['Partner events', partnerCount],
+            ['Other events',   Math.max(0, otherCount)]
+          ].map(function(row) {
+            return '<div class="act-summary-row">' +
+              '<span>' + row[0] + '</span>' +
+              '<strong>' + row[1] + '</strong>' +
+            '</div>';
+          }).join('');
+        }
+
+        function updateValueProcessed(events) {
+          var total = computeValueProcessed(events);
+          var el = document.getElementById('kpiValueProcessed');
+          if (el) el.textContent = '€' + total.toFixed(2);
+        }
+
+        function renderView(events) {
+          if (!events.length) {
+            showEmpty();
+            var zeroText = '0 events';
+            var cEl  = document.getElementById('activityCount');
+            var crEl = document.getElementById('activityCountRight');
+            if (cEl)  cEl.textContent  = zeroText;
+            if (crEl) crEl.textContent = zeroText;
+            return;
+          }
+          showTimeline();
+          renderTimeline(events);
+          updateValueProcessed(events);
+        }
+
+        /* ── fetch + render ───────────────────────────────────────────── */
+
+        async function fetchAndRender() {
+          showLoading();
+          var { data, error } = await buildQuery();
+          if (error) { console.error('Activity fetch error:', error); showError(); return; }
+          lastFetchedEvents = data || [];
+          var visible = applySearch(lastFetchedEvents);
+          renderView(visible);
+          renderBreakdown(lastFetchedEvents);
+        }
+
+        /* ── initial parallel load ────────────────────────────────────── */
+
+        var todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+
+        var [propsRes, partnersRes, activeTasksRes, completedTodayRes, activePartnerTasksRes] = await Promise.all([
+          sb.from('properties').select('id, display_name').order('display_name'),
+          sb.from('users').select('id, display_name, full_name').eq('account_type', 'partner').order('display_name'),
+          sb.from('tasks').select('*', { count: 'exact', head: true })
+            .neq('status', 'completed').neq('status', 'cancelled'),
+          sb.from('timeline_events').select('*', { count: 'exact', head: true })
+            .eq('event_type', 'task_completed')
+            .gte('created_at', todayStart.toISOString()),
+          sb.from('tasks').select('assigned_partner_id')
+            .in('status', ['assigned', 'accepted', 'in_progress'])
+            .not('assigned_partner_id', 'is', null)
+        ]);
+
+        /* Build lookup maps */
+        (propsRes.data || []).forEach(function(p) { propMap[p.id] = p.display_name || 'Property'; });
+        (partnersRes.data || []).forEach(function(p) { partnerMap[p.id] = p.display_name || p.full_name || 'Partner'; });
+
+        /* Populate KPIs */
+        var activeTasksCount = !activeTasksRes.error ? (activeTasksRes.count ?? 0) : '—';
+        var completedToday   = !completedTodayRes.error ? (completedTodayRes.count ?? 0) : '—';
+        var activePartners   = !activePartnerTasksRes.error
+          ? new Set((activePartnerTasksRes.data || []).map(function(t) { return t.assigned_partner_id; })).size
+          : '—';
+
+        var kpiActiveTasksEl    = document.getElementById('kpiActiveTasks');
+        var kpiCompletedTodayEl = document.getElementById('kpiCompletedToday');
+        var kpiActivePartnersEl = document.getElementById('kpiActivePartners');
+        if (kpiActiveTasksEl)    kpiActiveTasksEl.textContent    = activeTasksCount;
+        if (kpiCompletedTodayEl) kpiCompletedTodayEl.textContent = completedToday;
+        if (kpiActivePartnersEl) kpiActivePartnersEl.textContent = activePartners;
+
+        /* Populate property filter */
+        var propSel = document.getElementById('filterProperty');
+        if (propSel) {
+          (propsRes.data || []).forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.display_name || 'Property';
+            propSel.appendChild(opt);
+          });
+        }
+
+        /* Populate partner filter */
+        var partnerSel = document.getElementById('filterPartner');
+        if (partnerSel) {
+          (partnersRes.data || []).forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.display_name || p.full_name || 'Partner';
+            partnerSel.appendChild(opt);
+          });
+        }
+
+        /* ── event handlers ───────────────────────────────────────────── */
+
+        /* Search — client-side on already-fetched events */
+        document.getElementById('activitySearch').addEventListener('input', function() {
+          var val = this.value.trim().toLowerCase();
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(function() {
+            searchQuery = val;
+            var filtered = applySearch(lastFetchedEvents);
+            renderView(filtered);
+          }, 200);
+        });
+
+        /* Quick chips */
+        document.getElementById('quickChips').addEventListener('click', function(e) {
+          var btn = e.target.closest('.quick-chip');
+          if (!btn) return;
+          currentFilters.quickChip = btn.dataset.chip;
+          document.querySelectorAll('.quick-chip').forEach(function(b) {
+            b.classList.toggle('active', b === btn);
+          });
+          fetchAndRender();
+        });
+
+        /* Dropdown filters */
+        var filterMap = {
+          filterDateRange: 'dateRange',
+          filterCategory:  'category',
+          filterProperty:  'property',
+          filterStatus:    'status',
+          filterPartner:   'partner'
+        };
+        Object.keys(filterMap).forEach(function(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener('change', function() {
+            currentFilters[filterMap[id]] = el.value;
+            fetchAndRender();
+          });
+        });
+
+        /* Clickable timeline events — delegated */
+        document.getElementById('activityTimeline').addEventListener('click', function(e) {
+          var item = e.target.closest('[data-href]');
+          if (!item) return;
+          window.location.href = item.getAttribute('data-href');
+        });
+
+        /* ── initial render ───────────────────────────────────────────── */
+        await fetchAndRender();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,9 +1,9 @@
 # Service Request Flow
 
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Complete — Architecture phase
 **Scope:** Sicily launch · All service types
-**Last updated:** 2026-05-28
+**Last updated:** 2026-06-05
 **Related:** [partner-assignment-model.md](../architecture/partner-assignment-model.md) · [data-models.md](../backend/data-models.md) · [escalation-rules.md](../ai-concierge/escalation-rules.md) · [event-driven-architecture.md](../architecture/event-driven-architecture.md) · [notification-system.md](../architecture/notification-system.md)
 
 ---
@@ -101,11 +101,11 @@ Homeowner creates a request directly from the dashboard. Examples:
 
 Homeowner creation includes full job description, preferred date/time window, and optional notes for the partner.
 
-### 1.3 Guest (via AI) — `initiated_by: "guest"`
+### 1.3 Guest (via AI) — `initiated_by: "guest_direct"`
 
 Distinct from AI-created requests when the guest's message is unambiguous and the AI is acting as a transparent pass-through rather than exercising judgment. Reserved for structured request forms (not currently available at MVP — all guest-triggered requests are `ai_concierge` at MVP).
 
-**Post-MVP note:** When a self-service request form is added to the guest interface, `initiated_by: "guest"` becomes meaningful. Do not implement this distinction at MVP — use `ai_concierge` for all AI-mediated requests.
+**Post-MVP note:** When a self-service request form is added to the guest interface, `initiated_by: "guest_direct"` becomes meaningful. Do not implement this distinction at MVP — use `ai_concierge` for all AI-mediated requests.
 
 ### 1.4 Operator — `initiated_by: "operator"`
 
@@ -122,6 +122,8 @@ Classification happens immediately after `CREATED`. It assigns:
 1. `service_type` — confirmed or inferred from trigger
 2. `urgency` — based on content and classification rules below
 3. `classification_source` — how urgency was determined
+
+> **Enum casing note:** Enum values in this document use uppercase for readability (e.g. `EMERGENCY`, `URGENT`). Canonical SQL enum values are lowercase (e.g. `'emergency'`, `'urgent'`) as defined in [database-schema.md](../backend/database-schema.md) §2.
 
 ### 2.1 Urgency Levels
 
@@ -455,7 +457,7 @@ The following extends [data-models.md Model 9](../backend/data-models.md) with f
 | `property_id` | String → Property | |
 | `reservation_id` | UUID → Reservation | Nullable — homeowner-created requests may not link to a reservation |
 | `service_type` | Enum | One of 5 MVP service types: `CLEANING` / `MAINTENANCE` / `LAUNDRY` / `TRANSFERS` / `EXPERIENCES` — see [partner-assignment-model.md](../architecture/partner-assignment-model.md) |
-| `initiated_by` | Enum | `ai_concierge` / `homeowner` / `guest` / `operator` |
+| `initiated_by` | Enum | `ai_concierge` / `homeowner` / `guest_direct` / `operator` |
 | `urgency` | Enum | `EMERGENCY` / `URGENT` / `HIGH` / `NORMAL` / `SCHEDULED` |
 | `classification_source` | Enum | `ai_keyword_match` / `homeowner_specified` / `operator_override` / `default` |
 | `status` | Enum | 11 states as defined in Section 1 |
@@ -465,8 +467,8 @@ The following extends [data-models.md Model 9](../backend/data-models.md) with f
 | `assigned_partner_id` | UUID → User | Set when ASSIGNED state is reached |
 | `routing_attempt_count` | Integer | Number of partners contacted. Starts at 0. |
 | `routing_history` | Array of objects | One entry per routing attempt — see routing record in Section 3.3 |
-| `linked_partner_requests` | Array of UUIDs → PartnerRequest | All PartnerRequests created for this ServiceRequest |
-| `active_partner_request_id` | UUID → PartnerRequest | The currently active PartnerRequest (if any) |
+| `linked_partner_request_id` | UUID → PartnerRequest | First PartnerRequest created. Set at initial routing; retained for traceability. Not updated on reassignment. |
+| `active_partner_request_id` | UUID → PartnerRequest | Current PartnerRequest for live routing. Updated each time routing moves to a new partner. |
 | `escalation_id` | UUID → EscalationRecord | Populated if request is escalated |
 | `dispute_id` | UUID → Dispute | Populated if a dispute is opened |
 | `completion_notes` | Text | Partner's completion note |

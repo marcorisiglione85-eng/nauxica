@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Guest Detail — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── Detail header ─────────────────────────────────────── */
+      .nau-detail-header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .nau-detail-name {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      /* ── Guest contacts ────────────────────────────────────── */
+      .nau-guest-contacts {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .nau-guest-contact-row { font-size: 0.88rem; color: var(--stone); }
+
+      .nau-guest-contact-empty {
+        font-size: 0.88rem;
+        color: rgba(15,23,42,0.3);
+        font-style: italic;
+      }
+
+      /* ── Property context row ──────────────────────────────── */
+      .nau-prop-context {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+      }
+
+      .nau-prop-code {
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: var(--terracotta);
+        background: rgba(197,104,61,0.1);
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .nau-prop-type-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--stone);
+        background: rgba(15,23,42,0.06);
+        padding: 3px 9px;
+        border-radius: 999px;
+        text-transform: capitalize;
+        white-space: nowrap;
+      }
+
+      .nau-prop-context-link {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--charcoal);
+        text-decoration: none;
+      }
+
+      .nau-prop-context-link:hover {
+        color: var(--terracotta);
+        text-decoration: underline;
+      }
+
+      /* ── Badges ────────────────────────────────────────────── */
+      .nau-detail-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .nau-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .nau-badge-upcoming    { background: rgba(59,130,246,0.12);  color: #2563eb; }
+      .nau-badge-in-house    { background: rgba(22,163,74,0.13);   color: #15803d; }
+      .nau-badge-checked-out { background: rgba(100,100,110,0.1);  color: #555; }
+      .nau-badge-soon        { background: rgba(100,100,110,0.08); color: var(--stone); }
+      .nau-badge-override    { background: rgba(217,119,6,0.12);   color: #b45309; }
+
+      /* ── Breadcrumb ────────────────────────────────────────── */
+      .nau-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: var(--stone);
+        margin-bottom: 2px;
+      }
+
+      .nau-breadcrumb a {
+        color: var(--terracotta);
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .nau-breadcrumb a:hover { text-decoration: underline; }
+      .nau-breadcrumb-sep { color: rgba(15,23,42,0.3); }
+
+      /* ── Back link ─────────────────────────────────────────── */
+      .nau-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--terracotta);
+        text-decoration: none;
+        padding: 5px 0;
+      }
+
+      .nau-back-link:hover { text-decoration: underline; }
+
+      /* ── Info grid (same as property-detail) ───────────────── */
+      .nau-info-grid { display: grid; gap: 8px; }
+
+      .nau-info-row {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.05);
+        align-items: start;
+      }
+
+      .nau-info-label {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding-top: 1px;
+      }
+
+      .nau-info-value {
+        font-size: 0.86rem;
+        color: var(--charcoal);
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .nau-info-empty {
+        color: rgba(15,23,42,0.3);
+        font-style: italic;
+      }
+
+      /* ── Section label ─────────────────────────────────────── */
+      .nau-section-label {
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--terracotta);
+        margin: 14px 0 6px;
+      }
+
+      .nau-section-label:first-child { margin-top: 0; }
+
+      /* ── Status lifecycle card ─────────────────────────────── */
+      .nau-status-ctrl { display: grid; gap: 14px; }
+
+      .nau-status-current {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.06);
+      }
+
+      .nau-status-current-label {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex: 1;
+      }
+
+      .nau-status-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+      .nau-status-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 9px 22px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background .15s, color .15s, transform .15s;
+      }
+
+      .nau-status-btn-inhouse {
+        background: rgba(22,163,74,0.12);
+        color: #15803d;
+        border-color: rgba(22,163,74,0.25);
+      }
+
+      .nau-status-btn-inhouse:hover {
+        background: #15803d;
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      .nau-status-btn-checkout {
+        background: rgba(15,23,42,0.08);
+        color: var(--charcoal);
+        border-color: rgba(15,23,42,0.12);
+      }
+
+      .nau-status-btn-checkout:hover { background: rgba(15,23,42,0.14); }
+
+      .nau-status-done {
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: rgba(15,23,42,0.03);
+        border: 1px solid rgba(15,23,42,0.06);
+        font-size: 0.84rem;
+        color: var(--stone);
+        text-align: center;
+      }
+
+      .nau-status-note {
+        margin: 0;
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+
+      /* ── Locked modules ────────────────────────────────────── */
+      .nau-module-locked {
+        padding: 24px 20px;
+        border-radius: 12px;
+        background: rgba(15,23,42,0.02);
+        border: 1.5px dashed rgba(15,23,42,0.1);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nau-module-locked-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 900;
+        color: var(--stone);
+      }
+
+      .nau-module-locked p {
+        margin: 0;
+        color: var(--stone);
+        font-size: 0.84rem;
+        line-height: 1.5;
+        max-width: 300px;
+      }
+
+      .nau-module-locked-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(15,23,42,0.06);
+        color: rgba(15,23,42,0.35);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        border: 1px solid rgba(15,23,42,0.08);
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      /* ── Not-found state ───────────────────────────────────── */
+      .nau-not-found {
+        padding: 40px 24px;
+        text-align: center;
+        border-radius: 14px;
+        background: #fffaf6;
+        border: 1px solid rgba(15,23,42,0.06);
+      }
+
+      .nau-not-found h3 { margin: 0 0 8px; color: var(--charcoal); }
+      .nau-not-found p  { margin: 0 0 18px; color: var(--stone); font-size: 0.88rem; }
+
+      /* ── Edit form ─────────────────────────────────────────── */
+      .nau-edit-form { display: grid; gap: 12px; }
+      .nau-edit-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .nau-edit-form label {
+        display: flex; flex-direction: column; gap: 5px;
+        font-size: 0.78rem; font-weight: 800; color: var(--stone); text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .nau-edit-form input,
+      .nau-edit-form select,
+      .nau-edit-form textarea {
+        padding: 9px 12px; border-radius: 9px;
+        border: 1px solid rgba(15,23,42,0.12);
+        background: #fffaf4; font: inherit;
+        font-size: 0.88rem; color: var(--charcoal);
+        transition: border-color .15s;
+        font-weight: 500; text-transform: none; letter-spacing: normal;
+      }
+      .nau-edit-form input:focus,
+      .nau-edit-form select:focus,
+      .nau-edit-form textarea:focus { outline: none; border-color: var(--terracotta); }
+      .nau-edit-form textarea { resize: vertical; min-height: 76px; }
+      .nau-edit-actions { display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+      .nau-edit-save-btn {
+        padding: 10px 28px; border-radius: 999px; background: var(--terracotta);
+        color: #fff; font: inherit; font-size: 0.88rem; font-weight: 800;
+        border: none; cursor: pointer; transition: opacity .15s;
+      }
+      .nau-edit-save-btn:hover { opacity: .88; }
+      .nau-edit-save-btn:disabled { opacity: .5; cursor: not-allowed; }
+      .nau-edit-cancel-btn {
+        padding: 10px 20px; border-radius: 999px; background: rgba(15,23,42,0.06);
+        color: var(--charcoal); font: inherit; font-size: 0.88rem; font-weight: 700;
+        border: 1px solid rgba(15,23,42,0.1); cursor: pointer;
+      }
+      .nau-edit-error {
+        padding: 10px 14px; border-radius: 9px; background: rgba(192,57,43,0.08);
+        border: 1px solid rgba(192,57,43,0.2); color: #c0392b;
+        font-size: 0.84rem; font-weight: 600; display: none;
+      }
+      .nau-edit-error.is-visible { display: block; }
+      .nau-req { color: var(--terracotta); }
+
+      /* ── Conversation thread ───────────────────────────────────── */
+      .nau-thread { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 340px; overflow-y: auto; }
+
+      .nau-msg {
+        padding: 9px 13px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        max-width: 92%;
+      }
+
+      .nau-msg-homeowner {
+        background: rgba(197,104,61,0.1);
+        border: 1px solid rgba(197,104,61,0.18);
+        color: var(--charcoal);
+        align-self: flex-end;
+      }
+
+      .nau-msg-system {
+        background: rgba(15,23,42,0.04);
+        border: 1px solid rgba(15,23,42,0.07);
+        color: var(--stone);
+        font-style: italic;
+        font-size: 0.8rem;
+        align-self: center;
+        max-width: 100%;
+      }
+
+      .nau-msg-guest {
+        background: #fff;
+        border: 1px solid rgba(15,23,42,0.1);
+        color: var(--charcoal);
+        align-self: flex-start;
+      }
+
+      .nau-msg-ai {
+        background: rgba(59,130,246,0.07);
+        border: 1px solid rgba(59,130,246,0.15);
+        color: var(--charcoal);
+        align-self: flex-start;
+      }
+
+      .nau-msg-meta {
+        font-size: 0.72rem;
+        color: var(--stone);
+        margin-top: 2px;
+        opacity: 0.7;
+      }
+
+      .nau-msg-wrap { display: flex; flex-direction: column; }
+      .nau-msg-wrap.is-homeowner { align-items: flex-end; }
+      .nau-msg-wrap.is-system    { align-items: center; }
+
+      /* ── Composer ──────────────────────────────────────────────── */
+      .nau-composer {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid rgba(15,23,42,0.07);
+        padding-top: 12px;
+      }
+
+      .nau-composer textarea {
+        padding: 9px 12px;
+        border-radius: 9px;
+        border: 1px solid rgba(15,23,42,0.12);
+        background: #fffaf4;
+        font: inherit;
+        font-size: 0.88rem;
+        resize: vertical;
+        min-height: 72px;
+        color: var(--charcoal);
+      }
+
+      .nau-composer textarea:focus { outline: none; border-color: var(--terracotta); }
+
+      .nau-composer-send {
+        align-self: flex-end;
+        padding: 9px 22px;
+        border-radius: 999px;
+        background: var(--terracotta);
+        color: #fff;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        transition: opacity .15s;
+      }
+
+      .nau-composer-send:hover    { opacity: .88; }
+      .nau-composer-send:disabled { opacity: .5; cursor: not-allowed; }
+
+      /* ── Financial Summary card ────────────────────────────── */
+      .nau-fin-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.05);
+        align-items: center;
+      }
+
+      .nau-fin-label {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .nau-fin-value {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--charcoal);
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .nau-fin-value.is-positive { color: #15803d; }
+      .nau-fin-value.is-negative { color: #c0392b; }
+      .nau-fin-value.is-empty    { color: rgba(15,23,42,0.3); font-style: italic; font-weight: 500; }
+
+      .nau-fin-tasks {
+        border-radius: 8px;
+        border: 1px solid rgba(15,23,42,0.05);
+        overflow: hidden;
+        margin-top: 2px;
+      }
+
+      .nau-fin-task-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 12px;
+        font-size: 0.82rem;
+        border-bottom: 1px solid rgba(15,23,42,0.04);
+      }
+
+      .nau-fin-task-row:last-child  { border-bottom: none; }
+      .nau-fin-task-name { color: var(--stone); }
+      .nau-fin-task-val  { font-weight: 700; color: var(--charcoal); }
+      .nau-fin-task-null { color: rgba(15,23,42,0.3); font-style: italic; }
+    </style>
+  </head>
+  <body class="homeowner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="nau-breadcrumb">
+              <a href="guests.html">Guests</a>
+              <span class="nau-breadcrumb-sep">/</span>
+              <span id="breadcrumbName">Loading…</span>
+            </div>
+            <h1 class="dashboard-title" id="pageTitle">Guest</h1>
+            <div class="topbar-sub" id="pageSub">Loading guest details…</div>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-search">
+              <input type="search" placeholder="Search" id="globalSearch" />
+            </div>
+            <div class="topbar-controls">
+              <button class="icon-btn" aria-label="Notifications">🔔</button>
+              <button class="icon-btn" aria-label="Help">⌘</button>
+              <div class="date-chip" id="date-chip">Today</div>
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">MR</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Marco</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid" id="mainGrid">
+          <!-- Populated by JS -->
+          <div class="col-left">
+            <div class="dashboard-card">
+              <p class="dashboard-card-text">Loading…</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-demo-data.js"></script>
+    <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module">
+    (async () => {
+
+      /* ── Shared setup ───────────────────────────────────────── */
+      const accountType = NauxicaShared.resolveAccountType();
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+      NauxicaShared.setActivePage('guests');
+      NauxicaShared.updateTopbar(accountType);
+
+      const chip = document.getElementById('date-chip');
+      if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      document.getElementById('logout-button')?.addEventListener('click', async () => {
+        await window.NauxicaSupabase.auth.signOut();
+        localStorage.clear();
+        window.location.href = 'login.html';
+      });
+
+      /* ── Auth guard ─────────────────────────────────────────── */
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) { window.location.replace('login.html'); return; }
+
+      /* ── Resolve reservation ID from URL ────────────────────── */
+      const params = new URLSearchParams(window.location.search);
+      const resId  = params.get('id');
+
+      /* ── Helpers ────────────────────────────────────────────── */
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function fmtDate(d) {
+        if (!d) return null;
+        return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      function prettyType(t) {
+        if (!t) return null;
+        return t.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      }
+
+      function fmtResValue(r) {
+        if (r.reservation_value_amount == null) return null;
+        var sym = r.reservation_value_currency === 'EUR' ? '€' :
+                  r.reservation_value_currency === 'USD' ? '$' :
+                  r.reservation_value_currency === 'GBP' ? '£' :
+                  (r.reservation_value_currency || 'EUR') + ' ';
+        return sym + parseFloat(r.reservation_value_amount).toFixed(2);
+      }
+
+      function infoRow(label, value) {
+        const display = value
+          ? '<span class="nau-info-value">' + esc(value) + '</span>'
+          : '<span class="nau-info-value nau-info-empty">Not provided</span>';
+        return '<div class="nau-info-row"><span class="nau-info-label">' + esc(label) + '</span>' + display + '</div>';
+      }
+
+      function lockedModule(title, description, buttonLabel) {
+        return '<div class="dashboard-card">' +
+          '<div class="card-heading-row"><div>' +
+            '<h3 class="dashboard-section-title">' + esc(title) + '</h3>' +
+            '<p class="dashboard-card-text">' + esc(description) + '</p>' +
+          '</div><span class="nau-badge nau-badge-soon">Coming soon</span></div>' +
+          '<div class="nau-module-locked"><div class="nau-module-locked-icon">—</div>' +
+            '<p>This module is not yet available. It will be enabled in a future update.</p>' +
+            '<button class="nau-module-locked-btn" disabled>' + esc(buttonLabel) + '</button>' +
+          '</div></div>';
+      }
+
+      const STATUS_LABEL = {
+        confirmed:   'Confirmed', pre_arrival: 'Pre-arrival',
+        checked_in:  'In house',  checked_out: 'Checked out',
+        cancelled:   'Cancelled', no_show:     'No show'
+      };
+      const STATUS_CLASS = {
+        confirmed:   'nau-badge-upcoming', pre_arrival: 'nau-badge-upcoming',
+        checked_in:  'nau-badge-in-house', checked_out: 'nau-badge-checked-out',
+        cancelled:   'nau-badge-checked-out', no_show:  'nau-badge-checked-out'
+      };
+      const SOURCE_LABEL = {
+        airbnb: 'Airbnb', booking_com: 'Booking.com',
+        vrbo: 'VRBO', direct: 'Direct', other: 'Other'
+      };
+      const LANG_LABEL = { en: 'English', it: 'Italian', es: 'Spanish', fr: 'French', de: 'German' };
+
+      /* ── Show not-found ─────────────────────────────────────── */
+      function showNotFound() {
+        document.getElementById('breadcrumbName').textContent = 'Not found';
+        document.getElementById('pageTitle').textContent      = 'Guest not found';
+        document.getElementById('pageSub').textContent        = '';
+        document.getElementById('mainGrid').innerHTML =
+          '<div class="col-left"><div class="nau-not-found">' +
+            '<h3>Guest not found</h3>' +
+            '<p>This reservation may have been removed, or the link is invalid.</p>' +
+            '<a href="guests.html" class="nau-back-link">&#8592; Back to Guests</a>' +
+          '</div></div>';
+      }
+
+      /* ── Fetch reservation ───────────────────────────────────── */
+      if (!resId) { showNotFound(); return; }
+
+      const { data: res, error: fetchErr } = await window.NauxicaSupabase
+        .from('reservations')
+        .select('*, properties(id, display_name, property_code, property_type)')
+        .eq('id', resId)
+        .single();
+
+      if (fetchErr || !res) { showNotFound(); return; }
+
+      /* ── Render view mode ────────────────────────────────────── */
+      function renderPage(r) {
+        const prop     = r.properties || {};
+        const propId   = prop.id   || r.property_id;
+        const propName = prop.display_name  || 'Unknown Property';
+        const propCode = prop.property_code || '—';
+        const status   = r.reservation_status || 'confirmed';
+
+        /* Topbar */
+        const guestName = r.guest_name || 'Guest';
+        document.getElementById('breadcrumbName').textContent = guestName;
+        document.getElementById('pageTitle').textContent      = guestName;
+        document.getElementById('pageSub').textContent        = propCode + ' · ' + propName;
+        document.title = guestName + ' — Nauxica';
+
+        /* Property link */
+        const propLink = propId
+          ? '<a href="property-detail.html?id=' + encodeURIComponent(propId) + '" class="nau-prop-context-link">' + esc(propName) + '</a>'
+          : '<span class="nau-prop-context-link" style="cursor:default">' + esc(propName) + '</span>';
+
+        /* Identity card */
+        const identityCard =
+          '<div class="dashboard-card">' +
+            '<div class="card-heading-row">' +
+              '<a href="guests.html" class="nau-back-link">&#8592; All guests</a>' +
+              '<button class="nau-edit-btn" id="editResBtn">Edit Reservation</button>' +
+            '</div>' +
+            '<div class="nau-detail-header">' +
+              '<h2 class="nau-detail-name">' + esc(guestName) + '</h2>' +
+              '<div class="nau-guest-contacts">' +
+                (r.guest_phone
+                  ? '<span class="nau-guest-contact-row">' + esc(r.guest_phone) + '</span>'
+                  : '<span class="nau-guest-contact-empty">Phone not provided</span>') +
+                (r.guest_email
+                  ? '<span class="nau-guest-contact-row">' + esc(r.guest_email) + '</span>'
+                  : '<span class="nau-guest-contact-empty">Email not provided</span>') +
+              '</div>' +
+              '<div class="nau-detail-badges">' +
+                '<span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' + esc(STATUS_LABEL[status] || status) + '</span>' +
+                (r.confirmation_number ? '<span class="nau-badge nau-badge-soon">' + esc(r.confirmation_number) + '</span>' : '') +
+              '</div>' +
+              '<div class="nau-prop-context">' +
+                '<span class="nau-prop-code">' + esc(propCode) + '</span>' + propLink +
+                (prop.property_type ? '<span class="nau-prop-type-pill">' + esc(prettyType(prop.property_type)) + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        /* Status lifecycle card */
+        let actionsHTML;
+        if (status === 'confirmed' || status === 'pre_arrival') {
+          actionsHTML =
+            '<div class="nau-status-actions">' +
+              '<button class="nau-status-btn nau-status-btn-inhouse" id="markInHouseBtn">Mark Checked In</button>' +
+            '</div>';
+        } else if (status === 'checked_in') {
+          actionsHTML =
+            '<div class="nau-status-actions">' +
+              '<button class="nau-status-btn nau-status-btn-checkout" id="markCheckedOutBtn">Mark Checked Out</button>' +
+            '</div>';
+        } else {
+          actionsHTML = '<div class="nau-status-done">Stay complete — no further transitions available.</div>';
+        }
+
+        const statusCard =
+          '<div class="dashboard-card">' +
+            '<div class="card-heading-row"><div>' +
+              '<h3 class="dashboard-section-title">Stay Lifecycle</h3>' +
+              '<p class="dashboard-card-text">Advance the reservation status</p>' +
+            '</div></div>' +
+            '<div class="nau-status-ctrl">' +
+              '<div class="nau-status-current">' +
+                '<span class="nau-status-current-label">Current status</span>' +
+                '<span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' + esc(STATUS_LABEL[status] || status) + '</span>' +
+              '</div>' +
+              actionsHTML +
+              '<p class="nau-status-note">Update reservation status manually or use Edit Reservation for full control.</p>' +
+            '</div>' +
+          '</div>';
+
+        /* Stay overview card (right column) */
+        const nightsStr = r.nights != null
+          ? r.nights + (r.nights === 1 ? ' night' : ' nights')
+          : null;
+        const guestCountStr = r.guest_count != null
+          ? String(r.guest_count) + (r.guest_count === 1 ? ' guest' : ' guests')
+          : null;
+        const adultsStr   = r.guest_count_adults            != null ? String(r.guest_count_adults)            : null;
+        const childrenStr = r.guest_count_children_under_12 != null ? String(r.guest_count_children_under_12) : null;
+        const langStr     = r.guest_preferred_language ? (LANG_LABEL[r.guest_preferred_language] || r.guest_preferred_language) : null;
+        const createdStr  = r.created_at
+          ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          : null;
+
+        const stayCard =
+          '<div class="dashboard-card">' +
+            '<div class="card-heading-row"><div>' +
+              '<h3 class="dashboard-section-title">Reservation details</h3>' +
+              '<p class="dashboard-card-text">Full stay and booking information</p>' +
+            '</div></div>' +
+            '<div class="nau-info-grid">' +
+              '<p class="nau-section-label">Stay</p>' +
+              infoRow('Check-in',  fmtDate(r.checkin_date)) +
+              infoRow('Check-out', fmtDate(r.checkout_date)) +
+              infoRow('Duration',  nightsStr) +
+              infoRow('Guests',    guestCountStr) +
+              (adultsStr   ? infoRow('Adults',   adultsStr)   : '') +
+              (childrenStr ? infoRow('Children', childrenStr) : '') +
+              '<p class="nau-section-label">Guest</p>' +
+              infoRow('Language',  langStr) +
+              '<p class="nau-section-label">Booking</p>' +
+              infoRow('Confirmation', r.confirmation_number) +
+              infoRow('Channel',      SOURCE_LABEL[r.booking_source] || r.booking_source) +
+              (r.special_requests ? infoRow('Requests', r.special_requests) : '') +
+              (r.internal_notes   ? infoRow('Notes',    r.internal_notes)   : '') +
+              (createdStr ? '<p class="nau-section-label">Record</p>' + infoRow('Created', createdStr) : '') +
+            '</div>' +
+          '</div>';
+
+        /* Conversation card placeholder — filled async after render */
+        const conversationCard =
+          '<div class="dashboard-card" id="conversationCard">' +
+            '<div class="card-heading-row"><div>' +
+              '<h3 class="dashboard-section-title">Conversation</h3>' +
+              '<p class="dashboard-card-text">Messages for this stay</p>' +
+            '</div></div>' +
+            '<p style="color:var(--stone);font-size:0.84rem">Loading…</p>' +
+          '</div>';
+
+        const notesCard = lockedModule('Guest Notes', 'Private operational notes for this stay', 'Add Note');
+
+        /* Financial Summary card placeholder (filled async) */
+        const financialCardPlaceholder =
+          '<div class="dashboard-card" id="financialSummaryCard">' +
+            '<div class="card-heading-row"><div>' +
+              '<h3 class="dashboard-section-title">Financial Summary</h3>' +
+              '<p class="dashboard-card-text">Reservation profitability</p>' +
+            '</div></div>' +
+            '<p style="color:var(--stone);font-size:0.84rem;margin:4px 0">Loading…</p>' +
+          '</div>';
+
+        /* Assemble */
+        document.getElementById('mainGrid').innerHTML =
+          '<div class="col-left">' + identityCard + statusCard + conversationCard + notesCard + '</div>' +
+          '<div class="col-right">' + stayCard + financialCardPlaceholder + '</div>';
+
+        /* Wire status buttons */
+        async function applyStatus(newStatus) {
+          const btn = document.getElementById(newStatus === 'checked_in' ? 'markInHouseBtn' : 'markCheckedOutBtn');
+          if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+          const { data: updated, error: updErr } = await window.NauxicaSupabase
+            .from('reservations')
+            .update({ reservation_status: newStatus })
+            .eq('id', resId)
+            .select('*, properties(id, display_name, property_code, property_type)')
+            .single();
+          if (updErr || !updated) {
+            if (btn) { btn.disabled = false; btn.textContent = newStatus === 'checked_in' ? 'Mark Checked In' : 'Mark Checked Out'; }
+            alert('Could not update status. Please try again.');
+            return;
+          }
+          renderPage(updated);
+        }
+
+        const btnIn  = document.getElementById('markInHouseBtn');
+        const btnOut = document.getElementById('markCheckedOutBtn');
+        if (btnIn)  btnIn.addEventListener('click',  function () { applyStatus('checked_in'); });
+        if (btnOut) btnOut.addEventListener('click', function () { applyStatus('checked_out'); });
+
+        /* Wire edit button */
+        document.getElementById('editResBtn')?.addEventListener('click', function () { renderEditForm(r); });
+
+        /* Load async cards — do not block page render */
+        loadConversation(r.id, r.property_id);
+        loadFinancialSummary(r);
+      }
+
+      /* ── Financial Summary ───────────────────────────────────── */
+      async function loadFinancialSummary(r) {
+        const card = document.getElementById('financialSummaryCard');
+        if (!card) return;
+
+        const { data: tasks, error } = await window.NauxicaSupabase
+          .from('tasks')
+          .select('id, title, task_value_amount, task_value_currency, status')
+          .eq('reservation_id', r.id)
+          .neq('status', 'cancelled');
+
+        if (error) {
+          card.querySelector('p').textContent = 'Could not load task costs.';
+          return;
+        }
+
+        const linkedTasks = tasks || [];
+
+        /* Currency symbol — use reservation currency as base */
+        const cur = r.reservation_value_currency || 'EUR';
+        const sym = cur === 'EUR' ? '€' : cur === 'USD' ? '$' : cur === 'GBP' ? '£' : cur + ' ';
+
+        /* Calculations */
+        const resValue = r.reservation_value_amount != null
+          ? parseFloat(r.reservation_value_amount) : null;
+
+        const opCost = linkedTasks.reduce(function (sum, t) {
+          return sum + (t.task_value_amount != null ? parseFloat(t.task_value_amount) : 0);
+        }, 0);
+
+        const grossMargin = resValue != null ? resValue - opCost : null;
+        const marginPct   = (resValue != null && resValue > 0)
+          ? (grossMargin / resValue * 100) : null;
+
+        /* Render helpers */
+        function finRow(label, valueHtml) {
+          return '<div class="nau-fin-row">' +
+            '<span class="nau-fin-label">' + esc(label) + '</span>' +
+            valueHtml +
+          '</div>';
+        }
+
+        function fmtAmt(n) { return sym + n.toFixed(2); }
+
+        const resValueHtml = resValue != null
+          ? '<span class="nau-fin-value">' + esc(fmtAmt(resValue)) + '</span>'
+          : '<span class="nau-fin-value is-empty">Not set</span>';
+
+        const opCostHtml = '<span class="nau-fin-value">' + esc(fmtAmt(opCost)) + '</span>';
+
+        const marginHtml = grossMargin != null
+          ? '<span class="nau-fin-value ' + (grossMargin >= 0 ? 'is-positive' : 'is-negative') + '">' + esc(fmtAmt(grossMargin)) + '</span>'
+          : '<span class="nau-fin-value is-empty">—</span>';
+
+        const marginPctHtml = marginPct != null
+          ? '<span class="nau-fin-value ' + (marginPct >= 0 ? 'is-positive' : 'is-negative') + '">' + esc(marginPct.toFixed(1)) + '%</span>'
+          : '<span class="nau-fin-value is-empty">—</span>';
+
+        /* Linked task breakdown */
+        let tasksHtml;
+        if (linkedTasks.length) {
+          tasksHtml =
+            '<p class="nau-section-label" style="margin-top:14px">Linked costs</p>' +
+            '<div class="nau-fin-tasks">' +
+            linkedTasks.map(function (t) {
+              const tVal = t.task_value_amount != null
+                ? '<span class="nau-fin-task-val">' + esc(sym + parseFloat(t.task_value_amount).toFixed(2)) + '</span>'
+                : '<span class="nau-fin-task-null">Not set</span>';
+              return '<div class="nau-fin-task-row">' +
+                '<span class="nau-fin-task-name">' + esc(t.title || 'Task') + '</span>' +
+                tVal +
+              '</div>';
+            }).join('') +
+            '</div>';
+        } else {
+          tasksHtml = '<p style="color:var(--stone);font-size:0.84rem;margin-top:10px">No linked task costs yet.</p>';
+        }
+
+        card.innerHTML =
+          '<div class="card-heading-row"><div>' +
+            '<h3 class="dashboard-section-title">Financial Summary</h3>' +
+            '<p class="dashboard-card-text">Reservation profitability</p>' +
+          '</div></div>' +
+          '<div class="nau-info-grid" style="gap:6px">' +
+            finRow('Reservation Value', resValueHtml) +
+            finRow('Operational Cost',  opCostHtml) +
+            finRow('Gross Margin',      marginHtml) +
+            finRow('Margin %',          marginPctHtml) +
+          '</div>' +
+          tasksHtml;
+      }
+
+      /* ── Render edit form ────────────────────────────────────── */
+      function renderEditForm(r) {
+        const prop     = r.properties || {};
+        const propName = prop.display_name  || 'Unknown Property';
+        const propCode = prop.property_code || '—';
+
+        function valStr(v) { return v != null ? esc(String(v)) : ''; }
+        function sel(id, options, current) {
+          return '<select id="ef_' + id + '">' +
+            options.map(function (o) {
+              return '<option value="' + esc(o.v) + '"' + (o.v === current ? ' selected' : '') + '>' + esc(o.l) + '</option>';
+            }).join('') +
+          '</select>';
+        }
+
+        const statusOpts = [
+          { v: 'confirmed',   l: 'Confirmed' },
+          { v: 'pre_arrival', l: 'Pre-arrival' },
+          { v: 'checked_in',  l: 'Checked in' },
+          { v: 'checked_out', l: 'Checked out' },
+          { v: 'cancelled',   l: 'Cancelled' },
+          { v: 'no_show',     l: 'No show' }
+        ];
+        const sourceOpts = [
+          { v: 'direct',      l: 'Direct' },
+          { v: 'airbnb',      l: 'Airbnb' },
+          { v: 'booking_com', l: 'Booking.com' },
+          { v: 'vrbo',        l: 'VRBO' },
+          { v: 'other',       l: 'Other' }
+        ];
+        const langOpts = [
+          { v: 'en', l: 'English' }, { v: 'it', l: 'Italian' },
+          { v: 'es', l: 'Spanish' }, { v: 'fr', l: 'French'  },
+          { v: 'de', l: 'German'  }
+        ];
+
+        document.getElementById('mainGrid').innerHTML =
+          '<div class="col-left" style="grid-column:1/-1">' +
+          '<div class="dashboard-card">' +
+            '<div class="card-heading-row">' +
+              '<div>' +
+                '<h3 class="dashboard-section-title">Edit Reservation</h3>' +
+                '<p class="dashboard-card-text">' + esc(propCode) + ' · ' + esc(propName) + '</p>' +
+              '</div>' +
+              '<a href="guests.html" class="nau-back-link">&#8592; All guests</a>' +
+            '</div>' +
+            '<div id="editError" class="nau-edit-error"></div>' +
+            '<form class="nau-edit-form" id="editForm" onsubmit="return false">' +
+
+              '<p class="nau-section-label">Guest</p>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Name <span class="nau-req">*</span><input type="text" id="ef_guest_name" maxlength="120" value="' + valStr(r.guest_name) + '" autocomplete="off"></label>' +
+                '<label>Phone <span class="nau-req">*</span><input type="tel" id="ef_guest_phone" placeholder="+39 333 000 0000" value="' + valStr(r.guest_phone) + '"></label>' +
+              '</div>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Email<input type="email" id="ef_guest_email" value="' + valStr(r.guest_email) + '"></label>' +
+                '<label>Preferred language' + sel('guest_preferred_language', langOpts, r.guest_preferred_language || 'en') + '</label>' +
+              '</div>' +
+
+              '<p class="nau-section-label">Stay</p>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Check-in <span class="nau-req">*</span><input type="date" id="ef_checkin_date" value="' + valStr(r.checkin_date) + '"></label>' +
+                '<label>Check-out <span class="nau-req">*</span><input type="date" id="ef_checkout_date" value="' + valStr(r.checkout_date) + '"></label>' +
+              '</div>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Total guests <span class="nau-req">*</span><input type="number" id="ef_guest_count" min="1" max="50" value="' + valStr(r.guest_count) + '"></label>' +
+                '<label>Status' + sel('reservation_status', statusOpts, r.reservation_status) + '</label>' +
+              '</div>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Adults<input type="number" id="ef_guest_count_adults" min="0" max="50" value="' + valStr(r.guest_count_adults != null ? r.guest_count_adults : '') + '"></label>' +
+                '<label>Children under 12<input type="number" id="ef_guest_count_children_under_12" min="0" max="50" value="' + valStr(r.guest_count_children_under_12 != null ? r.guest_count_children_under_12 : '') + '"></label>' +
+              '</div>' +
+
+              '<p class="nau-section-label">Booking</p>' +
+              '<label>Channel' + sel('booking_source', sourceOpts, r.booking_source || 'direct') + '</label>' +
+              '<label>Special requests<textarea id="ef_special_requests">' + valStr(r.special_requests) + '</textarea></label>' +
+              '<label>Internal notes<textarea id="ef_internal_notes">' + valStr(r.internal_notes) + '</textarea></label>' +
+
+              '<p class="nau-section-label">Financial</p>' +
+              '<div class="nau-edit-row-2">' +
+                '<label>Reservation value<input type="number" id="ef_reservation_value_amount" min="0" step="0.01" placeholder="0.00" value="' + valStr(r.reservation_value_amount != null ? r.reservation_value_amount : '') + '"></label>' +
+                '<label>Currency' + sel('reservation_value_currency', [{v:'EUR',l:'EUR'},{v:'USD',l:'USD'},{v:'GBP',l:'GBP'}], r.reservation_value_currency || 'EUR') + '</label>' +
+              '</div>' +
+
+              '<div class="nau-edit-actions">' +
+                '<button type="submit" class="nau-edit-save-btn" id="editSaveBtn">Save changes</button>' +
+                '<button type="button" class="nau-edit-cancel-btn" id="editCancelBtn">Cancel</button>' +
+              '</div>' +
+            '</form>' +
+          '</div>' +
+          '</div>';
+
+        function showEditError(msg) {
+          const el = document.getElementById('editError');
+          el.textContent = msg;
+          el.classList.add('is-visible');
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        function clearEditError() {
+          document.getElementById('editError').classList.remove('is-visible');
+        }
+        function fldVal(id) {
+          const el = document.getElementById(id);
+          return el ? el.value.trim() : '';
+        }
+        function fldNum(id) {
+          const el = document.getElementById(id);
+          if (!el || el.value === '') return null;
+          const n = parseInt(el.value, 10);
+          return isNaN(n) ? null : n;
+        }
+
+        document.getElementById('editCancelBtn').addEventListener('click', function () { renderPage(r); });
+
+        document.getElementById('editForm').addEventListener('submit', async function () {
+          clearEditError();
+
+          const guestName  = fldVal('ef_guest_name');
+          const guestPhone = fldVal('ef_guest_phone');
+          const checkin    = fldVal('ef_checkin_date');
+          const checkout   = fldVal('ef_checkout_date');
+          const guestCount = fldNum('ef_guest_count');
+
+          if (!guestName)  { showEditError('Guest name is required.'); return; }
+          if (!guestPhone) { showEditError('Phone number is required.'); return; }
+          if (!checkin)    { showEditError('Check-in date is required.'); return; }
+          if (!checkout)   { showEditError('Check-out date is required.'); return; }
+          if (checkout <= checkin) { showEditError('Check-out date must be after check-in date.'); return; }
+          if (!guestCount || guestCount < 1) { showEditError('Number of guests must be at least 1.'); return; }
+
+          const rawResVal = fldVal('ef_reservation_value_amount');
+          const parsedResVal = rawResVal !== '' ? parseFloat(rawResVal) : null;
+          const payload = {
+            guest_name:                    guestName,
+            guest_phone:                   guestPhone,
+            guest_email:                   fldVal('ef_guest_email') || null,
+            guest_preferred_language:      fldVal('ef_guest_preferred_language') || 'en',
+            guest_count:                   guestCount,
+            guest_count_adults:            fldNum('ef_guest_count_adults'),
+            guest_count_children_under_12: fldNum('ef_guest_count_children_under_12'),
+            checkin_date:                  checkin,
+            checkout_date:                 checkout,
+            reservation_status:            fldVal('ef_reservation_status') || 'confirmed',
+            booking_source:                fldVal('ef_booking_source')     || 'direct',
+            special_requests:              fldVal('ef_special_requests')   || null,
+            internal_notes:                fldVal('ef_internal_notes')     || null,
+            reservation_value_amount:      isNaN(parsedResVal) ? null : parsedResVal,
+            reservation_value_currency:    fldVal('ef_reservation_value_currency') || 'EUR'
+          };
+
+          const saveBtn = document.getElementById('editSaveBtn');
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Saving…';
+
+          const { data: updated, error: saveErr } = await window.NauxicaSupabase
+            .from('reservations')
+            .update(payload)
+            .eq('id', resId)
+            .select('*, properties(id, display_name, property_code, property_type)')
+            .single();
+
+          if (saveErr || !updated) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save changes';
+            showEditError((saveErr && saveErr.message) || 'Could not save. Please try again.');
+            return;
+          }
+
+          renderPage(updated);
+        });
+      }
+
+      /* ── Conversation helpers ───────────────────────────────────── */
+      function fmtMsgTime(isoStr) {
+        if (!isoStr) return '';
+        return new Date(isoStr).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      }
+
+      async function loadOrCreateConversation(reservationId, propertyId, ownerId) {
+        // Try to find existing conversation first
+        const { data: existing } = await window.NauxicaSupabase
+          .from('conversations')
+          .select('id, status')
+          .eq('reservation_id', reservationId)
+          .maybeSingle();
+
+        if (existing) return existing;
+
+        // Not found — create it
+        const { data: created, error: insErr } = await window.NauxicaSupabase
+          .from('conversations')
+          .insert({ reservation_id: reservationId, property_id: propertyId, owner_id: ownerId })
+          .select('id, status')
+          .single();
+
+        if (insErr) {
+          if (insErr.code === '23505') {
+            // Unique violation: another tab just created it — re-fetch
+            const { data: refetch } = await window.NauxicaSupabase
+              .from('conversations')
+              .select('id, status')
+              .eq('reservation_id', reservationId)
+              .single();
+            return refetch;
+          }
+          throw insErr;
+        }
+        return created;
+      }
+
+      function renderThread(messages) {
+        if (!messages.length) {
+          return '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No messages yet.</p>';
+        }
+        return '<div class="nau-thread" id="msgThread">' +
+          messages.map(function (m) {
+            const wrapCls = m.sender_type === 'homeowner' ? 'is-homeowner' : (m.sender_type === 'system' ? 'is-system' : '');
+            const msgCls  = 'nau-msg nau-msg-' + m.sender_type;
+            const senderLabel = m.sender_type === 'homeowner' ? 'You' :
+                                m.sender_type === 'system'    ? '' :
+                                m.sender_type === 'ai'        ? 'AI Concierge' :
+                                m.sender_type === 'guest'     ? 'Guest' : m.sender_type;
+            return '<div class="nau-msg-wrap ' + wrapCls + '">' +
+              '<div class="' + msgCls + '">' + esc(m.message_text) + '</div>' +
+              '<span class="nau-msg-meta">' +
+                (senderLabel ? esc(senderLabel) + ' · ' : '') + fmtMsgTime(m.created_at) +
+              '</span>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+
+      async function loadConversation(reservationId, propertyId) {
+        const card = document.getElementById('conversationCard');
+        if (!card) return;
+
+        try {
+          const sessRes = await window.NauxicaSupabase.auth.getSession();
+          if (!sessRes.data || !sessRes.data.session) return;
+          const ownerId = sessRes.data.session.user.id;
+
+          const conv = await loadOrCreateConversation(reservationId, propertyId, ownerId);
+          if (!conv) { card.querySelector('p').textContent = 'Could not load conversation.'; return; }
+
+          async function refreshThread() {
+            const { data: msgs } = await window.NauxicaSupabase
+              .from('messages')
+              .select('id, sender_type, message_text, is_read, created_at')
+              .eq('conversation_id', conv.id)
+              .order('created_at', { ascending: true });
+
+            const threadEl = document.getElementById('msgThread');
+            const newHtml  = renderThread(msgs || []);
+
+            if (threadEl) {
+              threadEl.outerHTML = newHtml;
+            } else {
+              document.getElementById('threadWrap').innerHTML = newHtml;
+            }
+
+            // Scroll to bottom
+            const t = document.getElementById('msgThread');
+            if (t) t.scrollTop = t.scrollHeight;
+          }
+
+          // Status labels for the badge
+          const STATUS_BADGE = { open: 'Open', resolved: 'Resolved', archived: 'Archived' };
+
+          function buildCardHTML(messages) {
+            const statusBadge = '<span class="nau-badge nau-badge-soon" id="convStatusBadge">' +
+              (STATUS_BADGE[conv.status] || conv.status) + '</span>';
+
+            const statusActions =
+              '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+              ['open', 'resolved', 'archived'].map(function (s) {
+                return '<button class="nau-status-btn nau-status-btn-checkout" style="font-size:0.8rem;padding:6px 16px" ' +
+                  'data-set-status="' + s + '"' + (conv.status === s ? ' disabled style="opacity:.45"' : '') + '>' +
+                  STATUS_BADGE[s] + '</button>';
+              }).join('') +
+              '</div>';
+
+            return '<div class="card-heading-row"><div>' +
+                '<h3 class="dashboard-section-title">Conversation</h3>' +
+                '<p class="dashboard-card-text">Messages for this stay</p>' +
+              '</div>' + statusBadge + '</div>' +
+              statusActions +
+              '<div id="threadWrap" style="margin-top:10px">' + renderThread(messages) + '</div>' +
+              '<div class="nau-composer">' +
+                '<textarea id="msgComposer" placeholder="Type a message…" rows="3"></textarea>' +
+                '<button class="nau-composer-send" id="msgSendBtn">Send</button>' +
+              '</div>';
+          }
+
+          const { data: initialMsgs } = await window.NauxicaSupabase
+            .from('messages')
+            .select('id, sender_type, message_text, is_read, created_at')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: true });
+
+          card.innerHTML = buildCardHTML(initialMsgs || []);
+
+          // Scroll thread to bottom on load
+          const t = document.getElementById('msgThread');
+          if (t) t.scrollTop = t.scrollHeight;
+
+          // Send message
+          document.getElementById('msgSendBtn')?.addEventListener('click', async function () {
+            const textarea = document.getElementById('msgComposer');
+            const text = textarea ? textarea.value.trim() : '';
+            if (!text) return;
+
+            const sendBtn = document.getElementById('msgSendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+
+            const { error: sendErr } = await window.NauxicaSupabase
+              .from('messages')
+              .insert({ conversation_id: conv.id, sender_type: 'homeowner', message_text: text, is_read: true });
+
+            if (sendErr) {
+              sendBtn.disabled = false;
+              sendBtn.textContent = 'Send';
+              alert('Could not send message. Please try again.');
+              return;
+            }
+
+            textarea.value = '';
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send';
+            await refreshThread();
+          });
+
+          // Status change
+          card.addEventListener('click', async function (e) {
+            const btn = e.target.closest('[data-set-status]');
+            if (!btn) return;
+            const newStatus = btn.dataset.setStatus;
+
+            const { error: stErr } = await window.NauxicaSupabase
+              .from('conversations')
+              .update({ status: newStatus })
+              .eq('id', conv.id);
+
+            if (stErr) { alert('Could not update status.'); return; }
+
+            conv.status = newStatus;
+            const badge = document.getElementById('convStatusBadge');
+            if (badge) badge.textContent = STATUS_BADGE[newStatus] || newStatus;
+
+            card.querySelectorAll('[data-set-status]').forEach(function (b) {
+              b.disabled = (b.dataset.setStatus === newStatus);
+              b.style.opacity = (b.dataset.setStatus === newStatus) ? '0.45' : '';
+            });
+          });
+
+        } catch (err) {
+          const card2 = document.getElementById('conversationCard');
+          if (card2) card2.innerHTML += '<p style="color:#c0392b;font-size:0.83rem;margin-top:8px">Failed to load conversation.</p>';
+          console.error('loadConversation error:', err);
+        }
+      }
+
+      /* ── Initial render ──────────────────────────────────────── */
+      renderPage(res);
+
+    })();
+    </script>
+  </body>
+</html>

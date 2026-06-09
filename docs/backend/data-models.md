@@ -1,10 +1,20 @@
 # Data Models
 
-**Version:** 1.2
+**Version:** 1.7
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — pre-backend implementation reference
-**Last updated:** 2026-05-29
-**Related:** [property-data-schema.md](../property-intake/property-data-schema.md) · [api-overview.md](../api/api-overview.md) · [localStorage-to-backend-migration.md](localStorage-to-backend-migration.md) · [data-visibility-model.md](../architecture/data-visibility-model.md)
+**Last updated:** 2026-06-09
+**Related:** [property-data-schema.md](../property-intake/property-data-schema.md) · [api-overview.md](../api/api-overview.md) · [localStorage-to-backend-migration.md](localStorage-to-backend-migration.md) · [data-visibility-model.md](../architecture/data-visibility-model.md) · [auth-strategy.md](auth-strategy.md)
+
+> **v1.7 changes (2026-06-09):** Sprint 010A Documentation Alignment. DM-1: `reservation_value_amount` and `reservation_value_currency` added to Model 4 (Reservation) — from migration 007. DM-2: `reservation_id`, `task_value_amount`, and `task_value_currency` added to Model 10 (Task) — from migrations 002 and 006. DM-3: `task_type` enum corrected to live values (`cleaning`, `maintenance`, `inspection`, `laundry`, `guest_request`, `other`); `priority` enum corrected (`important` → `high`); `status` enum corrected to live values (`open`, `assigned`, `accepted`, `in_progress`, `completed`, `cancelled`). DM-4: New Model 14 (CommissionRules) added — from migration 009; commission applies only between Nauxica and partner; homeowner-facing pages must never reference this model.
+
+> **v1.6 changes (2026-06-07):** Supabase Foundation Final Blocker Fix. CB-NEW-1: `codice_fiscale_or_piva` in Model 1 (User) changed from Required to Optional — nullable at registration; collected during onboarding/account verification; no placeholder value. CB-NEW-2: `plan_started_at` and `plan_renews_at` in Model 1 changed from Required to Optional — nullable at MVP until Stripe billing module is implemented; not client-provided. CB-NEW-3: `property_code` in Model 2 (Property) notes extended with server-side generation strategy. CB-NEW-4: `confirmation_number` in Model 4 (Reservation) notes extended with server-side generation strategy.
+
+> **v1.5 changes (2026-06-07):** Supabase Sprint 1 Blocker Resolution. CB-A: `password_hash` removed from Model 1 (User) — Supabase Auth (GoTrue) manages password storage in `auth.users`; `public.users` is the application profile table only (source: auth-strategy.md §9.1). CB-C: `guest_nationality` made nullable (Optional) in Model 4 (Reservation) — Add Guest wizard does not collect nationality at MVP; Alloggiati Web compliance deferred to a later module.
+
+> **v1.4 changes (2026-06-05):** Property identity model realigned with implemented frontend. `property_id` text slug removed as FK anchor and as a field on the Property model. `property_code` (NAU-XXXXX format) added to Property model as immutable human-readable reference — never used as a foreign key. All child model `property_id` fields updated from `string → Property` to `uuid → Property.id`, reflecting UUID FK anchor on `properties.id`.
+
+> **v1.3 changes (2026-06-05):** ServiceRequest urgency and status enums updated to approved operational values (supersedes earlier draft values). ServiceRequest routing FK model aligned with database-schema.md dual-FK resolution. Property platform_status lifecycle extended with draft/onboarding/pending_activation states. availability_status field added to Property model. User model clarified: two public account types (homeowner, partner) only; operator and ai_runtime are not public account types. EscalationRecord operator FK noted as post-MVP internal field.
 
 ---
 
@@ -51,6 +61,7 @@ Visibility scopes align with the [Data Visibility Model](../architecture/data-vi
 | `PartnerRequest` | A service job request from homeowner to partner | Homeowner, Partner |
 | `Message` | An in-platform message between platform users | Homeowner, Partner |
 | `Review` | A post-stay or post-job rating and comment | Homeowner, Partner, Guest |
+| `CommissionRules` | Platform commission rate table (Nauxica ↔ Partner only) | Nauxica (internal) |
 
 **Note on Booking vs Reservation:** The former `Booking` model has been renamed `Reservation` and expanded to include full guest stay operational data. The term "Booking" referred to the commercial act; "Reservation" reflects the full stay lifecycle including check-in, check-out, and AI session context.
 
@@ -58,26 +69,29 @@ Visibility scopes align with the [Data Visibility Model](../architecture/data-vi
 
 ## Model 1 — User
 
-Represents a homeowner or service partner account. Guests do not have User accounts on Nauxica (WhatsApp-only guest model).
+Represents a homeowner or service partner account. There are two public account types: `homeowner` and `partner`. No other public account types exist at MVP.
+
+- **Guests** have no User accounts. Guest identity is anchored to the `Reservation` record via `guest_phone`. See Model 4 and [auth-strategy.md](auth-strategy.md) §5.
+- **AI runtime** is a service role operating via API key — it is not a User account. See [auth-strategy.md](auth-strategy.md) §6.
+- **Internal Nauxica administration** is outside the public account model at MVP. No `operator` account_type exists. See [auth-strategy.md](auth-strategy.md) §7.
 
 | Field | Type | Visibility | Required | Notes |
 |---|---|---|---|---|
 | `id` | uuid | `INT` | Yes (auto) | Primary key |
 | `email` | string | `INT` | Yes | Unique. Used for login and notifications. |
-| `password_hash` | string | `INT` | Yes | Bcrypt or Argon2. Never exposed via API. |
-| `account_type` | enum | `INT` | Yes | Values: `homeowner` / `partner` |
+| `account_type` | enum | `INT` | Yes | Values: `homeowner` / `partner`. These are the only public account types at MVP. No `operator` or `guest` value exists. Operator-related FK fields in other models (e.g. `escalation_records.assigned_operator_id`) are internal post-MVP fields — see [auth-strategy.md](auth-strategy.md) §7. |
 | `full_name` | string | `INT` | Yes | Legal name |
 | `display_name` | string | `PUB` | Recommended | Shown on reviews and partner listings |
 | `phone_number` | string | `INT` | Yes | Italian format (+39...). Verified on registration. |
-| `codice_fiscale_or_piva` | string | `INT` | Yes | ⚠️ **Legal review required** — tax ID, encrypted at rest |
+| `codice_fiscale_or_piva` | string | `INT` | No | ⚠️ **Legal review required** — tax ID, encrypted at rest. Nullable at registration — collected during onboarding/account verification. Must not be inserted as a placeholder. |
 | `business_type` | enum | `INT` | Conditional | Required for partners. Values: `individual` / `sole-trader` / `company` |
 | `profile_photo_url` | string | `PUB` | Optional | CDN URL |
 | `is_email_verified` | boolean | `INT` | Yes | Set on email confirmation |
 | `is_phone_verified` | boolean | `INT` | Yes | Set on SMS confirmation |
 | `is_identity_verified` | boolean | `INT` | Yes | Set after ID document review (partners) |
 | `nauxica_plan_tier` | enum | `INT` | Yes | Values: `starter` / `professional` / `premium` |
-| `plan_started_at` | datetime | `INT` | Yes | |
-| `plan_renews_at` | datetime | `INT` | Yes | |
+| `plan_started_at` | datetime | `INT` | No | Nullable at MVP — managed by Stripe billing module. Not sent by client; server-generated when subscription activates. |
+| `plan_renews_at` | datetime | `INT` | No | Nullable at MVP — managed by Stripe billing module. Not sent by client; server-generated when subscription activates. |
 | `account_status` | enum | `INT` | Yes | Values: `pending` / `active` / `suspended` / `closed` |
 | `preferred_language` | string | `INT` | Recommended | ISO 639-1 code, e.g. `it`, `en` |
 | `created_at` | datetime | `INT` | Yes (auto) | |
@@ -104,11 +118,12 @@ The central model. Full field specification in [property-data-schema.md](../prop
 
 | Field | Type | Visibility | Required | Notes |
 |---|---|---|---|---|
-| `id` | uuid | `INT` | Yes (auto) | Primary key |
-| `property_id` | string (slug) | `INT` | Yes | Human-readable ID, e.g. `villa-mare`. Unique. Immutable after activation. |
+| `id` | uuid | `INT` | Yes (auto) | Primary key. UUID FK anchor for all child records. |
+| `property_code` | text | `INT` | Yes | Immutable human-readable reference, format `NAU-XXXXX`. Generated server-side at property creation using a PostgreSQL sequence or equivalent atomic database-side counter. Unique, never reused, never client-generated in production. Frontend localStorage generation (wizard prototype) is prototype-only. Used for display, support, search, and communications. Never used as a foreign key. |
 | `owner_id` | uuid → User | `INT` | Yes | Foreign key |
 | `schema_version` | string | `INT` | Yes | For migration compatibility, e.g. `1.0` |
-| `platform_status` | enum | `INT` | Yes | Values: `pending` / `active` / `suspended` / `archived` |
+| `platform_status` | enum | `INT` | Yes | Values: `draft` / `onboarding` / `pending_activation` / `active` / `suspended` / `archived`. See lifecycle transitions below. |
+| `availability_status` | enum | `INT` | Conditional | Values: `available` / `unavailable` / `maintenance`. Controls booking availability for active properties. Only meaningful when `platform_status = 'active'`. Default: `available` when property first transitions to `active`. Set by homeowner. See availability model below. |
 | `nauxica_plan_tier` | enum | `INT` | Yes | Inherited from owner User at creation; can be overridden |
 | `created_at` | datetime | `INT` | Yes (auto) | |
 | `activated_at` | datetime | `INT` | Conditional | Set when status transitions to `active` |
@@ -123,6 +138,34 @@ The central model. Full field specification in [property-data-schema.md](../prop
 - A `Property` has zero or many `PartnerRequest` records
 - A `Property` has zero or many `Review` records (from guests)
 
+**Property lifecycle — `platform_status` transitions:**
+
+| From | To | Trigger |
+|---|---|---|
+| *(new)* | `draft` | Property record created by homeowner |
+| `draft` | `onboarding` | Homeowner begins the activation checklist (minimum identifier fields present) |
+| `onboarding` | `pending_activation` | Homeowner submits for Nauxica review; Category A blockers must all pass before submission is permitted |
+| `pending_activation` | `active` | Nauxica review passes all required categories; `activated_at` is set |
+| `pending_activation` | `onboarding` | Nauxica review fails; property returned to homeowner with blocking items identified |
+| `active` | `suspended` | Operator action — compliance, quality, or safety issue; full Category D re-check required before reinstatement |
+| `active` | `archived` | Homeowner closure request or operator-initiated permanent deactivation; terminal state |
+| `suspended` | `active` | Suspension resolved; operator lifts suspension after issue confirmed resolved |
+| any state | `archived` | Terminal — no further transitions. Data retained per retention schedule. |
+
+**Property availability model — `availability_status`:**
+
+`availability_status` is independent of `platform_status`. It controls whether an active property accepts new reservations. It is only meaningful when `platform_status = 'active'`.
+
+| Value | Meaning | Who sets |
+|---|---|---|
+| `available` | Property accepts new reservations. Default on activation. | Homeowner |
+| `unavailable` | Owner has paused new bookings (renovation, personal use, etc.). Active stays proceed unaffected. | Homeowner |
+| `maintenance` | Property blocked for a maintenance window. No new reservations; active stays continue. | Homeowner or operator |
+
+- When `platform_status != 'active'`, `availability_status` is ignored by the reservation engine regardless of its value.
+- When `platform_status = 'suspended'`, the suspension overrides availability — no new reservations are accepted even if `availability_status = 'available'`.
+- `availability_status` is not reset when `platform_status` changes — it retains its value and takes effect when the property returns to `active`.
+
 ---
 
 ## Model 3 — PropertyKnowledgeBlock
@@ -134,7 +177,7 @@ Full schema: [property-knowledge-schema.md](../ai-concierge/property-knowledge-s
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | Primary key |
-| `property_id` | string → Property | `INT` | No | Yes | Foreign key (slug reference) |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | Foreign key. |
 | `schema_version` | string | `INT` | No | Yes | Knowledge block version |
 | `is_complete` | boolean | `INT` | No | Yes | Set to true after quality review |
 | `last_reviewed_at` | datetime | `INT` | No | Recommended | Date Nauxica staff last verified accuracy |
@@ -152,19 +195,21 @@ Full schema: [property-knowledge-schema.md](../ai-concierge/property-knowledge-s
 
 Represents a confirmed guest stay linked to a property. Guests do not have User accounts — guest identity is captured on the reservation record only. This is the primary anchor for the AI concierge session context.
 
+**Terminology note — Guest vs Reservation:** The frontend uses the term "Guests" in operational views (guest list, guest detail pages). The canonical backend entity is `Reservation`. Guest-labelled UI views are operational views of `Reservation` records. The guest is not a separate model — they are represented by the fields `guest_name`, `guest_phone`, and related fields on this record. Backend code, API responses, and all data models use `Reservation` terminology.
+
 > ⚠️ **Legal review required:** Guest personal data (name, phone, nationality, document number) is subject to GDPR and Alloggiati Web reporting obligations. Confirm data retention period, deletion schedule, and encryption requirements before implementation.
 
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | Primary key |
-| `property_id` | string → Property | `INT` | No | Yes | |
-| `confirmation_number` | string | `GST` | Yes | Yes | Human-readable reference, e.g. `NX-2026-00142`. Shared with guest on booking. |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
+| `confirmation_number` | string | `GST` | Yes | Yes | Human-readable reference, format `NX-YYYY-NNNNN`. Auto-generated server-side using a PostgreSQL sequence if not provided by client. Unique, immutable, never reused. Shared with guest on booking. |
 | `guest_name` | string | `GST` | Yes | Yes | Full name of lead guest. Used by AI to personalise messages. |
 | `guest_phone` | string | `INT` | Yes | Yes | WhatsApp-registered phone number. The primary AI session anchor — used to resolve guest identity. **Normalised to E.164 format.** |
 | `guest_phone_verified` | boolean | `INT` | No | Yes | Set to true when number confirmed as active WhatsApp contact. |
 | `guest_email` | string | `INT` | No | No | For booking confirmation only. |
 | `guest_preferred_language` | string | `GST` | Yes | Recommended | ISO 639-1 code detected or collected at booking. Used by AI concierge for language selection. Default: `en`. |
-| `guest_nationality` | string | `INT` | No | Yes | ISO 3166-1 alpha-2. ⚠️ Required for Alloggiati Web. |
+| `guest_nationality` | string | `INT` | No | No | ISO 3166-1 alpha-2. Nullable at MVP — Alloggiati Web compliance deferred to a later module. |
 | `guest_document_type` | enum | `INT` | No | Conditional | ⚠️ Required for Alloggiati Web. Values: `passport` / `id-card` / `driving-licence` |
 | `guest_document_number` | string | `INT` | No | Conditional | ⚠️ Required for Alloggiati Web. **Encrypted at rest.** |
 | `guest_count` | integer | `GST` | Yes | Yes | Total number of guests in party. AI uses this for capacity and rule checks. |
@@ -179,6 +224,8 @@ Represents a confirmed guest stay linked to a property. Guests do not have User 
 | `booking_source` | enum | `INT` | No | Recommended | Values: `direct` / `airbnb` / `booking-com` / `vrbo` / `other` |
 | `special_requests` | text | `GST` | Yes | Optional | Guest notes at booking time. AI uses this for personalisation. |
 | `internal_notes` | text | `INT` | No | Optional | Homeowner/operator notes. AI cannot read. |
+| `reservation_value_amount` | decimal | `INT` | No | Optional | Gross reservation value as entered by homeowner. Used for Financial Summary margin calculation (guest-detail view). Never exposed to guests or partners. Added: migration 007. |
+| `reservation_value_currency` | string | `INT` | No | Optional | ISO 4217 currency code. Default: `EUR`. Must match `task_value_currency` on linked tasks for margin calculations to be valid — currency mismatch is flagged at the application layer. Added: migration 007. |
 | `reservation_status` | enum | `INT` | No | Yes | Values: `confirmed` / `pre_arrival` / `checked_in` / `checked_out` / `cancelled` / `no_show` |
 | `checkin_completed_at` | datetime | `INT` | No | Conditional | Set when check-in is confirmed. |
 | `checkout_completed_at` | datetime | `INT` | No | Conditional | Set when checkout is confirmed. |
@@ -207,7 +254,7 @@ Operational check-in and check-out data for a specific stay. Created when a rese
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
 | `reservation_id` | uuid → Reservation | `INT` | No | Yes | |
-| `property_id` | string → Property | `INT` | No | Yes | Denormalised for fast lookup. |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | Denormalised for fast lookup. |
 | `access_code_delivered` | boolean | `INT` | No | Yes | True when lockbox/smart lock code has been sent to the guest. |
 | `access_code_delivered_at` | datetime | `INT` | No | Conditional | |
 | `welcome_message_sent` | boolean | `INT` | No | Yes | True when the AI welcome message was sent on arrival day. |
@@ -239,7 +286,7 @@ See [WhatsApp Session Anchor](../ai-concierge/whatsapp-session-anchor.md) for th
 | `id` | uuid | `INT` | No | Yes (auto) | |
 | `guest_phone` | string | `INT` | No | Yes | Normalised E.164. The lookup key. |
 | `reservation_id` | uuid → Reservation | `INT` | No | Yes | Resolved reservation. |
-| `property_id` | string → Property | `INT` | No | Yes | Denormalised for fast context loading. |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | Denormalised for fast context loading. |
 | `session_status` | enum | `INT` | No | Yes | Values: `active` / `escalated` / `closed` |
 | `context_loaded_at` | datetime | `INT` | No | Yes | When the property knowledge block was loaded into context. |
 | `detected_language` | string | `INT` | Yes | Recommended | ISO 639-1 code detected from guest messages. |
@@ -261,7 +308,7 @@ Property-level emergency contacts, utility controls, and procedures. Always pre-
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | One-to-one relationship. |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | One-to-one relationship. |
 | `is_complete` | boolean | `INT` | No | Yes | Blocking flag — property cannot activate until this is true. |
 | `owner_emergency_name` | string | `GST` | Yes | Yes | Name of owner or designated emergency contact. |
 | `owner_emergency_phone` | string | `GST` | Yes | Yes | Always available to AI. Italian E.164 format. |
@@ -293,11 +340,11 @@ Captures the state when the AI concierge hands a conversation to a human operato
 | `id` | uuid | `INT` | No | Yes (auto) | |
 | `session_id` | uuid → WhatsAppSession | `INT` | No | Yes | |
 | `reservation_id` | uuid → Reservation | `INT` | No | Yes | |
-| `property_id` | string → Property | `INT` | No | Yes | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
 | `trigger_type` | enum | `INT` | No | Yes | See escalation trigger taxonomy in [Escalation Rules](../ai-concierge/escalation-rules.md). |
 | `trigger_detail` | text | `INT` | No | Recommended | The specific message or condition that triggered escalation. |
 | `escalation_status` | enum | `INT` | No | Yes | Values: `pending` / `acknowledged` / `in_progress` / `resolved` / `auto_closed` |
-| `assigned_operator_id` | uuid → User | `INT` | No | Conditional | The operator handling this escalation. |
+| `assigned_operator_id` | uuid → User | `INT` | No | Conditional | The operator handling this escalation. ⚠️ **MVP note:** Internal Nauxica administration is outside the public account model at MVP. This field is a future-facing reference; it does not correspond to any public registration path at Sicily launch. See [auth-strategy.md](auth-strategy.md) §7. |
 | `acknowledged_at` | datetime | `INT` | No | Conditional | |
 | `resolved_at` | datetime | `INT` | No | Conditional | |
 | `resolution_notes` | text | `INT` | No | Optional | |
@@ -313,7 +360,7 @@ A formal assignment of a service partner to a property for a specific service ty
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
 | `partner_id` | uuid → User | `INT` | No | Yes | |
 | `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `transfers` / `experiences` / `laundry`. Post-MVP subtypes (`pool_maintenance`, `garden_maintenance`, `concierge_in_person`, `inspection`) are not active at Sicily launch — see [partner-assignment-model.md](../architecture/partner-assignment-model.md) §2. |
 | `assignment_status` | enum | `INT` | No | Yes | Values: `active` / `paused` / `ended` |
@@ -332,15 +379,16 @@ A request for a service action, which can be initiated by: the AI concierge (on 
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
 | `reservation_id` | uuid → Reservation | `INT` | No | Conditional | Required if initiated during a stay. |
 | `initiated_by` | enum | `INT` | No | Yes | Values: `ai_concierge` / `guest_direct` / `homeowner` / `operator` |
 | `service_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `laundry` / `transfers` / `experiences`. Emergency-level requests use the `urgency` field, not `service_type`. Pool and garden maintenance are classified as `maintenance` at MVP — see [partner-assignment-model.md](../architecture/partner-assignment-model.md). |
-| `urgency` | enum | `INT` | Yes | Yes | Values: `routine` / `same_day` / `urgent` / `emergency`. AI uses this to determine response tone and escalation. |
+| `urgency` | enum | `INT` | Yes | Yes | Values: `emergency` / `urgent` / `high` / `normal` / `scheduled`. **Updated 2026-05-29:** supersedes earlier draft values (`routine`, `same_day`, `urgent`, `emergency`). Authoritative reference: [service-request-flow.md](../operations/service-request-flow.md) §2.1. AI uses this to determine response tone and escalation. |
 | `description` | text | `INT` | No | Yes | Internal description of what's needed. |
 | `guest_message` | text | `GST` | Yes | Conditional | The original guest message that triggered this request. Visible to AI for context. |
-| `status` | enum | `INT` | No | Yes | Values: `open` / `assigned` / `in_progress` / `completed` / `cancelled` |
-| `linked_partner_request_id` | uuid → PartnerRequest | `INT` | No | Conditional | Set when a PartnerRequest is created to fulfil this ServiceRequest. |
+| `status` | enum | `INT` | No | Yes | Values: `created` / `classified` / `routed` / `pending_acceptance` / `assigned` / `in_progress` / `completed` / `verified` / `escalated` / `failed` / `cancelled`. **Updated 2026-05-29:** supersedes earlier 5-state set (`open`, `assigned`, `in_progress`, `completed`, `cancelled`). Full state machine: [service-request-flow.md](../operations/service-request-flow.md) §1. |
+| `linked_partner_request_id` | uuid → PartnerRequest | `INT` | No | Conditional | First PartnerRequest created for this ServiceRequest. Set at initial routing; retained for traceability and audit. **Not updated** when routing moves to a backup partner. |
+| `active_partner_request_id` | uuid → PartnerRequest | `INT` | No | Conditional | Current PartnerRequest for live routing. Updated each time routing moves to a new partner. Points to whichever PartnerRequest is currently `pending_acceptance`, `accepted`, or `in_progress`. Null until routing begins. |
 | `guest_status_message` | text | `GST` | Yes | No | AI-safe status update to share with the guest (e.g. "A maintenance partner has been notified and will contact you shortly.") |
 | `resolved_at` | datetime | `INT` | No | Conditional | |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |
@@ -354,18 +402,24 @@ An operational to-do item tied to a property, owned by the homeowner.
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
 | `owner_id` | uuid → User | `INT` | No | Yes | |
 | `title` | string | `INT` | No | Yes | |
 | `description` | text | `INT` | No | Optional | |
-| `task_type` | enum | `INT` | No | Yes | Values: `check-in` / `maintenance` / `cleaning` / `inspection` / `admin` / `other` |
-| `priority` | enum | `INT` | No | Yes | Values: `low` / `normal` / `important` / `urgent` |
-| `status` | enum | `INT` | No | Yes | Values: `pending` / `in-progress` / `completed` / `cancelled` |
+| `task_type` | enum | `INT` | No | Yes | Values: `cleaning` / `maintenance` / `inspection` / `laundry` / `guest_request` / `other`. Updated: migration 002 live schema. |
+| `priority` | enum | `INT` | No | Yes | Values: `low` / `normal` / `high` / `urgent`. Note: earlier draft used `important`; live schema uses `high`. |
+| `status` | enum | `INT` | No | Yes | Values: `open` / `assigned` / `accepted` / `in_progress` / `completed` / `cancelled`. Full partner lifecycle status. Updated: migration 004 (`accepted` added). |
 | `due_date` | date | `INT` | No | Optional | |
-| `assigned_partner_request_id` | uuid → PartnerRequest | `INT` | No | Optional | If task resulted in a partner job. |
+| `reservation_id` | uuid → Reservation | `INT` | No | Optional | Optional link to the reservation this task supports. `ON DELETE SET NULL` — task is retained if reservation is deleted. Set at task creation when homeowner selects a related reservation. Added: migration 002. |
+| `task_value_amount` | decimal | `INT` | No | Optional | Gross service charge for the task. This is the homeowner's operational cost for the task. Never modified by commission logic. Used in guest-detail Financial Summary (Operational Cost) and by partner-facing earning calculation. Added: migration 006. |
+| `task_value_currency` | string | `INT` | No | Optional | ISO 4217 currency code. Default: `EUR`. Added: migration 006. |
+| `assigned_partner_id` | uuid → User (partner) | `INT` | No | Optional | Partner assigned to this task. Set when status transitions to `assigned`. Note: live schema uses `assigned_partner_id` (direct User FK) rather than `assigned_partner_request_id`. |
+| `assigned_partner_request_id` | uuid → PartnerRequest | `INT` | No | Optional | If task resulted in a PartnerRequest job. Dormant at MVP — `assigned_partner_id` is the active assignment FK. |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |
 | `updated_at` | datetime | `INT` | No | Yes (auto) | |
 | `completed_at` | datetime | `INT` | No | Conditional | Set when status transitions to `completed`. |
+
+**Visibility note on `task_value_amount`:** Homeowner-facing views show this as full task cost. Partner-facing views must never display the gross amount — partners see only their net earning derived as `task_value_amount × (1 − commission_rate)`, sourced from `CommissionRules`.
 
 **localStorage equivalent:** `tasks` array in `nauxicaDemoState`
 
@@ -378,7 +432,7 @@ A service job request created by a homeowner and sent to a partner. The central 
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | string → Property | `INT` | No | Yes | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | |
 | `homeowner_id` | uuid → User | `INT` | No | Yes | |
 | `partner_id` | uuid → User | `INT` | No | Conditional | Null until partner accepts or is assigned. |
 | `service_request_id` | uuid → ServiceRequest | `INT` | No | Optional | Set if this was triggered by a ServiceRequest. |
@@ -448,6 +502,33 @@ A rating and comment record. Reviews can be: guest → property (post-stay), hom
 
 ---
 
+## Model 14 — CommissionRules
+
+Platform commission rate table. Defines the rate Nauxica retains from each task's gross service charge before the remainder is paid to the partner.
+
+> ⚠️ **Access restriction:** This model is an internal Nauxica–Partner financial contract. Homeowner-facing pages must **never** reference this table, display the commission rate, show Nauxica fee, partner earning, or payout. The homeowner's view of cost is always `task_value_amount` (the full gross charge) — commission is invisible to them.
+
+| Field | Type | Visibility | AI | Required | Notes |
+|---|---|---|---|---|---|
+| `id` | uuid | `INT` | No | Yes (auto) | Primary key |
+| `scope_type` | string | `INT` | No | Yes | Scope of this rule. MVP value: `global`. Post-MVP values: `homeowner`, `partner`, `property`, `task_type`. Resolution order: most-specific scope wins. |
+| `scope_id` | uuid | `INT` | No | No | References the relevant entity for scoped rules. NULL for the global rule. |
+| `rate` | decimal (5,4) | `INT` | No | Yes | Commission fraction. Example: `0.1500` = 15%. Applied as: `partnerEarning = task_value_amount × (1 − rate)`. |
+| `valid_from` | date | `INT` | No | Yes | Inclusive effective date. Default: current date at insert. |
+| `valid_to` | date | `INT` | No | No | Exclusive end date. NULL = open-ended (rule is currently active). |
+| `created_at` | datetime | `INT` | No | Yes (auto) | |
+| `updated_at` | datetime | `INT` | No | Yes (auto) | |
+
+**MVP seed row:** `scope_type = 'global'`, `scope_id = NULL`, `rate = 0.1500`, `valid_to = NULL`.
+
+**RLS:** Authenticated users may SELECT. No INSERT, UPDATE, or DELETE for authenticated role — mutations require service_role (Supabase dashboard or backend function only).
+
+**Relationship to `partner_requests.nauxica_commission_eur`:** The `partner_requests` table retains a legacy `nauxica_commission_eur` column for the ServiceRequest/PartnerRequest workflow (dormant at MVP). `CommissionRules` is the canonical rate table for the Task workflow. The two mechanisms operate on different records and do not conflict.
+
+**Source:** migration 009
+
+---
+
 ## Model Relationships Summary
 
 ```
@@ -460,10 +541,12 @@ User (homeowner) ──< Property >──1── PropertyKnowledgeBlock
                                                  └──0-1── EscalationRecord
                                         └──<── ServiceRequest >──── PartnerRequest
                                         └──<── Review (guest-to-property)
-                                 >──<── Task
+                                 >──<── Task ──0-1──► Reservation (optional link)
                                  >──<── PartnerRequest >──── User (partner)
 User (homeowner) ──< Message >── User (partner)
 PartnerRequest ──< Review (homeowner-to-partner, partner-to-homeowner)
+
+CommissionRules  (standalone lookup — no FK from other tables at MVP)
 ```
 
 Key cardinalities:
@@ -478,6 +561,8 @@ Key cardinalities:
 - One WhatsAppSession → zero or one active EscalationRecord
 - One PartnerRequest → zero or one partner User (unassigned until accepted)
 - One ServiceRequest → zero or one PartnerRequest (the execution record)
+- One Task → zero or one Reservation (optional operational link; `ON DELETE SET NULL`)
+- CommissionRules → no FK relationship with other tables; read at render time by partner-facing views
 
 ---
 

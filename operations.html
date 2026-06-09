@@ -65,31 +65,34 @@
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Operational overview</h2>
-                  <p class="dashboard-card-text">Coordinate services and manage day-to-day property operations</p>
+                  <h2 class="dashboard-section-title">Task assignment</h2>
+                  <p class="dashboard-card-text">Assign open tasks to partners and track active operations</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Operations coming soon</h3>
-                <p>Service request management, partner coordination, cleaning schedules and maintenance workflows will be available here.</p>
+              <div class="message-filters" id="opsFilters" style="margin:10px 0 14px">
+                <button class="message-filter active" data-filter="all" type="button">All</button>
+                <button class="message-filter" data-filter="open" type="button">Open</button>
+                <button class="message-filter" data-filter="assigned" type="button">Assigned</button>
+                <button class="message-filter" data-filter="accepted" type="button">Accepted</button>
+                <button class="message-filter" data-filter="in_progress" type="button">In progress</button>
+                <button class="message-filter" data-filter="completed" type="button">Completed</button>
               </div>
+              <div id="opsTaskList"></div>
             </div>
           </div>
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">Active requests</h3>
-              <p class="dashboard-card-text">Pending service requests across properties</p>
-              <div class="empty-state-card">
-                <p>No active requests.</p>
-              </div>
+              <h3 class="dashboard-section-title">Summary</h3>
+              <div id="opsStats" class="dashboard-card-text">Loading...</div>
             </div>
           </div>
         </section>
       </section>
     </main>
 
-    <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
     <script>
       (function () {
         const accountType = NauxicaShared.resolveAccountType();
@@ -102,6 +105,171 @@
 
         document.getElementById('logout-button')
           ?.addEventListener('click', NauxicaShared.handleLogout);
+      })();
+    </script>
+    <script type="module">
+      (async () => {
+        var sb = window.NauxicaSupabase;
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+        var allTasks    = [];
+        var allPartners = [];
+        var currentFilter = 'all';
+        var focusTaskId   = new URLSearchParams(window.location.search).get('task') || null;
+
+        var TASK_TYPE_LABELS = {
+          cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+          laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
+        };
+        var STATUS_LABELS = {
+          open: 'Open', assigned: 'Assigned', accepted: 'Accepted', in_progress: 'In progress',
+          completed: 'Completed', cancelled: 'Cancelled'
+        };
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function fmtValue(amount, currency) {
+          if (amount == null) return null;
+          var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : (currency || 'EUR') + ' ';
+          return sym + parseFloat(amount).toFixed(2);
+        }
+
+        async function loadData() {
+          var [tasksRes, partnersRes] = await Promise.all([
+            sb.from('tasks')
+              .select('id, property_id, title, task_type, priority, status, due_date, assigned_partner_id, created_at, task_value_amount, task_value_currency, properties(display_name), assigned_partner:users!assigned_partner_id(display_name, full_name), reservation_id, reservations(guest_name, checkin_date, checkout_date)')
+              .order('created_at', { ascending: false }),
+            sb.from('users')
+              .select('id, display_name, full_name')
+              .eq('account_type', 'partner')
+              .order('display_name')
+          ]);
+          if (tasksRes.error)    console.error('Tasks error:', tasksRes.error);
+          if (partnersRes.error) console.error('Partners error:', partnersRes.error);
+          allTasks    = tasksRes.data    || [];
+          allPartners = partnersRes.data || [];
+        }
+
+        function partnerSelectHtml(taskId, assignedPartnerId) {
+          var opts = '<option value="">— Unassigned —</option>' +
+            allPartners.map(function(p) {
+              var name = p.display_name || p.full_name || 'Partner';
+              var sel  = assignedPartnerId === p.id ? ' selected' : '';
+              return '<option value="' + esc(p.id) + '"' + sel + '>' + esc(name) + '</option>';
+            }).join('');
+          return '<select class="ops-partner-select" data-task-id="' + esc(taskId) + '" ' +
+            'style="font-size:0.8rem;padding:4px 8px;border-radius:8px;border:1px solid rgba(0,0,0,0.12);background:#fff;cursor:pointer">' +
+            opts + '</select>';
+        }
+
+        function renderList() {
+          var filtered = currentFilter === 'all'
+            ? allTasks
+            : allTasks.filter(function(t) { return t.status === currentFilter; });
+          var el = document.getElementById('opsTaskList');
+          if (!el) return;
+          if (!filtered.length) {
+            el.innerHTML = '<div class="empty-state-card"><p>' +
+              (allTasks.length === 0
+                ? 'No tasks yet. Create tasks from the dashboard.'
+                : 'No ' + currentFilter.replace('_', ' ') + ' tasks.') +
+              '</p></div>';
+            return;
+          }
+          el.innerHTML = filtered.map(function(t) {
+            var propName  = (t.properties && t.properties.display_name) || 'Property';
+            var typeLabel = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+            var due       = t.due_date ? 'Due ' + t.due_date : '';
+            var valueStr  = fmtValue(t.task_value_amount, t.task_value_currency);
+            var assignRow = '';
+            if (t.status === 'open' || t.status === 'assigned') {
+              assignRow = '<div style="margin-top:8px;display:flex;gap:8px;align-items:center">' +
+                partnerSelectHtml(t.id, t.assigned_partner_id) +
+                '<button class="btn ops-assign-btn" data-task-id="' + esc(t.id) + '" type="button" ' +
+                'style="font-size:0.8rem;padding:4px 12px">Assign</button>' +
+              '</div>';
+            }
+            var isHighlighted = focusTaskId && t.id === focusTaskId;
+            var highlightStyle = isHighlighted
+              ? ';outline:2px solid #2563eb;outline-offset:3px;border-radius:8px'
+              : '';
+            return '<div class="priority-task" data-task-id="' + esc(t.id) + '" style="margin-bottom:10px' + highlightStyle + '">' +
+              '<div class="task-main">' +
+                '<span class="task-dot"></span>' +
+                '<div style="flex:1">' +
+                  '<strong>' + esc(t.title) + '</strong>' +
+                  '<p>' + esc(propName) + ' \xb7 ' + esc(typeLabel) + ' \xb7 ' + esc(STATUS_LABELS[t.status] || t.status) + '</p>' +
+                  (due ? '<small>' + esc(due) + '</small>' : '') +
+                  ((t.reservations && t.reservations.guest_name) ? '<small style="color:var(--stone)">Guest: ' + esc(t.reservations.guest_name) + '</small>' : '') +
+                  (valueStr ? '<small style="color:var(--stone)">Value: ' + esc(valueStr) + '</small>' : '') +
+                  assignRow +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+
+        function renderStats() {
+          var open   = allTasks.filter(function(t) { return t.status === 'open'; }).length;
+          var asgn   = allTasks.filter(function(t) { return t.status === 'assigned'; }).length;
+          var acpt   = allTasks.filter(function(t) { return t.status === 'accepted'; }).length;
+          var inProg = allTasks.filter(function(t) { return t.status === 'in_progress'; }).length;
+          var el = document.getElementById('opsStats');
+          if (el) el.innerHTML =
+            '<strong>' + open + '</strong> open &nbsp; ' +
+            '<span style="color:var(--stone)">' + asgn + ' assigned &nbsp;&middot;&nbsp; ' + acpt + ' accepted &nbsp;&middot;&nbsp; ' + inProg + ' in progress</span>';
+        }
+
+        document.getElementById('opsTaskList').addEventListener('click', async function(e) {
+          var btn = e.target.closest('.ops-assign-btn');
+          if (!btn) return;
+          var taskId    = btn.dataset.taskId;
+          var sel       = document.querySelector('.ops-partner-select[data-task-id="' + taskId + '"]');
+          if (!sel || !sel.value) { alert('Select a partner first.'); return; }
+          var partnerId = sel.value;
+          var { error } = await sb.from('tasks').update({ assigned_partner_id: partnerId, status: 'assigned' }).eq('id', taskId);
+          if (error) { console.error('Assign error:', error); return; }
+          var p       = allPartners.find(function(x) { return x.id === partnerId; });
+          var asgTask = allTasks.find(function(t) { return t.id === taskId; });
+          window.NauxicaTimeline.log({
+            property_id: asgTask ? asgTask.property_id : null,
+            task_id:     taskId,
+            actor_type:  'homeowner',
+            event_type:  'task_assigned',
+            event_title: 'Task assigned' + (asgTask ? ': ' + asgTask.title : ''),
+            event_description: p ? 'Assigned to ' + (p.display_name || p.full_name || 'partner') : null,
+            metadata: { task_value_amount: asgTask ? asgTask.task_value_amount : null, task_value_currency: asgTask ? asgTask.task_value_currency : 'EUR' }
+          });
+          allTasks = allTasks.map(function(t) {
+            if (t.id !== taskId) return t;
+            return Object.assign({}, t, { status: 'assigned', assigned_partner_id: partnerId, assigned_partner: p || null });
+          });
+          renderList();
+          renderStats();
+        });
+
+        document.getElementById('opsFilters').addEventListener('click', function(e) {
+          var btn = e.target.closest('.message-filter');
+          if (!btn) return;
+          currentFilter = btn.dataset.filter;
+          document.querySelectorAll('#opsFilters .message-filter').forEach(function(b) {
+            b.classList.toggle('active', b === btn);
+          });
+          renderList();
+        });
+
+        await loadData();
+        renderList();
+        renderStats();
+
+        if (focusTaskId) {
+          var focusEl = document.querySelector('[data-task-id="' + focusTaskId + '"]');
+          if (focusEl) focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       })();
     </script>
   </body>

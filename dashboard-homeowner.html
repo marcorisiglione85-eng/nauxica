@@ -354,23 +354,7 @@
     <div class="dashboard-sidebar-inner">
       <div class="sidebar-brand">Nauxica</div>
 
-      <nav class="dashboard-nav">
-        <a class="dashboard-nav-item active" data-page="dashboard" href="#overview">Dashboard</a>
-        <a class="dashboard-nav-item" href="#overview">Overview</a>
-        <a class="dashboard-nav-item" data-page="calendar" href="calendar.html">Calendar</a>
-        <a class="dashboard-nav-item" data-page="reservations" href="reservations.html">Reservations</a>
-        <a class="dashboard-nav-item" data-page="guests" href="guests.html">Guests</a>
-        <a class="dashboard-nav-item" data-page="messages" href="messages.html">Messages</a>
-        <a class="dashboard-nav-item" data-page="operations" href="operations.html">Operations</a>
-        <a class="dashboard-nav-item" data-page="tasks" href="tasks.html">Tasks</a>
-        <a class="dashboard-nav-item" data-page="properties" href="properties.html">Properties</a>
-        <a class="dashboard-nav-item" data-page="reports" href="reports.html">Reports</a>
-        <a class="dashboard-nav-item" data-page="revenue" href="revenue.html">Revenue</a>
-        <a class="dashboard-nav-item" data-page="reviews" href="reviews.html">Reviews</a>
-        <a class="dashboard-nav-item" data-page="marketplace" href="marketplace.html">Marketplace</a>
-        <a class="dashboard-nav-item" data-page="settings" href="settings.html">Settings</a>
-        <a class="dashboard-nav-item" data-page="help" href="help.html">Help Center</a>
-      </nav>
+      <nav class="dashboard-nav"></nav>
     </div>
   </aside>
 
@@ -447,8 +431,8 @@
     </div>
 
     <div class="kpi-label">Occupancy</div>
-    <div class="kpi-value">78%</div>
-    <div class="kpi-sub">vs last month</div>
+    <div class="kpi-value" id="kpiOccupancyValue">—</div>
+    <div class="kpi-sub">properties occupied today</div>
   </div>
 
   <div class="kpi-card dashboard-card">
@@ -458,18 +442,18 @@
     </div>
 
     <div class="kpi-label">Revenue</div>
-    <div class="kpi-value">€18,420</div>
+    <div class="kpi-value">Coming soon</div>
     <div class="kpi-sub">monthly income</div>
   </div>
 
-  <div class="kpi-card dashboard-card">
+  <div class="kpi-card dashboard-card" id="kpiArrivals">
     <div class="kpi-top">
       <span class="kpi-icon">🛬</span>
       <span class="kpi-trend neutral">Today</span>
     </div>
 
     <div class="kpi-label">Arrivals</div>
-    <div class="kpi-value">7</div>
+    <div class="kpi-value" id="kpiArrivalsValue">—</div>
     <div class="kpi-sub">scheduled check-ins</div>
   </div>
 
@@ -480,7 +464,7 @@
     </div>
 
     <div class="kpi-label">Open tasks</div>
-    <div class="kpi-value">12</div>
+    <div class="kpi-value" id="kpiOpenTasksValue">—</div>
     <div class="kpi-sub">require attention</div>
   </div>
 
@@ -525,43 +509,12 @@
   <div class="card-heading-row">
     <div>
       <h3 class="dashboard-section-title">Arrivals calendar</h3>
-      <p class="dashboard-card-text">Today’s guest movements</p>
+      <p class="dashboard-card-text">Today’s check-ins and check-outs</p>
     </div>
-    <span class="mini-date">Today</span>
+    <span class="mini-date" id="arrivalsDateLabel">Today</span>
   </div>
-
-  <div class="arrival-calendar">
-    <div class="calendar-row">
-      <div class="calendar-time">11:00</div>
-      <div class="calendar-event check">
-        <strong>Check out</strong>
-        <span>Lucas B. · Casa Cielo</span>
-      </div>
-    </div>
-
-    <div class="calendar-row">
-      <div class="calendar-time">15:00</div>
-      <div class="calendar-event check">
-        <strong>Check in</strong>
-        <span>Emma P. · Villa Mare</span>
-      </div>
-    </div>
-
-    <div class="calendar-row">
-      <div class="calendar-time">16:30</div>
-      <div class="calendar-event cleaning">
-        <strong>Cleaning completed</strong>
-        <span>Partner team · Casa Cielo</span>
-      </div>
-    </div>
-
-    <div class="calendar-row">
-      <div class="calendar-time">18:00</div>
-      <div class="calendar-event check">
-        <strong>Check in</strong>
-        <span>Sofia R. · Penthouse Alba</span>
-      </div>
-    </div>
+  <div class="arrival-calendar" id="arrivalsCalendar">
+    <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
   </div>
 </div>
 
@@ -725,48 +678,11 @@
       <h3 class="dashboard-section-title">Property overview</h3>
       <p class="dashboard-card-text">Live performance across your portfolio</p>
     </div>
-    <a class="mini-link" href="#properties">View all</a>
+    <a class="mini-link" href="properties.html">View all</a>
   </div>
 
-  <div class="property-grid property-grid-vertical">
-    <div class="property-card premium-property-card">
-      <div class="property-thumb property-thumb-sea"></div>
-      <div class="property-info">
-        <div class="prop-title">Villa Mare</div>
-        <div class="prop-meta">Next arrival · 15:00</div>
-        <div class="property-stats">
-          <span>78% occupancy</span>
-          <span>€6,840</span>
-        </div>
-      </div>
-      <span class="property-status positive">Live</span>
-    </div>
-
-    <div class="property-card premium-property-card">
-      <div class="property-thumb property-thumb-city"></div>
-      <div class="property-info">
-        <div class="prop-title">Casa Cielo</div>
-        <div class="prop-meta">Cleaning in progress</div>
-        <div class="property-stats">
-          <span>64% occupancy</span>
-          <span>€4,920</span>
-        </div>
-      </div>
-      <span class="property-status warning">Attention</span>
-    </div>
-
-    <div class="property-card premium-property-card">
-      <div class="property-thumb property-thumb-penthouse"></div>
-      <div class="property-info">
-        <div class="prop-title">Penthouse Alba</div>
-        <div class="prop-meta">Next arrival · 18:00</div>
-        <div class="property-stats">
-          <span>92% occupancy</span>
-          <span>€6,660</span>
-        </div>
-      </div>
-      <span class="property-status positive">Live</span>
-    </div>
+  <div class="property-grid property-grid-vertical" id="dashPropertyList">
+    <p style="color:var(--stone);font-size:0.85rem;margin:0">Loading properties…</p>
   </div>
 </div>
 
@@ -784,6 +700,19 @@
     <!-- Dynamic live requests -->
   </div>
 </div>
+
+<div class="dashboard-card" id="recentActivityCard">
+  <div class="card-heading-row">
+    <div>
+      <h3 class="dashboard-section-title">Recent activity</h3>
+      <p class="dashboard-card-text">Latest events across your properties</p>
+    </div>
+  </div>
+  <div id="recentActivityList">
+    <p style="color:var(--stone);font-size:0.85rem;margin:4px 0">Loading…</p>
+  </div>
+</div>
+
        <div class="dashboard-card revenue" id="revenue">
   <div class="card-heading-row">
     <div>
@@ -872,130 +801,257 @@
     </div>
   </footer>
 
-  <script src="nauxica-demo-data.js"></script>
+  <script src="nauxica-shared.js"></script>
+  <script type="module" src="supabase-client.js"></script>
+  <script src="nauxica-timeline.js"></script>
+  <script type="module">
+    (async () => {
+      const { data } = await window.NauxicaSupabase.auth.getSession();
+      if (!data.session) { window.location.replace('login.html'); return; }
+      const { data: profile } = await window.NauxicaSupabase
+        .from('users').select('account_type').eq('id', data.session.user.id).single();
+      if (!profile || profile.account_type !== 'homeowner') { window.location.replace('login.html'); }
+    })();
+  </script>
+
+  <script type="module">
+    (async () => {
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) return;
+
+      const { data: props } = await window.NauxicaSupabase
+        .from('properties')
+        .select('id, display_name, property_type, address_city, address_province, bedrooms, max_guests, availability_status')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      const container = document.getElementById('dashPropertyList');
+      if (!container) return;
+
+      if (!props || !props.length) {
+        container.innerHTML =
+          '<p style="color:var(--stone);font-size:0.85rem;margin:0">No properties yet. ' +
+          '<a href="properties.html" style="color:var(--terracotta);font-weight:700">Add one</a>.</p>';
+        return;
+      }
+
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      const AVAIL_STATUS_CLASS  = { available: 'positive', unavailable: 'negative', maintenance: 'warning' };
+      const AVAIL_STATUS_LABEL  = { available: 'Available', unavailable: 'Unavailable', maintenance: 'Maintenance' };
+
+      container.innerHTML = props.map(function (p) {
+        const loc    = [p.address_city, p.address_province].filter(Boolean).join(', ') || '—';
+        const meta   = [
+          p.bedrooms   != null ? p.bedrooms   + ' bed'    : null,
+          p.max_guests != null ? p.max_guests + ' guests' : null
+        ].filter(Boolean).join(' · ');
+        const av          = p.availability_status || 'available';
+        const statusClass = AVAIL_STATUS_CLASS[av] || 'positive';
+        const statusLabel = AVAIL_STATUS_LABEL[av] || av;
+        return '<div class="property-card premium-property-card" style="cursor:pointer" data-prop-id="' + esc(p.id) + '">' +
+          '<div class="property-info">' +
+            '<div class="prop-title">' + esc(p.display_name || 'Property') + '</div>' +
+            '<div class="prop-meta">' + esc(loc) + '</div>' +
+            (meta ? '<div class="property-stats"><span>' + esc(meta) + '</span></div>' : '') +
+          '</div>' +
+          '<span class="property-status ' + statusClass + '">' + esc(statusLabel) + '</span>' +
+        '</div>';
+      }).join('');
+
+      container.addEventListener('click', function (e) {
+        const card = e.target.closest('[data-prop-id]');
+        if (card) window.location.href = 'property-detail.html?id=' + encodeURIComponent(card.getAttribute('data-prop-id'));
+      });
+    })();
+  </script>
+
+  <script type="module">
+    (async () => {
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) return;
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data: todayRes } = await window.NauxicaSupabase
+        .from('reservations')
+        .select('id, guest_name, checkin_date, checkout_date, reservation_status, reservation_value_amount, reservation_value_currency, properties(display_name)')
+        .or('checkin_date.eq.' + today + ',checkout_date.eq.' + today)
+        .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in', 'checked_out']);
+
+      const arrivals = todayRes || [];
+
+      /* Update KPI count */
+      const checkInsToday = arrivals.filter(function (r) { return r.checkin_date === today; });
+      const kpiEl = document.getElementById('kpiArrivalsValue');
+      if (kpiEl) kpiEl.textContent = checkInsToday.length;
+
+      /* Update arrivals card date label */
+      const labelEl = document.getElementById('arrivalsDateLabel');
+      if (labelEl) {
+        labelEl.textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      }
+
+      /* Render arrivals calendar */
+      const calEl = document.getElementById('arrivalsCalendar');
+      if (!calEl) return;
+
+      if (!arrivals.length) {
+        calEl.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No check-ins or check-outs today.</p>';
+        return;
+      }
+
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      const rows = [];
+      arrivals.forEach(function (r) {
+        const propName  = (r.properties && r.properties.display_name) || 'Property';
+        const guestName = r.guest_name || 'Guest';
+        if (r.checkin_date === today) {
+          rows.push({ type: 'in',  label: 'Check in',  guest: guestName, prop: propName });
+        }
+        if (r.checkout_date === today) {
+          rows.push({ type: 'out', label: 'Check out', guest: guestName, prop: propName });
+        }
+      });
+
+      calEl.innerHTML = rows.map(function (row) {
+        return '<div class="calendar-row">' +
+          '<div class="calendar-time">' + (row.type === 'in' ? '15:00' : '11:00') + '</div>' +
+          '<div class="calendar-event check">' +
+            '<strong>' + esc(row.label) + '</strong>' +
+            '<span>' + esc(row.guest) + ' · ' + esc(row.prop) + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    })();
+  </script>
+
+  <script type="module">
+    (async () => {
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) return;
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const [propsRes, occupiedRes, activeResRes, taskCountRes] = await Promise.all([
+        window.NauxicaSupabase
+          .from('properties')
+          .select('id, display_name')
+          .order('display_name', { ascending: true }),
+        window.NauxicaSupabase
+          .from('reservations')
+          .select('property_id')
+          .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in'])
+          .lte('checkin_date', today)
+          .gt('checkout_date', today),
+        window.NauxicaSupabase
+          .from('reservations')
+          .select('id, guest_name, property_id, properties(display_name)')
+          .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in'])
+          .order('checkin_date', { ascending: true }),
+        window.NauxicaSupabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'completed')
+          .neq('status', 'cancelled')
+      ]);
+
+      window._dashProperties = propsRes.data || [];
+      window._dashActiveReservations = activeResRes.data || [];
+
+      const totalProps = (propsRes.data || []).length;
+      const occupiedEl = document.getElementById('kpiOccupancyValue');
+      if (occupiedEl && totalProps > 0) {
+        const occupiedIds = new Set((occupiedRes.data || []).map(function (r) { return r.property_id; }));
+        const pct = Math.round((occupiedIds.size / totalProps) * 100);
+        occupiedEl.textContent = pct + '%';
+      } else if (occupiedEl) {
+        occupiedEl.textContent = '—';
+      }
+
+      const taskKpiEl = document.getElementById('kpiOpenTasksValue');
+      if (taskKpiEl) {
+        taskKpiEl.textContent = (taskCountRes && !taskCountRes.error)
+          ? (taskCountRes.count ?? 0)
+          : '—';
+      }
+    })();
+  </script>
+
   <script>
-document.addEventListener("DOMContentLoaded", function () {
+    localStorage.setItem('accountType', 'homeowner');
+    NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'homeowner');
+    NauxicaShared.setActivePage('dashboard');
+  </script>
+  <script type="module">
+    (async () => {
+      var sb = window.NauxicaSupabase;
 
-  function renderHomeownerLiveRequests() {
+      var TASK_TYPE_LABELS = {
+        cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+        laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
+      };
 
-    const liveRequestsList = document.getElementById("homeownerLiveRequestsList");
-    const liveRequestsCount = document.getElementById("homeownerLiveRequestsCount");
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
 
-    if (!liveRequestsList || !window.NauxicaDemoData) return;
+      async function refreshLiveTasks() {
+        var el      = document.getElementById('homeownerLiveRequestsList');
+        var countEl = document.getElementById('homeownerLiveRequestsCount');
+        if (!el) return;
 
-    const state = window.NauxicaDemoData.loadState();
-    const requests = state.partnerRequests || [];
+        var { data: tasks, error } = await sb
+          .from('tasks')
+          .select('id, title, task_type, status, due_date, properties(display_name), assigned_partner:users!assigned_partner_id(display_name, full_name), reservation_id, reservations(guest_name)')
+          .in('status', ['assigned', 'accepted', 'in_progress'])
+          .order('due_date', { ascending: true, nullsFirst: false });
 
-    const activeRequests = requests.filter(function (request) {
-      return request.status === "accepted" || request.status === "in-progress";
-    });
+        if (error) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.85rem;padding:12px 0">Unable to load live tasks.</p>';
+          return;
+        }
 
-    if (liveRequestsCount) {
-      liveRequestsCount.textContent = `${activeRequests.length} live`;
-    }
+        if (countEl) countEl.textContent = (tasks ? tasks.length : 0) + ' live';
 
-    if (!activeRequests.length) {
-      liveRequestsList.innerHTML = `
-        <div class="empty-state">
-          No active partner operations right now.
-        </div>
-      `;
-      return;
-    }
+        if (!tasks || !tasks.length) {
+          el.innerHTML = '<div class="empty-state">No active partner operations right now.</div>';
+          return;
+        }
 
-    liveRequestsList.innerHTML = activeRequests.map(function (request) {
+        el.innerHTML = tasks.map(function(t) {
+          var propName    = (t.properties && t.properties.display_name) || 'Property';
+          var partnerName = (t.assigned_partner && (t.assigned_partner.display_name || t.assigned_partner.full_name)) || 'Partner';
+          var typeLabel   = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+          var statusClass = t.status === 'in_progress' ? 'live-status-progress' : t.status === 'accepted' ? 'live-status-accepted' : 'live-status-assigned';
+          var statusLabel = t.status === 'in_progress' ? 'In progress' : t.status === 'accepted' ? 'Accepted' : 'Assigned';
+          var dueText     = t.due_date ? 'Due ' + t.due_date : 'No due date';
+          var guestLine   = (t.reservations && t.reservations.guest_name)
+            ? '<small style="color:var(--stone)">Guest: ' + esc(t.reservations.guest_name) + '</small>'
+            : '';
+          return '<div class="live-request-card ' + statusClass + '">' +
+            '<div class="live-request-top"><strong>' + esc(propName) + '</strong><span>' + esc(partnerName) + '</span></div>' +
+            '<p>' + esc(t.title) + ' \xb7 ' + esc(typeLabel) + '</p>' +
+            guestLine +
+            '<div class="live-request-footer">' +
+              '<span class="live-request-badge">' + statusLabel + '</span>' +
+              '<small>' + esc(dueText) + '</small>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
 
-      const statusClass =
-        request.status === "in-progress"
-          ? "live-status-progress"
-          : "live-status-accepted";
-
-      const statusLabel =
-        request.status === "in-progress"
-          ? "In progress"
-          : "Accepted";
-
-      return `
-        <div class="live-request-card ${statusClass}">
-          <div class="live-request-top">
-            <strong>${request.property}</strong>
-            <span>€${request.payout}</span>
-          </div>
-
-          <p>${request.service}</p>
-
-          <div class="live-request-footer">
-            <span class="live-request-badge">
-              ${statusLabel}
-            </span>
-
-            <small>
-              ${request.date || "Today"} · ${request.time || "Flexible"}
-            </small>
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  renderHomeownerLiveRequests();
-
-  window.addEventListener("storage", renderHomeownerLiveRequests);
-
-  setInterval(renderHomeownerLiveRequests, 1500);
-
-});
-</script>
- <script>
-  document.addEventListener("click", function (event) {
-  const clickedButton = event.target.closest(".panel-primary-btn");
-  if (!clickedButton) return;
-
-  const panelTitle = actionPanelTitle.textContent.trim();
-  if (panelTitle !== "Create task") return;
-
-  const fields = actionPanelBody.querySelectorAll("select, textarea");
-  const payoutField = actionPanelBody.querySelector('input[type="number"]');
-
-  const taskType = fields[0]?.value || "Cleaning";
-  const property = fields[1]?.value || "Villa Mare";
-  const priority = fields[2]?.value || "Normal";
-  const payout = Number(payoutField?.value || 0);
-  const description = fields[3]?.value || "New operational request";
-
-  if (window.NauxicaDemoData) {
-    const newRequest = window.NauxicaDemoData.addPartnerRequest({
-      service: taskType,
-      property: property,
-      partnerType: taskType.toLowerCase(),
-      priority: priority.toLowerCase(),
-      description: description,
-      payout: payout,
-      date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit"
-      }),
-      notes: "",
-      status: "new"
-    });
-
-    console.log("New partner request created:", newRequest);
-  }
-
-  actionPanelBody.innerHTML = `
-    <div class="panel-success">
-      <strong>Job request created successfully</strong>
-      <p>The request has been sent to the partner workspace.</p>
-    </div>
-  `;
-
-  setTimeout(function () {
-    closePanel();
-  }, 900);
-});
-</script>
-
+      await refreshLiveTasks();
+    })();
+  </script>
 <div class="action-panel-overlay" id="actionPanelOverlay"></div>
 
 <aside class="action-panel" id="actionPanel">
@@ -1061,9 +1117,6 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   </div>
 </div>
-  <span class="ai-fab-icon">✦</span>
-  <span>Nauxica AI</span>
-</button>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     if ("scrollRestoration" in history) {
@@ -1110,56 +1163,53 @@ const actionPanelBody = document.getElementById("actionPanelBody");
 const closeActionPanel = document.getElementById("closeActionPanel");
 
 const panelContent = {
-  reservation: {
-    title: "Add reservation",
-    body: `
-      <div class="panel-form">
-        <label>Guest name<input type="text" placeholder="Emma Johnson"></label>
-        <label>Property
-          <select>
-            <option>Villa Mare</option>
-            <option>Casa Cielo</option>
-            <option>Penthouse Alba</option>
-          </select>
-        </label>
-        <label>Check-in date<input type="date"></label>
-        <label>Notes<textarea placeholder="Arrival time, requests, guest preferences"></textarea></label>
-        <button class="panel-primary-btn" type="button">Create reservation</button>
-      </div>
-    `
-  },
   task: {
     title: "Create task",
     body: `
       <div class="panel-form">
-        <label>Task type
-          <select>
-            <option>Cleaning</option>
-            <option>Maintenance</option>
-            <option>Guest request</option>
-            <option>Emergency</option>
+        <label>Property *
+          <select id="taskPropertySelect"><option value="">Loading…</option></select>
+        </label>
+        <label>Related reservation <span style="font-weight:600;color:var(--stone)">(optional)</span>
+          <select id="taskReservationSelect"><option value="">No reservation</option></select>
+        </label>
+        <label>Title *
+          <input type="text" id="taskTitleInput" placeholder="e.g. Post-checkout cleaning" maxlength="200" />
+        </label>
+        <label>Task type *
+          <select id="taskTypeSelect">
+            <option value="cleaning">Cleaning</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="inspection">Inspection</option>
+            <option value="laundry">Laundry</option>
+            <option value="guest_request">Guest request</option>
+            <option value="other">Other</option>
           </select>
         </label>
-        <label>Property
-          <select>
-            <option>Villa Mare</option>
-            <option>Casa Cielo</option>
-            <option>Penthouse Alba</option>
-          </select>
+        <label>Description
+          <textarea id="taskDescTA" placeholder="Additional details (optional)"></textarea>
         </label>
         <label>Priority
-  <select>
-    <option>Normal</option>
-    <option>Important</option>
-    <option>Urgent</option>
-  </select>
-</label>
-
-<label>Partner payout (€)
-  <input type="number" min="0" step="5" placeholder="65">
-</label>
-
-<label>Description<textarea placeholder="Describe the task"></textarea></label>
+          <select id="taskPrioritySelect">
+            <option value="low">Low</option>
+            <option value="normal" selected>Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </label>
+        <label>Due date
+          <input type="date" id="taskDueDateInput" />
+        </label>
+        <label>Estimated task value
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="number" id="taskValueAmount" placeholder="Optional" min="0" step="0.01" style="flex:1;min-width:80px" />
+            <select id="taskValueCurrency" style="width:120px;flex-shrink:0">
+              <option value="EUR" selected>EUR (€)</option>
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </label>
         <button class="panel-primary-btn" type="button">Create task</button>
       </div>
     `
@@ -1169,10 +1219,8 @@ const panelContent = {
     body: `
       <div class="panel-form">
         <label>Guest
-          <select>
-            <option>Olivia Smith</option>
-            <option>James Lee</option>
-            <option>Sophia Martinez</option>
+          <select id="messageGuestSelect">
+            <option value="">Loading…</option>
           </select>
         </label>
         <label>Template
@@ -1182,8 +1230,8 @@ const panelContent = {
             <option>Restaurant recommendations</option>
           </select>
         </label>
-        <label>Message<textarea>Hello, thanks for your message. I’ll be happy to help.</textarea></label>
-        <button class="panel-primary-btn" type="button">Send message</button>
+        <label>Message<textarea id="messageTextarea" placeholder="Optional — leave blank to just open the conversation."></textarea></label>
+        <button class="panel-primary-btn" type="button" id="messageActionBtn">Open conversation</button>
       </div>
     `
   },
@@ -1200,12 +1248,97 @@ const panelContent = {
   }
 };
 
+function populatePanelSelects(type) {
+  if (type === 'task') {
+    const sel = document.getElementById('taskPropertySelect');
+    if (!sel) return;
+    const props = window._dashProperties || [];
+    if (!props.length) {
+      sel.innerHTML = '<option value="" disabled>No properties available</option>';
+      sel.disabled = true;
+    } else {
+      sel.disabled = false;
+      sel.innerHTML = props.map(function (p) {
+        return '<option value="' + p.id + '">' + (p.display_name || 'Property') + '</option>';
+      }).join('');
+    }
+  }
+  if (type === 'message') {
+    const sel = document.getElementById('messageGuestSelect');
+    if (!sel) return;
+    const res = window._dashActiveReservations || [];
+    if (!res.length) {
+      sel.innerHTML = '<option value="" disabled>No active guests</option>';
+      sel.disabled = true;
+    } else {
+      sel.disabled = false;
+      sel.innerHTML = res.map(function (r) {
+        const propName = (r.properties && r.properties.display_name) || '';
+        const label = r.guest_name + (propName ? ' — ' + propName : '');
+        return '<option value="' + r.id + '">' + label + '</option>';
+      }).join('');
+    }
+  }
+}
+
+async function _refreshTaskReservations(propertyId) {
+  var sel = document.getElementById('taskReservationSelect');
+  if (!sel) return;
+  if (!propertyId) {
+    sel.innerHTML = '<option value="">No reservation</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="" disabled>Loading…</option>';
+  var { data: res, error } = await window.NauxicaSupabase
+    .from('reservations')
+    .select('id, guest_name, checkin_date, checkout_date')
+    .eq('property_id', propertyId)
+    .neq('reservation_status', 'cancelled')
+    .neq('reservation_status', 'no_show')
+    .order('checkin_date', { ascending: false });
+  if (error || !res || !res.length) {
+    sel.innerHTML = '<option value="">No reservations available</option>';
+    return;
+  }
+  function _fmtShort(d) {
+    if (!d) return '?';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  sel.innerHTML = '<option value="">No reservation</option>' +
+    res.map(function (r) {
+      return '<option value="' + r.id + '">' +
+        (r.guest_name || 'Guest') + ' — ' + _fmtShort(r.checkin_date) + ' → ' + _fmtShort(r.checkout_date) +
+        '</option>';
+    }).join('');
+}
+
 function openActionPanel(type) {
   const content = panelContent[type];
   if (!content || !actionPanel || !actionPanelBody || !actionPanelTitle) return;
 
   actionPanelTitle.textContent = content.title;
   actionPanelBody.innerHTML = content.body;
+  populatePanelSelects(type);
+
+  if (type === 'task') {
+    var propSelTask = document.getElementById('taskPropertySelect');
+    if (propSelTask) {
+      _refreshTaskReservations(propSelTask.value);
+      propSelTask.addEventListener('change', function () {
+        _refreshTaskReservations(this.value);
+      });
+    }
+  }
+
+  if (type === 'message') {
+    var ta  = document.getElementById('messageTextarea');
+    var btn = document.getElementById('messageActionBtn');
+    if (ta && btn) {
+      ta.addEventListener('input', function () {
+        btn.textContent = ta.value.trim() ? 'Send and open conversation' : 'Open conversation';
+      });
+    }
+  }
 
   actionPanel.classList.add("is-visible");
   actionPanelOverlay.classList.add("is-visible");
@@ -1216,8 +1349,182 @@ function closePanel() {
   actionPanelOverlay.classList.remove("is-visible");
 }
 
+document.addEventListener("click", function (event) {
+  const clickedButton = event.target.closest(".panel-primary-btn");
+  if (!clickedButton || !actionPanel.classList.contains("is-visible")) return;
+
+  const panelTitle = actionPanelTitle.textContent.trim();
+
+  if (panelTitle === "Create task") {
+    var propId        = document.getElementById('taskPropertySelect')?.value || '';
+    var title         = (document.getElementById('taskTitleInput')?.value || '').trim();
+    var taskType      = document.getElementById('taskTypeSelect')?.value || 'cleaning';
+    var desc          = (document.getElementById('taskDescTA')?.value || '').trim() || null;
+    var priority      = document.getElementById('taskPrioritySelect')?.value || 'normal';
+    var dueDate       = document.getElementById('taskDueDateInput')?.value || null;
+    var valueRaw      = document.getElementById('taskValueAmount')?.value;
+    var valueAmount   = valueRaw !== '' && valueRaw != null ? parseFloat(valueRaw) : null;
+    var valueCurrency = document.getElementById('taskValueCurrency')?.value || 'EUR';
+    var reservationId = document.getElementById('taskReservationSelect')?.value || null;
+
+    if (!propId) {
+      actionPanelBody.innerHTML += '<p style="color:#c0392b;font-size:0.83rem;margin-top:8px">Please select a property.</p>';
+      return;
+    }
+    if (!title) {
+      actionPanelBody.innerHTML += '<p style="color:#c0392b;font-size:0.83rem;margin-top:8px">Please enter a task title.</p>';
+      return;
+    }
+
+    var createBtn = event.target;
+    createBtn.disabled = true;
+    createBtn.textContent = 'Creating…';
+
+    ;(async function () {
+      try {
+        var sessRes = await window.NauxicaSupabase.auth.getSession();
+        if (!sessRes.data || !sessRes.data.session) throw new Error('Not authenticated');
+        var ownerId = sessRes.data.session.user.id;
+
+        var { data: newTask, error: insErr } = await window.NauxicaSupabase.from('tasks').insert({
+          property_id:         propId,
+          reservation_id:      reservationId || null,
+          title:               title,
+          task_type:           taskType,
+          description:         desc,
+          priority:            priority,
+          due_date:            dueDate || null,
+          status:              'open',
+          created_by:          ownerId,
+          task_value_amount:   valueAmount,
+          task_value_currency: valueCurrency
+        }).select('id').single();
+
+        if (insErr) throw insErr;
+
+        var countRes = await window.NauxicaSupabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'completed')
+          .neq('status', 'cancelled');
+
+        var kpiEl = document.getElementById('kpiOpenTasksValue');
+        if (kpiEl && !countRes.error) kpiEl.textContent = countRes.count ?? 0;
+
+        if (typeof window._refreshDashTasks === 'function') window._refreshDashTasks();
+
+        window.NauxicaTimeline.log({
+          property_id:    propId,
+          reservation_id: reservationId,
+          task_id:        newTask.id,
+          actor_type:     'homeowner',
+          event_type:     'task_created',
+          event_title:    'Task created: ' + title,
+          metadata:       { task_type: taskType, priority: priority, task_value_amount: valueAmount || null, task_value_currency: valueCurrency || 'EUR' }
+        });
+
+        actionPanelBody.innerHTML =
+          '<div class="panel-success">' +
+            '<strong>Task created</strong>' +
+            '<p>The task has been added to your task list.</p>' +
+          '</div>';
+        setTimeout(closePanel, 900);
+      } catch (err) {
+        console.error('Create task error:', err);
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create task';
+        actionPanelBody.innerHTML += '<p style="color:#c0392b;font-size:0.83rem;margin-top:8px">Could not create task. Please try again.</p>';
+      }
+    })();
+    return;
+  }
+
+  if (panelTitle === "Message guest") {
+    const sel  = document.getElementById('messageGuestSelect');
+    const ta   = actionPanelBody.querySelector('textarea');
+    const resId    = sel ? sel.value : '';
+    const msgText  = ta  ? ta.value.trim() : '';
+
+    if (!resId) {
+      actionPanelBody.innerHTML =
+        '<div class="panel-success"><strong>No guest selected</strong><p>Please select an active guest first.</p></div>';
+      return;
+    }
+
+    const sendBtn = event.target;
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Opening…';
+
+    ;(async function () {
+      try {
+        const sessRes  = await window.NauxicaSupabase.auth.getSession();
+        if (!sessRes.data || !sessRes.data.session) throw new Error('Not authenticated');
+        const ownerId  = sessRes.data.session.user.id;
+
+        // Resolve property_id from local cache
+        const resList  = window._dashActiveReservations || [];
+        const resObj   = resList.find(function (r) { return r.id === resId; });
+        const propId   = resObj ? resObj.property_id : null;
+
+        if (!propId) throw new Error('Could not determine property for this reservation.');
+
+        // Load or create conversation
+        let { data: conv } = await window.NauxicaSupabase
+          .from('conversations').select('id').eq('reservation_id', resId).maybeSingle();
+
+        if (!conv) {
+          const { data: newConv, error: insErr } = await window.NauxicaSupabase
+            .from('conversations')
+            .insert({ reservation_id: resId, property_id: propId, owner_id: ownerId })
+            .select('id').single();
+
+          if (insErr && insErr.code === '23505') {
+            const { data: refetch } = await window.NauxicaSupabase
+              .from('conversations').select('id').eq('reservation_id', resId).single();
+            conv = refetch;
+          } else if (insErr) {
+            throw insErr;
+          } else {
+            conv = newConv;
+            window.NauxicaTimeline.log({
+              property_id:    propId,
+              reservation_id: resId,
+              conversation_id: conv.id,
+              actor_type:     'homeowner',
+              event_type:     'conversation_created',
+              event_title:    'Conversation started',
+              event_description: resObj ? resObj.guest_name || null : null,
+              metadata:       {}
+            });
+          }
+        }
+
+        // Insert homeowner message if text was provided
+        if (msgText) {
+          await window.NauxicaSupabase.from('messages').insert({
+            conversation_id: conv.id, sender_type: 'homeowner', message_text: msgText, is_read: true
+          });
+        }
+
+        window.location.href = 'messages.html?conversation=' + encodeURIComponent(conv.id);
+      } catch (err) {
+        console.error('Message panel error:', err);
+        sendBtn.disabled = false;
+        sendBtn.textContent = msgText ? 'Send and open conversation' : 'Open conversation';
+        actionPanelBody.innerHTML +=
+          '<p style="color:#c0392b;font-size:0.83rem;margin-top:8px">Could not open conversation. Please try again.</p>';
+      }
+    })();
+    return;
+  }
+});
+
 actionButtons.forEach(function (button) {
   button.addEventListener("click", function () {
+    if (button.dataset.panel === "reservation") {
+      window.location.href = "properties.html";
+      return;
+    }
     openActionPanel(button.dataset.panel);
   });
 });
@@ -1229,80 +1536,232 @@ if (closeActionPanel) {
 if (actionPanelOverlay) {
   actionPanelOverlay.addEventListener("click", closePanel);
 }
-if (actionPanelOverlay) {
-  actionPanelOverlay.addEventListener("click", closePanel);
-}
 
-function getTaskClass(priority, type) {
-  const value = `${priority} ${type}`.toLowerCase();
-
-  if (value.includes("emergency") || value.includes("urgent")) {
-    return "task-red";
-  }
-
-  if (value.includes("maintenance") || value.includes("important") || value.includes("guest request")) {
-    return "task-yellow";
-  }
-
-  return "task-green";
-}
-
-function renderDynamicTasks() {
-  const taskList = document.getElementById("dynamicTaskList");
-  if (!taskList || !window.NauxicaDemoData) return;
-
-  const state = window.NauxicaDemoData.loadState();
-  const tasks = (state.tasks || []).filter(function (task) {
-  return task.status !== "archived";
-});
-
-  taskList.innerHTML = tasks.map(function (task) {
-  const taskClass = getTaskClass(task.priority, task.type);
-
-  const createdDate = task.createdAt
-    ? new Date(task.createdAt).toLocaleDateString()
-    : "No date";
-
-  const createdTime = task.createdAt
-    ? new Date(task.createdAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      })
-    : "No time";
-
-  return `
-    <div class="priority-task ${taskClass}" data-task-id="${task.id}">
-      <div class="task-main">
-        <span class="task-dot"></span>
-
-        <div>
-          <strong>${task.title}</strong>
-          <p>${task.property} · ${task.type} · ${task.status} · €${task.payout}</p>
-          <small>Requested on ${createdDate} at ${createdTime}</small>
-        </div>
-      </div>
-
-      <button class="task-undo-btn" type="button" data-action="archive-task">
-        Undo
-      </button>
-    </div>
-  `;
-}).join("");
-}
-
-renderDynamicTasks();
-document.addEventListener("click", function (event) {
-  const archiveButton = event.target.closest("[data-action='archive-task']");
-  if (!archiveButton || !window.NauxicaDemoData) return;
-
-  const taskCard = archiveButton.closest("[data-task-id]");
-  if (!taskCard) return;
-
-  window.NauxicaDemoData.updateTaskStatus(taskCard.dataset.taskId, "archived");
-  renderDynamicTasks();
-});
 
 });
 </script>
+
+  <script type="module">
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
+
+      var TASK_TYPE_LABELS = {
+        cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+        laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
+      };
+
+      var STATUS_LABELS = {
+        open: 'Open', assigned: 'Assigned', in_progress: 'In progress',
+        completed: 'Completed', cancelled: 'Cancelled'
+      };
+
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function taskClass(priority) {
+        if (priority === 'urgent') return 'task-red';
+        if (priority === 'high')   return 'task-yellow';
+        return 'task-green';
+      }
+
+      var dashTasks = [];
+
+      async function refreshDashTasks() {
+        var el = document.getElementById('dynamicTaskList');
+        if (!el) return;
+
+        var { data: tasks, error } = await sb
+          .from('tasks')
+          .select('id, property_id, title, task_type, priority, status, due_date, created_at, task_value_amount, task_value_currency, properties(display_name, property_code), reservation_id, reservations(guest_name)')
+          .neq('status', 'completed')
+          .neq('status', 'cancelled');
+
+        if (error) {
+          el.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Unable to load tasks right now.</p>';
+          return;
+        }
+
+        dashTasks = tasks || [];
+
+        if (!tasks || !tasks.length) {
+          el.innerHTML = '<div class="empty-state-card"><p>No open tasks requiring attention.</p></div>';
+          return;
+        }
+
+        tasks.sort(function (a, b) {
+          var pa = PRIORITY_ORDER[a.priority] ?? 99;
+          var pb = PRIORITY_ORDER[b.priority] ?? 99;
+          if (pa !== pb) return pa - pb;
+          if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : 1;
+          if (a.due_date) return -1;
+          if (b.due_date) return 1;
+          return a.created_at > b.created_at ? -1 : 1;
+        });
+
+        function fmtValue(amount, currency) {
+          if (amount == null) return null;
+          var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : (currency || 'EUR') + ' ';
+          return sym + parseFloat(amount).toFixed(2);
+        }
+
+        el.innerHTML = tasks.slice(0, 5).map(function (t) {
+          var propName    = (t.properties && t.properties.display_name) || 'Property';
+          var typeLabel   = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+          var statusLabel = STATUS_LABELS[t.status] || t.status;
+          var due         = t.due_date ? 'Due ' + t.due_date : 'No due date';
+          var cls         = taskClass(t.priority);
+          var valueStr    = fmtValue(t.task_value_amount, t.task_value_currency);
+          var guestStr    = (t.reservations && t.reservations.guest_name) ? ' \xb7 Guest: ' + t.reservations.guest_name : '';
+          return '<div class="priority-task ' + esc(cls) + '" data-task-id="' + esc(t.id) + '">' +
+            '<div class="task-main">' +
+              '<span class="task-dot"></span>' +
+              '<div>' +
+                '<strong>' + esc(t.title) + '</strong>' +
+                '<p>' + esc(propName) + ' \xb7 ' + esc(typeLabel) + ' \xb7 ' + esc(t.priority) + ' priority' + esc(guestStr) + '</p>' +
+                '<small>' + esc(due) + ' \xb7 ' + esc(statusLabel) + (valueStr ? ' \xb7 ' + esc(valueStr) : '') + '</small>' +
+              '</div>' +
+            '</div>' +
+            '<button class="task-undo-btn" type="button" data-action="mark-done" data-task-id="' + esc(t.id) + '">Mark done</button>' +
+          '</div>';
+        }).join('');
+      }
+
+      window._refreshDashTasks = refreshDashTasks;
+
+      document.getElementById('dynamicTaskList').addEventListener('click', async function (e) {
+        var btn = e.target.closest('[data-action="mark-done"]');
+        if (!btn) return;
+        var taskId = btn.dataset.taskId;
+        btn.disabled = true;
+        btn.textContent = '…';
+        var { error } = await sb.from('tasks').update({ status: 'completed' }).eq('id', taskId);
+        if (error) {
+          console.error('Mark done error:', error);
+          btn.disabled = false;
+          btn.textContent = 'Mark done';
+          return;
+        }
+        var doneTask = dashTasks.find(function(t) { return t.id === taskId; });
+        window.NauxicaTimeline.log({
+          property_id: doneTask ? doneTask.property_id : null,
+          task_id:     taskId,
+          actor_type:  'homeowner',
+          event_type:  'task_completed',
+          event_title: 'Task completed' + (doneTask ? ': ' + doneTask.title : ''),
+          metadata:    { task_value_amount: doneTask ? doneTask.task_value_amount : null, task_value_currency: doneTask ? doneTask.task_value_currency : 'EUR' }
+        });
+        await refreshDashTasks();
+        var countRes = await sb
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'completed')
+          .neq('status', 'cancelled');
+        var kpiEl = document.getElementById('kpiOpenTasksValue');
+        if (kpiEl && !countRes.error) kpiEl.textContent = countRes.count ?? 0;
+      });
+
+      await refreshDashTasks();
+    })();
+  </script>
+
+  <script type="module">
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var ACTIVITY_LABELS = {
+        task_created: 'Task', task_assigned: 'Assigned', task_accepted: 'Accepted',
+        task_declined: 'Declined', task_started: 'Started', task_completed: 'Completed',
+        task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message'
+      };
+      var ACTIVITY_CLASS = {
+        task_completed: 'positive', task_accepted: 'positive',
+        task_started: 'neutral', task_assigned: 'neutral', task_created: 'neutral',
+        task_declined: 'warning', task_cancelled: 'warning',
+        conversation_created: 'neutral', message_sent: 'neutral'
+      };
+
+      function escAct(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function actEvtValue(ev) {
+        if (!ev.metadata) return null;
+        var amount = ev.metadata.task_value_amount != null ? ev.metadata.task_value_amount
+          : ev.metadata.reservation_value_amount != null ? ev.metadata.reservation_value_amount : null;
+        if (amount == null || amount === '') return null;
+        var f = parseFloat(amount);
+        if (!f) return null;
+        var currency = ev.metadata.task_value_currency || ev.metadata.reservation_value_currency || 'EUR';
+        var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : currency + ' ';
+        return sym + f.toFixed(2);
+      }
+
+      function relTime(iso) {
+        var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+        if (diff < 60)    return 'Just now';
+        if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      var actEl = document.getElementById('recentActivityList');
+      if (!actEl) return;
+
+      var { data: events, error } = await sb
+        .from('timeline_events')
+        .select('id, event_type, event_title, event_description, metadata, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        actEl.innerHTML = '<p style="color:var(--stone);font-size:0.85rem;margin:4px 0">Unable to load activity.</p>';
+        return;
+      }
+
+      if (!events || !events.length) {
+        actEl.innerHTML = '<div class="empty-state-card"><p>No recent activity yet.</p></div>';
+        return;
+      }
+
+      actEl.innerHTML = events.map(function(ev) {
+        var cls   = ACTIVITY_CLASS[ev.event_type]  || 'neutral';
+        var label = ACTIVITY_LABELS[ev.event_type] || ev.event_type;
+        var valStr = actEvtValue(ev);
+        return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(15,23,42,0.06)">' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-weight:600;font-size:0.85rem;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escAct(ev.event_title) + '</div>' +
+            (valStr ? '<div style="font-size:0.8rem;font-weight:800;color:#15803d;margin-top:1px">' + escAct(valStr) + '</div>' : '') +
+            (ev.event_description ? '<div style="font-size:0.79rem;color:var(--stone);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escAct(ev.event_description) + '</div>' : '') +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">' +
+            '<span class="kpi-trend ' + cls + '" style="font-size:0.7rem;padding:2px 8px;border-radius:999px">' + escAct(label) + '</span>' +
+            '<small style="color:var(--stone);font-size:0.73rem;white-space:nowrap">' + escAct(relTime(ev.created_at)) + '</small>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+      '<div style="margin-top:12px;text-align:right">' +
+        '<a href="activity.html" style="font-size:0.82rem;color:#2563eb;text-decoration:none;font-weight:600">View all activity →</a>' +
+      '</div>';
+    })();
+  </script>
+
+  <script type="module">
+    document.getElementById('logout-button').addEventListener('click', async function (e) {
+      e.preventDefault();
+      const { error } = await window.NauxicaSupabase.auth.signOut();
+      if (error) console.error('signOut error:', error);
+      localStorage.removeItem('accountType');
+      window.location.replace('login.html');
+    });
+  </script>
 </body>
 </html>

@@ -41,9 +41,9 @@
       <div class="partner-profile-card">
         <div class="partner-profile-icon">🧹</div>
         <div>
-          <strong>Sparkle Clean</strong>
-          <span>Cleaning services</span>
-          <small>✓ Verified partner</small>
+          <strong id="partnerCardName">Sparkle Clean</strong>
+          <span id="partnerCardService">Cleaning services</span>
+          <small id="partnerCardVerified">✓ Verified partner</small>
         </div>
       </div>
 
@@ -72,8 +72,8 @@
     <div class="dashboard-topbar partner-topbar">
       <div class="topbar-left">
         <div class="eyebrow-label">Nauxica partner workspace</div>
-        <h1 class="dashboard-title">Good morning,<br />Maria.</h1>
-        <div class="topbar-sub">Here’s what’s happening with your cleaning business today.</div>
+        <h1 class="dashboard-title">Good morning,<br /><span id="partnerGreetingName">Partner</span>.</h1>
+        <div class="topbar-sub">Here’s what’s happening across your partner workspace today.</div>
       </div>
 
       <div class="topbar-right">
@@ -388,48 +388,76 @@
       </div>
     </footer>
 
-    <script src="nauxica-demo-data.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
+    <script type="module">
+      const SERVICE_LABELS = {
+        cleaning:     'Cleaning services',
+        maintenance:  'Maintenance services',
+        laundry:      'Laundry services',
+        transfers:    'Transfer services',
+        experiences:  'Experience services',
+      };
+
+      (async () => {
+        const { data } = await window.NauxicaSupabase.auth.getSession();
+        if (!data.session) { window.location.replace('login.html'); return; }
+
+        const { data: profile } = await window.NauxicaSupabase
+          .from('users')
+          .select('account_type, full_name, display_name, partner_service_types, is_identity_verified')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (!profile || profile.account_type !== 'partner') { window.location.replace('login.html'); return; }
+
+        const displayName = profile.display_name || profile.full_name || 'Partner';
+        const firstName   = (profile.full_name || 'Partner').split(' ')[0];
+        const serviceKey  = Array.isArray(profile.partner_service_types) && profile.partner_service_types.length
+          ? profile.partner_service_types[0]
+          : null;
+        const serviceLabel   = SERVICE_LABELS[serviceKey] || 'Partner services';
+        const verifiedLabel  = profile.is_identity_verified ? '✓ Verified partner' : '⏳ Verification pending';
+
+        document.getElementById('partnerCardName').textContent    = displayName;
+        document.getElementById('partnerCardService').textContent = serviceLabel;
+        document.getElementById('partnerCardVerified').textContent = verifiedLabel;
+        document.getElementById('partnerGreetingName').textContent = firstName;
+      })();
+    </script>
+
     <script>
+localStorage.setItem('accountType', 'partner');
+
 document.addEventListener("DOMContentLoaded", function () {
   if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
   }
 
   window.scrollTo(0, 0);
-
-  setTimeout(function () {
-    window.scrollTo(0, 0);
-  }, 50);
+  setTimeout(function () { window.scrollTo(0, 0); }, 50);
 
   const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
-  const header = document.querySelector(".nx-header");
-  const mobileMenuLinks = document.querySelectorAll(".nx-links a");
+  const header           = document.querySelector(".nx-header");
+  const mobileMenuLinks  = document.querySelectorAll(".nx-links a");
 
   if (mobileMenuButton && header) {
     mobileMenuButton.addEventListener("click", function () {
       const isOpen = header.classList.toggle("nav-open");
-      mobileMenuButton.setAttribute(
-        "aria-expanded",
-        isOpen ? "true" : "false"
-      );
+      mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
     });
   }
 
   mobileMenuLinks.forEach(function (link) {
     link.addEventListener("click", function () {
       header.classList.remove("nav-open");
-
-      if (mobileMenuButton) {
-        mobileMenuButton.setAttribute("aria-expanded", "false");
-      }
+      if (mobileMenuButton) mobileMenuButton.setAttribute("aria-expanded", "false");
     });
   });
 
-  const partnerAiFab = document.querySelector(".partner-ai-fab");
-  const partnerAiPanel = document.getElementById("partnerAiPanel");
-  const closePartnerAiPanel = document.getElementById(
-    "closePartnerAiPanel"
-  );
+  const partnerAiFab       = document.querySelector(".partner-ai-fab");
+  const partnerAiPanel     = document.getElementById("partnerAiPanel");
+  const closePartnerAiPanel = document.getElementById("closePartnerAiPanel");
 
   if (partnerAiFab && partnerAiPanel) {
     partnerAiFab.addEventListener("click", function () {
@@ -442,345 +470,168 @@ document.addEventListener("DOMContentLoaded", function () {
       partnerAiPanel.classList.remove("is-visible");
     });
   }
-
-  function renderPartnerNotifications() {
-    const notificationsList = document.getElementById(
-      "partnerNotificationsList"
-    );
-
-    if (!notificationsList || !window.NauxicaDemoData) return;
-
-    const state = window.NauxicaDemoData.loadState();
-    const notifications = state.notifications || [];
-
-    notificationsList.innerHTML = notifications.length
-      ? notifications
-          .slice(0, 5)
-          .map(function (notification) {
-            const createdAt = new Date(notification.createdAt);
-
-            return `
-              <div class="partner-notification-item">
-                <div class="notification-dot"></div>
-
-                <div class="notification-content">
-                  <strong>${notification.title}</strong>
-                  <p>${notification.message}</p>
-
-                  <small>
-                    ${createdAt.toLocaleDateString()} ·
-                    ${createdAt.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </small>
-                </div>
-              </div>
-            `;
-          })
-          .join("")
-      : `<div class="empty-state">No notifications.</div>`;
-  }
-
-  function renderPartnerMessages() {
-  const messagesCard = document.getElementById("partnerMessagesCard");
-  if (!messagesCard || !window.NauxicaDemoData) return;
-
-  const state = window.NauxicaDemoData.loadState();
-
-  const messages = (state.messages || []).filter(function (message) {
-    return message.accountType === "partner" && !message.archived;
-  });
-
-  const unreadCount = messages.filter(function (message) {
-    return !message.read;
-  }).length;
-
-  messagesCard.innerHTML = `
-    <h3>Messages</h3>
-    <p>Owner requests and Nauxica updates</p>
-
-    <span class="dashboard-pill">
-      ${unreadCount} unread
-    </span>
-
-    <div class="dashboard-mini-list">
-      ${
-        messages.length
-          ? messages
-              .slice(0, 3)
-              .map(function (message) {
-                return `
-                  <div class="dashboard-mini-item">
-                    <strong>${message.title}</strong>
-                    <span>${message.body}</span>
-                  </div>
-                `;
-              })
-              .join("")
-          : `<p>No messages.</p>`
-      }
-    </div>
-
-    <a class="text-button" href="messages.html">Open messages</a>
-  `;
-}
-
-  function renderNewPartnerRequest(request) {
-    return `
-      <div class="partner-request-card request-new" data-request-id="${request.id}">
-        <div>
-          <strong>${request.property}</strong>
-          <p>${request.service}</p>
-
-          <small>
-            Requested on ${request.date || "Today"} at ${
-      request.time || "Flexible"
-    }
-          </small>
-        </div>
-
-        <div class="partner-request-meta">
-          <span>€${request.payout}</span>
-
-          <div class="request-actions">
-            <button
-              class="decline-btn"
-              type="button"
-              data-action="decline-request"
-            >
-              Decline
-            </button>
-
-            <button
-              class="accept-btn"
-              type="button"
-              data-action="accept-request"
-            >
-              Accept
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderPartnerJobRequest(request) {
-    let actionButton = "";
-
-    if (request.status === "accepted") {
-      actionButton = `
-        <button
-          class="accept-btn"
-          type="button"
-          data-action="start-request"
-        >
-          Start job
-        </button>
-      `;
-    }
-
-    if (request.status === "in-progress") {
-      actionButton = `
-        <button
-          class="accept-btn"
-          type="button"
-          data-action="complete-request"
-        >
-          Complete
-        </button>
-      `;
-    }
-
-    return `
-      <div class="partner-request-card request-${request.status}" data-request-id="${request.id}">
-        <div>
-          <strong>${request.property}</strong>
-          <p>${request.service}</p>
-
-          <small>
-            Status: ${request.status} · Requested on ${
-      request.date || "Today"
-    } at ${request.time || "Flexible"}
-          </small>
-        </div>
-
-        <div class="partner-request-meta">
-          <span>€${request.payout}</span>
-          ${actionButton}
-        </div>
-      </div>
-    `;
-  }
-
-  function renderPartnerHistoryRequest(request) {
-    return `
-      <div class="partner-request-card request-${request.status}" data-request-id="${request.id}">
-        <div>
-          <strong>${request.property}</strong>
-          <p>${request.service}</p>
-
-          <small>
-            Status: ${request.status} · Requested on ${
-      request.date || "Today"
-    } at ${request.time || "Flexible"}
-          </small>
-        </div>
-
-        <div class="partner-request-meta">
-          <span>€${request.payout}</span>
-
-          <button
-            class="decline-btn"
-            type="button"
-            data-action="undo-request"
-          >
-            Undo
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderPartnerRequests() {
-    const newRequestsList = document.getElementById(
-      "partnerNewRequestsList"
-    );
-
-    const myJobsList = document.getElementById(
-      "partnerMyJobsList"
-    );
-
-    const historyList = document.getElementById(
-      "partnerHistoryList"
-    );
-
-    if (
-      !newRequestsList ||
-      !myJobsList ||
-      !historyList ||
-      !window.NauxicaDemoData
-    ) {
-      return;
-    }
-
-    const state = window.NauxicaDemoData.loadState();
-    const partnerRequests = state.partnerRequests || [];
-
-    const newRequests = partnerRequests.filter(function (request) {
-      return (
-        request.status === "new" ||
-        request.status === "pending" ||
-        request.status === "approved"
-      );
-    });
-
-    const myJobs = partnerRequests.filter(function (request) {
-      return (
-        request.status === "accepted" ||
-        request.status === "in-progress"
-      );
-    });
-
-    const requestHistory = partnerRequests.filter(function (request) {
-      return (
-        request.status === "completed" ||
-        request.status === "declined"
-      );
-    });
-
-    const jobRequestsCount = document.getElementById(
-      "jobRequestsCount"
-    );
-
-    if (jobRequestsCount) {
-      jobRequestsCount.textContent = `${newRequests.length} new`;
-    }
-
-    newRequestsList.innerHTML = newRequests.length
-      ? newRequests.map(renderNewPartnerRequest).join("")
-      : `<div class="empty-state">All caught up. No pending requests.</div>`;
-
-    myJobsList.innerHTML = myJobs.length
-      ? myJobs.map(renderPartnerJobRequest).join("")
-      : `<div class="empty-state">No accepted jobs yet.</div>`;
-
-    historyList.innerHTML = requestHistory.length
-      ? requestHistory.map(renderPartnerHistoryRequest).join("")
-      : `<div class="empty-state">No history to display.</div>`;
-  }
-
-  renderPartnerRequests();
-  renderPartnerNotifications();
-  renderPartnerMessages();
-
-  document.body.addEventListener("click", function (event) {
-    const button = event.target.closest("[data-action]");
-if (!button || !window.NauxicaDemoData) return;
-
-const action = button.dataset.action;
-
-if (action === "read-message") {
-  window.NauxicaDemoData.markMessageRead(button.dataset.messageId);
-  renderPartnerMessages();
-  return;
-}
-if (action === "archive-message") {
-  window.NauxicaDemoData.archiveMessage(button.dataset.messageId);
-  renderPartnerMessages();
-  return;
-}
-
-const card = button.closest("[data-request-id]");
-if (!card) return;
-
-  if (action === "accept-request") {
-  window.NauxicaDemoData.updatePartnerRequest(
-    card.dataset.requestId,
-    "accepted"
-  );
-}
-
-  if (action === "decline-request") {
-  window.NauxicaDemoData.updatePartnerRequest(
-    card.dataset.requestId,
-    "declined"
-  );
-}
-
-if (action === "start-request") {
-  window.NauxicaDemoData.updatePartnerRequest(
-    card.dataset.requestId,
-    "in-progress"
-  );
-}
-
-if (action === "complete-request") {
-  window.NauxicaDemoData.updatePartnerRequest(
-    card.dataset.requestId,
-    "completed"
-  );
-}
-
-if (action === "undo-request") {
-  window.NauxicaDemoData.updatePartnerRequest(
-    card.dataset.requestId,
-    "archived"
-  );
-}
-
-renderPartnerRequests();
-renderPartnerNotifications();
-renderPartnerMessages();
-  });
 });
-const logoutButton = document.querySelector("#logout-button");
 
-logoutButton?.addEventListener("click", () => {
+const logoutButton = document.querySelector("#logout-button");
+logoutButton?.addEventListener("click", async function (e) {
+  e.preventDefault();
+  const { error } = await window.NauxicaSupabase.auth.signOut();
+  if (error) console.error('signOut error:', error);
   localStorage.removeItem("nauxicaAccountType");
   localStorage.removeItem("accountType");
-  window.location.href = "index.html";
+  window.location.replace("login.html");
 });
 </script>
+    <script type="module">
+      (async () => {
+        var sb = window.NauxicaSupabase;
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+        var uid = sessData.session.user.id;
+        var partnerTasks = [];
+        var commissionRate = 0.15;
+
+        var { data: ruleData } = await sb
+          .from('commission_rules')
+          .select('rate')
+          .eq('scope_type', 'global')
+          .is('scope_id', null)
+          .maybeSingle();
+        if (ruleData && ruleData.rate != null) commissionRate = parseFloat(ruleData.rate);
+
+        var TASK_TYPE_LABELS = {
+          cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+          laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
+        };
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        async function loadAndRender() {
+          var { data: tasks, error } = await sb
+            .from('tasks')
+            .select('id, property_id, title, task_type, priority, status, due_date, task_value_amount, task_value_currency, properties(display_name), reservation_id, reservations(guest_name, checkin_date, checkout_date)')
+            .eq('assigned_partner_id', uid)
+            .order('due_date', { ascending: true, nullsFirst: false });
+
+          if (error) { console.error('Tasks load error:', error); return; }
+          tasks = tasks || [];
+          partnerTasks = tasks;
+
+          var newRequests = tasks.filter(function(t) { return t.status === 'assigned'; });
+          var myJobs      = tasks.filter(function(t) { return t.status === 'accepted' || t.status === 'in_progress'; });
+          var history     = tasks.filter(function(t) { return t.status === 'completed' || t.status === 'cancelled'; });
+
+          var countEl = document.getElementById('jobRequestsCount');
+          if (countEl) countEl.textContent = newRequests.length + ' new';
+
+          function taskCard(t, buttons) {
+            var propName  = (t.properties && t.properties.display_name) || 'Property';
+            var typeLabel = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+            var due       = t.due_date ? '<small>Due ' + esc(t.due_date) + '</small>' : '';
+            var earningLine = '';
+            if (t.task_value_amount != null) {
+              var earnSym = t.task_value_currency === 'EUR' ? '€' : t.task_value_currency === 'USD' ? '$' : t.task_value_currency === 'GBP' ? '£' : (t.task_value_currency || 'EUR') + ' ';
+              earningLine = '<small style="color:var(--stone)">Your earning: ' + esc(earnSym + (parseFloat(t.task_value_amount) * (1 - commissionRate)).toFixed(2)) + '</small>';
+            }
+            var guestLine = (t.reservations && t.reservations.guest_name)
+              ? '<small style="color:var(--stone)">Guest: ' + esc(t.reservations.guest_name) + '</small>'
+              : '';
+            return '<div class="partner-request-card request-' + esc(t.status) + '" data-task-id="' + esc(t.id) + '">' +
+              '<div>' +
+                '<strong>' + esc(propName) + '</strong>' +
+                '<p>' + esc(t.title) + ' \xb7 ' + esc(typeLabel) + '</p>' +
+                due +
+                guestLine +
+                earningLine +
+              '</div>' +
+              '<div class="partner-request-meta">' +
+                '<span class="dashboard-pill">' + esc(t.priority) + '</span>' +
+                buttons +
+              '</div>' +
+            '</div>';
+          }
+
+          var newEl  = document.getElementById('partnerNewRequestsList');
+          var jobsEl = document.getElementById('partnerMyJobsList');
+          var histEl = document.getElementById('partnerHistoryList');
+
+          if (newEl) {
+            newEl.innerHTML = newRequests.length
+              ? newRequests.map(function(t) {
+                  return taskCard(t,
+                    '<div class="request-actions">' +
+                      '<button class="decline-btn" type="button" data-action="decline-task" data-task-id="' + esc(t.id) + '">Decline</button>' +
+                      '<button class="accept-btn"  type="button" data-action="accept-task"  data-task-id="' + esc(t.id) + '">Accept</button>' +
+                    '</div>');
+                }).join('')
+              : '<div class="empty-state">All caught up. No pending requests.</div>';
+          }
+
+          if (jobsEl) {
+            jobsEl.innerHTML = myJobs.length
+              ? myJobs.map(function(t) {
+                  var btn = t.status === 'accepted'
+                    ? '<button class="accept-btn" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">Start job</button>'
+                    : '<button class="accept-btn" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">Complete</button>';
+                  return taskCard(t, btn);
+                }).join('')
+              : '<div class="empty-state">No accepted jobs yet.</div>';
+          }
+
+          if (histEl) {
+            histEl.innerHTML = history.length
+              ? history.map(function(t) {
+                  return taskCard(t, '');
+                }).join('')
+              : '<div class="empty-state">No history to display.</div>';
+          }
+        }
+
+        document.body.addEventListener('click', async function(e) {
+          var btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          var action = btn.dataset.action;
+          var taskId = btn.dataset.taskId;
+          if (!taskId) return;
+
+          var updates = null;
+          if (action === 'accept-task')   updates = { status: 'accepted' };
+          if (action === 'start-task')    updates = { status: 'in_progress' };
+          if (action === 'decline-task')  updates = { status: 'open', assigned_partner_id: null };
+          if (action === 'complete-task') updates = { status: 'completed' };
+          if (!updates) return;
+
+          var { error } = await sb.from('tasks').update(updates).eq('id', taskId);
+          if (error) { console.error('Task update error:', error); return; }
+
+          var ptask = partnerTasks.find(function(t) { return t.id === taskId; });
+          var evtMap = {
+            'accept-task':   { type: 'task_accepted',  title: 'Task accepted' },
+            'start-task':    { type: 'task_started',   title: 'Task started' },
+            'decline-task':  { type: 'task_declined',  title: 'Task declined' },
+            'complete-task': { type: 'task_completed', title: 'Task completed' }
+          };
+          var evtDef = evtMap[action];
+          if (evtDef) {
+            window.NauxicaTimeline.log({
+              property_id: ptask ? ptask.property_id : null,
+              task_id:     taskId,
+              actor_type:  'partner',
+              event_type:  evtDef.type,
+              event_title: evtDef.title + (ptask ? ': ' + ptask.title : ''),
+              metadata:    { task_value_amount: ptask ? ptask.task_value_amount : null, task_value_currency: ptask ? ptask.task_value_currency : 'EUR' }
+            });
+          }
+
+          await loadAndRender();
+        });
+
+        await loadAndRender();
+      })();
+    </script>
   </body>
 </html>

@@ -135,7 +135,7 @@ Five canonical MVP service types active at Sicily launch: `cleaning`, `maintenan
 | Feature | MVP? | Notes |
 |---|---|---|
 | Homeowner subscription billing (Stripe) | Yes | Monthly/annual, 3 tiers |
-| Partner commission calculation (12%) | Yes | Computed and recorded on marketplace-facilitated jobs |
+| Partner commission calculation (15%) | Yes | Platform rate stored in `commission_rules` table (global default: 0.1500). Applies only between Nauxica and partner — homeowner-facing pages never show commission rate, Nauxica fee, partner earning, or payout. Partner sees net earning = `task_value_amount × (1 − rate)`. |
 | Automated partner payout | No | Post-MVP — manual payout at MVP |
 | Invoice generation for partners | No | Post-MVP — partners issue own invoices at MVP |
 | Tourist tax calculation display | Yes | For homeowner reference — collection and remittance is homeowner's responsibility |

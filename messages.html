@@ -71,155 +71,324 @@
         </div>
       </div>
 
-      <div class="message-filters" aria-label="Message filters">
+      <div class="message-filters" aria-label="Message filters" id="conv-filters">
         <button class="message-filter active" data-filter="all">All</button>
-        <button class="message-filter" data-filter="unread">Unread</button>
+        <button class="message-filter" data-filter="open">Open</button>
+        <button class="message-filter" data-filter="resolved">Resolved</button>
         <button class="message-filter" data-filter="archived">Archived</button>
-        <button class="message-filter" data-filter="nauxica">Nauxica</button>
       </div>
 
-      <div class="dashboard-card">
-        <div class="card-heading-row">
-          <div>
-            <h2 class="dashboard-section-title">Inbox</h2>
-            <p class="dashboard-card-text" id="messages-summary">
-              Loading messages...
-            </p>
+      <div class="dashboard-grid">
+        <div class="col-left">
+          <div class="dashboard-card">
+            <div class="card-heading-row">
+              <div>
+                <h2 class="dashboard-section-title">Conversations</h2>
+                <p class="dashboard-card-text" id="messages-summary">Loading…</p>
+              </div>
+            </div>
+            <div class="messages-list" id="messages-list"></div>
           </div>
         </div>
 
-        <div class="messages-list" id="messages-list"></div>
+        <div class="col-right" id="thread-panel" style="display:none">
+          <div class="dashboard-card" id="thread-card">
+            <!-- filled by JS -->
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
   <script src="nauxica-demo-data.js"></script>
   <script src="nauxica-shared.js"></script>
-
+  <script type="module" src="supabase-client.js"></script>
+  <script src="nauxica-timeline.js"></script>
   <script>
     const accountType = NauxicaShared.resolveAccountType();
-
     NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
     NauxicaShared.setActivePage('messages');
     NauxicaShared.updateTopbar(accountType);
-
-    const filters = document.querySelectorAll(".message-filter");
-    const messagesList = document.querySelector("#messages-list");
-    const messagesSummary = document.querySelector("#messages-summary");
-
-    let activeFilter = "all";
-
-    function getMessages() {
-      const state = window.NauxicaDemoData.loadState();
-      return NauxicaShared.filterByAccountType(state.messages, accountType);
-    }
-
-    function getVisibleMessages() {
-      const messages = getMessages();
-
-      return messages.filter((message) => {
-        if (activeFilter === "all") return !message.archived;
-        if (activeFilter === "unread") return !message.read && !message.archived;
-        if (activeFilter === "archived") return message.archived;
-        if (activeFilter === "nauxica") return message.type === "nauxica" && !message.archived;
-
-        return !message.archived;
-      });
-    }
-
-    function renderMessages() {
-      const visibleMessages = getVisibleMessages();
-
-      messagesSummary.textContent =
-        visibleMessages.length === 1
-          ? "1 message found"
-          : `${visibleMessages.length} messages found`;
-
-      if (!visibleMessages.length) {
-        messagesList.innerHTML = `
-          <div class="empty-state-card">
-            <h3>No messages here</h3>
-            <p>Try another filter or check back later.</p>
-          </div>
-        `;
-        return;
+    document.querySelector('#logout-button')?.addEventListener('click', NauxicaShared.handleLogout);
+  </script>
+  <script type="module">
+    (async () => {
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData || !sessData.session) {
+        window.location.replace('login.html');
+        throw 0;
       }
 
-      messagesList.innerHTML = visibleMessages
-        .map((message) => {
-          const readClass = message.read ? "is-read" : "is-unread";
-          const archivedLabel = message.archived ? "Undo archive" : "Archive";
+      // ── Check for deep-link ?conversation=<id> ─────────────────────
+      const urlParams     = new URLSearchParams(window.location.search);
+      const deepLinkConvId = urlParams.get('conversation');
 
-          return `
-            <article class="message-row ${readClass}" data-message-id="${message.id}">
-              <div class="message-row-main">
-                <div class="message-meta-row">
-                  <span class="message-type-pill">${message.type}</span>
-                  <span class="message-date">${message.date}</span>
-                </div>
+      const db             = window.NauxicaSupabase;
+      const messagesList   = document.getElementById('messages-list');
+      const messagesSummary = document.getElementById('messages-summary');
+      const threadPanel    = document.getElementById('thread-panel');
+      const threadCard     = document.getElementById('thread-card');
+      const datechip       = document.getElementById('date-chip');
+      if (datechip) datechip.textContent = NauxicaShared.formatDateChip();
 
-                <h3>${message.title}</h3>
-                <p>${message.body}</p>
-              </div>
+      let activeFilter   = 'all';
+      let allConversations = [];
+      let openConvId     = null;
 
-              <div class="message-actions">
-                ${
-                  !message.read
-                    ? `<button class="text-button" data-action="mark-read">Mark as read</button>`
-                    : `<span class="read-label">Read</span>`
-                }
-
-                <button class="text-button" data-action="toggle-archive">
-                  ${archivedLabel}
-                </button>
-              </div>
-            </article>
-          `;
-        })
-        .join("");
-    }
-
-    function setActiveFilter(filter) {
-      activeFilter = filter;
-
-      filters.forEach((button) => {
-        button.classList.toggle("active", button.dataset.filter === filter);
-      });
-
-      renderMessages();
-    }
-
-    filters.forEach((button) => {
-      button.addEventListener("click", () => {
-        setActiveFilter(button.dataset.filter);
-      });
-    });
-
-    messagesList.addEventListener("click", (event) => {
-      const actionButton = event.target.closest("[data-action]");
-      if (!actionButton) return;
-
-      const messageRow = actionButton.closest("[data-message-id]");
-      if (!messageRow) return;
-
-      const messageId = messageRow.dataset.messageId;
-      const action = actionButton.dataset.action;
-
-      if (action === "mark-read") {
-        window.NauxicaDemoData.markMessageRead(messageId);
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
 
-      if (action === "toggle-archive") {
-        window.NauxicaDemoData.archiveMessage(messageId);
+      function fmtRelative(isoStr) {
+        if (!isoStr) return '';
+        const d    = new Date(isoStr);
+        const now  = new Date();
+        const diff = Math.floor((now - d) / 1000);
+        if (diff < 60)   return 'Just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
       }
 
-      renderMessages();
-    });
+      function fmtMsgTime(isoStr) {
+        if (!isoStr) return '';
+        return new Date(isoStr).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      }
 
-    document.querySelector("#logout-button")
-      ?.addEventListener("click", NauxicaShared.handleLogout);
+      // ── Load conversations list ────────────────────────────────────
+      async function loadConversations() {
+        const { data, error } = await db
+          .from('conversations')
+          .select('id, status, last_message_at, created_at, reservation_id, property_id, reservations(guest_name), properties(display_name, property_code)')
+          .order('last_message_at', { ascending: false, nullsFirst: false });
 
-    renderMessages();
+        if (error) {
+          messagesSummary.textContent = 'Failed to load conversations.';
+          return;
+        }
+        allConversations = data || [];
+        renderList();
+      }
+
+      // ── Render conversation list ───────────────────────────────────
+      function getFiltered() {
+        return allConversations.filter(function (c) {
+          if (activeFilter === 'all') return true;
+          return c.status === activeFilter;
+        });
+      }
+
+      function renderList() {
+        const list = getFiltered();
+        const n    = list.length;
+        messagesSummary.textContent = n === 1 ? '1 conversation' : n + ' conversations';
+
+        if (!list.length) {
+          messagesList.innerHTML =
+            '<div class="empty-state-card"><h3>No conversations</h3><p>Try a different filter.</p></div>';
+          return;
+        }
+
+        messagesList.innerHTML = list.map(function (c) {
+          const guestName = (c.reservations && c.reservations.guest_name) || 'Guest';
+          const propName  = (c.properties  && c.properties.display_name)  || '';
+          const propCode  = (c.properties  && c.properties.property_code) || '';
+          const isActive  = c.id === openConvId;
+          const statusCls = c.status === 'open' ? 'is-unread' : 'is-read';
+
+          return '<article class="message-row ' + statusCls + (isActive ? ' active' : '') +
+            '" data-conv-id="' + esc(c.id) + '" style="cursor:pointer">' +
+            '<div class="message-row-main">' +
+              '<div class="message-meta-row">' +
+                '<span class="message-type-pill">' + esc(c.status) + '</span>' +
+                (propCode ? '<span class="message-type-pill" style="background:rgba(197,104,61,0.1);color:var(--terracotta)">' + esc(propCode) + '</span>' : '') +
+                '<span class="message-date">' + fmtRelative(c.last_message_at || c.created_at) + '</span>' +
+              '</div>' +
+              '<h3>' + esc(guestName) + '</h3>' +
+              '<p>' + esc(propName) + '</p>' +
+            '</div>' +
+            '</article>';
+        }).join('');
+      }
+
+      // ── Render thread ──────────────────────────────────────────────
+      function renderThreadMessages(messages) {
+        if (!messages.length) {
+          return '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No messages yet.</p>';
+        }
+        const SENDER = { homeowner: 'You', guest: 'Guest', ai: 'AI Concierge', system: '', partner: 'Partner' };
+        return '<div style="display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto" id="msgThread">' +
+          messages.map(function (m) {
+            const isOwner = m.sender_type === 'homeowner';
+            const isSys   = m.sender_type === 'system';
+            const bg = isOwner ? 'rgba(197,104,61,0.1)' :
+                       isSys   ? 'rgba(15,23,42,0.04)'   :
+                                 '#fff';
+            const border = isOwner ? '1px solid rgba(197,104,61,0.18)' :
+                           isSys   ? '1px solid rgba(15,23,42,0.07)'   :
+                                     '1px solid rgba(15,23,42,0.1)';
+            const align  = isOwner ? 'flex-end' : (isSys ? 'center' : 'flex-start');
+            const label  = SENDER[m.sender_type] || m.sender_type;
+            return '<div style="display:flex;flex-direction:column;align-items:' + align + '">' +
+              '<div style="max-width:90%;padding:9px 13px;border-radius:10px;background:' + bg +
+                ';border:' + border + ';font-size:0.85rem;line-height:1.45' +
+                (isSys ? ';font-style:italic;color:var(--stone)' : ';color:var(--charcoal)') + '">' +
+                esc(m.message_text) +
+              '</div>' +
+              '<span style="font-size:0.72rem;color:var(--stone);opacity:.7;margin-top:2px">' +
+                (label ? esc(label) + ' · ' : '') + fmtMsgTime(m.created_at) +
+              '</span>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+
+      async function openConversation(convId) {
+        openConvId = convId;
+        renderList(); // re-render to highlight active row
+
+        const conv = allConversations.find(function (c) { return c.id === convId; });
+        if (!conv) return;
+
+        threadPanel.style.display = '';
+        threadCard.innerHTML = '<p style="color:var(--stone);font-size:0.84rem">Loading thread…</p>';
+
+        const { data: msgs, error: msgsErr } = await db
+          .from('messages')
+          .select('id, sender_type, message_text, is_read, created_at')
+          .eq('conversation_id', convId)
+          .order('created_at', { ascending: true });
+
+        if (msgsErr) { threadCard.innerHTML = '<p style="color:#c0392b">Failed to load messages.</p>'; return; }
+
+        const guestName = (conv.reservations && conv.reservations.guest_name) || 'Guest';
+        const propName  = (conv.properties  && conv.properties.display_name)  || '';
+
+        const STATUS_LABEL = { open: 'Open', resolved: 'Resolved', archived: 'Archived' };
+
+        function buildThread(messages) {
+          const statusBtns = ['open', 'resolved', 'archived'].map(function (s) {
+            return '<button style="padding:5px 14px;border-radius:999px;font:inherit;font-size:0.78rem;font-weight:700;' +
+              'border:1px solid rgba(15,23,42,0.12);background:rgba(15,23,42,0.05);cursor:pointer;' +
+              (conv.status === s ? 'opacity:.4;cursor:not-allowed' : '') +
+              '" data-set-status="' + s + '"' + (conv.status === s ? ' disabled' : '') + '>' +
+              STATUS_LABEL[s] + '</button>';
+          }).join('');
+
+          return '<div class="card-heading-row"><div>' +
+              '<h3 class="dashboard-section-title">' + esc(guestName) + '</h3>' +
+              '<p class="dashboard-card-text">' + esc(propName) + ' · ' +
+                '<span id="convStatusLabel">' + (STATUS_LABEL[conv.status] || conv.status) + '</span>' +
+              '</p>' +
+            '</div>' +
+            '<a href="guest-detail.html?id=' + esc(conv.reservation_id) + '" ' +
+              'style="font-size:0.82rem;font-weight:700;color:var(--terracotta);text-decoration:none">View guest →</a>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + statusBtns + '</div>' +
+            '<div id="threadWrap">' + renderThreadMessages(messages) + '</div>' +
+            '<div style="margin-top:12px;border-top:1px solid rgba(15,23,42,0.07);padding-top:12px;display:flex;flex-direction:column;gap:8px">' +
+              '<textarea id="msgComposer" placeholder="Type a message…" rows="3" ' +
+                'style="padding:9px 12px;border-radius:9px;border:1px solid rgba(15,23,42,0.12);background:#fffaf4;font:inherit;font-size:0.88rem;resize:vertical;color:var(--charcoal)"></textarea>' +
+              '<button id="msgSendBtn" style="align-self:flex-end;padding:9px 22px;border-radius:999px;background:var(--terracotta);color:#fff;font:inherit;font-size:0.85rem;font-weight:800;border:none;cursor:pointer">Send</button>' +
+            '</div>';
+        }
+
+        threadCard.innerHTML = buildThread(msgs || []);
+
+        // Scroll thread
+        const t = document.getElementById('msgThread');
+        if (t) t.scrollTop = t.scrollHeight;
+
+        // Send
+        document.getElementById('msgSendBtn')?.addEventListener('click', async function () {
+          const ta   = document.getElementById('msgComposer');
+          const text = ta ? ta.value.trim() : '';
+          if (!text) return;
+
+          const sendBtn = document.getElementById('msgSendBtn');
+          sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+
+          const { error: sErr } = await db.from('messages').insert({
+            conversation_id: convId, sender_type: 'homeowner', message_text: text, is_read: true
+          });
+
+          if (sErr) { sendBtn.disabled = false; sendBtn.textContent = 'Send'; alert('Send failed.'); return; }
+          window.NauxicaTimeline.log({
+            property_id:    conv.property_id || null,
+            conversation_id: convId,
+            actor_type:     'homeowner',
+            event_type:     'message_sent',
+            event_title:    'Message sent',
+            event_description: text.length > 60 ? text.substring(0, 60) + '…' : text,
+            metadata:       {}
+          });
+          ta.value = '';
+          sendBtn.disabled = false; sendBtn.textContent = 'Send';
+
+          // Refresh thread
+          const { data: fresh } = await db.from('messages').select('id, sender_type, message_text, is_read, created_at')
+            .eq('conversation_id', convId).order('created_at', { ascending: true });
+          document.getElementById('threadWrap').innerHTML = renderThreadMessages(fresh || []);
+          const t2 = document.getElementById('msgThread');
+          if (t2) t2.scrollTop = t2.scrollHeight;
+
+          // Refresh list (last_message_at changed)
+          await loadConversations();
+        });
+
+        // Status change
+        threadCard.addEventListener('click', async function (e) {
+          const btn = e.target.closest('[data-set-status]');
+          if (!btn) return;
+          const newStatus = btn.dataset.setStatus;
+
+          const { error: stErr } = await db.from('conversations').update({ status: newStatus }).eq('id', convId);
+          if (stErr) { alert('Could not update status.'); return; }
+
+          // Update local state
+          const c = allConversations.find(function (x) { return x.id === convId; });
+          if (c) c.status = newStatus;
+
+          const lbl = document.getElementById('convStatusLabel');
+          if (lbl) lbl.textContent = STATUS_LABEL[newStatus] || newStatus;
+
+          threadCard.querySelectorAll('[data-set-status]').forEach(function (b) {
+            b.disabled = (b.dataset.setStatus === newStatus);
+            b.style.opacity = (b.dataset.setStatus === newStatus) ? '0.4' : '';
+          });
+
+          renderList();
+        });
+      }
+
+      // ── Wire filter buttons ────────────────────────────────────────
+      document.getElementById('conv-filters')?.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-filter]');
+        if (!btn) return;
+        activeFilter = btn.dataset.filter;
+        document.querySelectorAll('#conv-filters .message-filter').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.filter === activeFilter);
+        });
+        renderList();
+      });
+
+      // ── Wire conversation list clicks ──────────────────────────────
+      messagesList.addEventListener('click', function (e) {
+        const row = e.target.closest('[data-conv-id]');
+        if (!row) return;
+        openConversation(row.dataset.convId);
+      });
+
+      // ── Boot ───────────────────────────────────────────────────────
+      await loadConversations();
+
+      if (deepLinkConvId) {
+        // Wait one tick for allConversations to be populated, then open
+        const target = allConversations.find(function (c) { return c.id === deepLinkConvId; });
+        if (target) openConversation(deepLinkConvId);
+      }
+    })();
   </script>
 </body>
 </html>

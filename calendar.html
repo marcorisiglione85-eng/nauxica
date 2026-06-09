@@ -121,139 +121,163 @@
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
-    <script>
-      (function () {
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module">
+      (async () => {
         const accountType = NauxicaShared.resolveAccountType();
 
         NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
         NauxicaShared.setActivePage('calendar');
         NauxicaShared.updateTopbar(accountType);
 
-        const filters = document.querySelectorAll(".message-filter");
-        const eventsList = document.getElementById("calendar-events-list");
-        const calendarSummary = document.getElementById("calendar-summary");
-        const calendarDateStrip = document.getElementById(
-          "calendar-date-strip",
-        );
-        const eventDetails = document.getElementById("eventDetails");
+        document.getElementById('logout-button')?.addEventListener('click', async () => {
+          await window.NauxicaSupabase.auth.signOut();
+          localStorage.clear();
+          window.location.href = 'login.html';
+        });
 
-        let activeFilter = "today";
-        let selectedDate = new Date().toISOString().split("T")[0];
+        const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); return; }
 
-        function getCalendarEvents() {
-          const state = window.NauxicaDemoData.loadState();
-          return NauxicaShared.filterByAccountType(state.calendarEvents, accountType);
+        /* ── Fetch reservations with property names ─────────────── */
+        const { data: reservations } = await window.NauxicaSupabase
+          .from('reservations')
+          .select('id, guest_name, checkin_date, checkout_date, reservation_status, guest_count, properties(display_name)')
+          .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in', 'checked_out'])
+          .order('checkin_date');
+
+        /* ── Build calendar events from reservations ─────────────── */
+        function buildCalendarEvents(rows) {
+          const events = [];
+          (rows || []).forEach(function (r) {
+            const propName  = (r.properties && r.properties.display_name) || 'Property';
+            const guestName = r.guest_name || 'Guest';
+            const count     = r.guest_count ? ' · ' + r.guest_count + (r.guest_count === 1 ? ' guest' : ' guests') : '';
+            const isActive  = r.reservation_status === 'checked_in' || r.reservation_status === 'checked_out';
+
+            if (r.checkin_date) {
+              events.push({
+                id:          r.id + '-ci',
+                category:    'Check-in',
+                title:       'Check-in: ' + guestName,
+                description: propName + count,
+                property:    propName,
+                eventDate:   r.checkin_date,
+                time:        '',
+                status:      isActive ? 'completed' : 'upcoming'
+              });
+            }
+            if (r.checkout_date) {
+              events.push({
+                id:          r.id + '-co',
+                category:    'Check-out',
+                title:       'Check-out: ' + guestName,
+                description: propName + count,
+                property:    propName,
+                eventDate:   r.checkout_date,
+                time:        '',
+                status:      (r.reservation_status === 'checked_out') ? 'completed' : 'upcoming'
+              });
+            }
+          });
+          return events;
         }
 
+        const allCalendarEvents = buildCalendarEvents(reservations);
+
+        const filterBtns    = document.querySelectorAll('.message-filter');
+        const eventsList    = document.getElementById('calendar-events-list');
+        const calendarSummary    = document.getElementById('calendar-summary');
+        const calendarDateStrip  = document.getElementById('calendar-date-strip');
+        const eventDetails  = document.getElementById('eventDetails');
+
+        let activeFilter = 'today';
+        let selectedDate = new Date().toISOString().split('T')[0];
+
         function getVisibleEvents() {
-          const events = getCalendarEvents();
-          return events.filter((event) => {
-            if (activeFilter === "all") return true;
-            if (activeFilter === "completed")
-              return event.status === "completed";
-            if (activeFilter === "today")
-              return event.eventDate === selectedDate;
-            if (activeFilter === "upcoming")
-              return (
-                event.eventDate > selectedDate && event.status !== "completed"
-              );
+          return allCalendarEvents.filter(function (event) {
+            if (activeFilter === 'all')       return true;
+            if (activeFilter === 'completed') return event.status === 'completed';
+            if (activeFilter === 'today')     return event.eventDate === selectedDate;
+            if (activeFilter === 'upcoming')  return event.eventDate > selectedDate && event.status !== 'completed';
             return true;
           });
         }
 
         function formatDateLabel(date, index) {
-          if (index === 0) return "Today";
-          if (index === 1) return "Tomorrow";
-          return date.toLocaleDateString("en-GB", {
-            weekday: "short",
-            day: "numeric",
-          });
+          if (index === 0) return 'Today';
+          if (index === 1) return 'Tomorrow';
+          return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
         }
 
         function renderDateStrip() {
           const today = new Date();
-          calendarDateStrip.innerHTML = Array.from({ length: 7 })
-            .map((_, index) => {
-              const date = new Date(today);
-              date.setDate(today.getDate() + index);
-              const dateValue = date.toISOString().split("T")[0];
-              const isActive = dateValue === selectedDate;
-              return `<button class="calendar-date-chip ${isActive ? "active" : ""}" type="button" data-date="${dateValue}"><span>${formatDateLabel(date, index)}</span><small>${date.toLocaleDateString("en-GB", { month: "short" })}</small></button>`;
-            })
-            .join("");
+          calendarDateStrip.innerHTML = Array.from({ length: 7 }).map(function (_, index) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + index);
+            const dateValue = date.toISOString().split('T')[0];
+            const isActive  = dateValue === selectedDate;
+            return '<button class="calendar-date-chip ' + (isActive ? 'active' : '') + '" type="button" data-date="' + dateValue + '">' +
+              '<span>' + formatDateLabel(date, index) + '</span>' +
+              '<small>' + date.toLocaleDateString('en-GB', { month: 'short' }) + '</small>' +
+            '</button>';
+          }).join('');
         }
 
         function renderCalendarEvents() {
           const visibleEvents = getVisibleEvents();
-          calendarSummary.textContent =
-            visibleEvents.length === 1
-              ? "1 event found"
-              : `${visibleEvents.length} events found`;
+          calendarSummary.textContent = visibleEvents.length === 1 ? '1 event found' : visibleEvents.length + ' events found';
+
           if (!visibleEvents.length) {
-            eventsList.innerHTML = `<div class="empty-state-card"><h3>No events here</h3><p>Try another filter or check back later.</p></div>`;
+            eventsList.innerHTML = '<div class="empty-state-card"><h3>No events here</h3><p>Try another filter or check back later.</p></div>';
             return;
           }
 
-          eventsList.innerHTML = visibleEvents
-            .map(
-              (event) => `
-          <article class="message-row calendar-event-row" data-event-id="${event.id}">
-            <div class="message-row-main">
-              <div class="message-meta-row"><span class="message-type-pill">${event.category}</span><span class="message-date">${event.eventDate} · ${event.time || ""}</span></div>
-              <h3>${event.title}</h3>
-              <p>${event.property || ""}</p>
-              <p>${event.description || ""}</p>
-            </div>
-            <div class="message-actions"><span class="read-label">${event.status || ""}</span></div>
-          </article>
-        `,
-            )
-            .join("");
+          eventsList.innerHTML = visibleEvents.map(function (event) {
+            return '<article class="message-row calendar-event-row" data-event-id="' + event.id + '">' +
+              '<div class="message-row-main">' +
+                '<div class="message-meta-row">' +
+                  '<span class="message-type-pill">' + event.category + '</span>' +
+                  '<span class="message-date">' + event.eventDate + (event.time ? ' · ' + event.time : '') + '</span>' +
+                '</div>' +
+                '<h3>' + event.title + '</h3>' +
+                '<p>' + (event.description || '') + '</p>' +
+              '</div>' +
+              '<div class="message-actions"><span class="read-label">' + (event.status || '') + '</span></div>' +
+            '</article>';
+          }).join('');
         }
 
         function showEventDetails(id) {
-          const events = getCalendarEvents();
-          const ev = events.find((e) => String(e.id) === String(id));
+          const ev = allCalendarEvents.find(function (e) { return String(e.id) === String(id); });
           if (!ev) return;
-          eventDetails.innerHTML = `<strong>${ev.title}</strong><p>${ev.description || ""}</p><p>${ev.property || ""} · ${ev.eventDate} ${ev.time || ""}</p>`;
+          eventDetails.innerHTML = '<strong>' + ev.title + '</strong><p>' + (ev.description || '') + '</p><p>' + (ev.property || '') + ' · ' + ev.eventDate + '</p>';
         }
 
         function setActiveFilter(filter) {
           activeFilter = filter;
-          filters.forEach((button) =>
-            button.classList.toggle("active", button.dataset.filter === filter),
-          );
+          filterBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.filter === filter); });
           renderCalendarEvents();
         }
 
-        filters.forEach((button) =>
-          button.addEventListener("click", () =>
-            setActiveFilter(button.dataset.filter),
-          ),
-        );
+        filterBtns.forEach(function (b) { b.addEventListener('click', function () { setActiveFilter(b.dataset.filter); }); });
 
-        calendarDateStrip.addEventListener("click", (event) => {
-          const button = event.target.closest("[data-date]");
+        calendarDateStrip.addEventListener('click', function (event) {
+          const button = event.target.closest('[data-date]');
           if (!button) return;
           selectedDate = button.dataset.date;
-          activeFilter = "today";
-          filters.forEach((b) =>
-            b.classList.toggle("active", b.dataset.filter === "today"),
-          );
+          activeFilter = 'today';
+          filterBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.filter === 'today'); });
           renderDateStrip();
           renderCalendarEvents();
         });
 
-        eventsList.addEventListener("click", (e) => {
-          const row = e.target.closest("[data-event-id]");
+        eventsList.addEventListener('click', function (e) {
+          const row = e.target.closest('[data-event-id]');
           if (!row) return;
           showEventDetails(row.dataset.eventId);
         });
 
-        document.getElementById("logout-button")
-          ?.addEventListener("click", NauxicaShared.handleLogout);
-
-        // init
         renderDateStrip();
         renderCalendarEvents();
       })();

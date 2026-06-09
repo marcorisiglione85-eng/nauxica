@@ -3,9 +3,282 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Guests — Nauxica</title>
+    <title>Guests Overview — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* ── Stats strip ───────────────────────────────────────── */
+      .nau-ops-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .nau-ops-stat {
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .nau-ops-stat-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--charcoal);
+        line-height: 1;
+      }
+
+      .nau-ops-stat-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      .nau-ops-stat.is-upcoming .nau-ops-stat-value { color: #2563eb; }
+      .nau-ops-stat.is-inhouse  .nau-ops-stat-value { color: #15803d; }
+
+      /* ── Filters row ───────────────────────────────────────── */
+      .nau-ops-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-top: 16px;
+      }
+
+      .nau-ops-filter-select {
+        padding: 7px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,0.1);
+        background: #fffaf4;
+        font: inherit;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        cursor: pointer;
+        transition: border-color .15s;
+      }
+
+      .nau-ops-filter-select:focus {
+        outline: none;
+        border-color: var(--terracotta);
+      }
+
+      .nau-ops-clear-btn {
+        background: none;
+        border: none;
+        color: var(--terracotta);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 7px 4px;
+        display: none;
+      }
+
+      .nau-ops-clear-btn.is-visible { display: inline; }
+
+      .nau-ops-result-count {
+        margin-left: auto;
+        font-size: 0.8rem;
+        color: var(--stone);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      /* ── Guest table ───────────────────────────────────────── */
+      .nau-guest-table {
+        display: grid;
+        gap: 4px;
+        margin-top: 12px;
+      }
+
+      .nau-gt-row {
+        display: grid;
+        grid-template-columns: minmax(140px,1.2fr) minmax(130px,1fr) 108px 108px 100px;
+        gap: 12px;
+        align-items: center;
+        padding: 11px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(15,23,42,0.05);
+        background: #fffaf4;
+        cursor: pointer;
+        transition: background .12s, box-shadow .12s;
+      }
+
+      .nau-gt-row:hover {
+        background: #fff7ed;
+        box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+      }
+
+      .nau-gt-header {
+        background: transparent;
+        border-color: transparent;
+        cursor: default;
+        padding: 4px 16px 2px;
+      }
+
+      .nau-gt-header:hover {
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .nau-gt-col-label {
+        font-size: 0.7rem;
+        font-weight: 900;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      .nau-gt-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--charcoal);
+      }
+
+      .nau-gt-phone {
+        font-size: 0.76rem;
+        color: var(--stone);
+        margin-top: 2px;
+      }
+
+      .nau-gt-phone-empty {
+        font-size: 0.76rem;
+        color: rgba(15,23,42,0.3);
+        font-style: italic;
+        margin-top: 2px;
+      }
+
+      .nau-gt-prop-code {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.07em;
+        color: var(--terracotta);
+        background: rgba(197,104,61,0.1);
+        padding: 2px 6px;
+        border-radius: 999px;
+        margin-bottom: 3px;
+        white-space: nowrap;
+      }
+
+      .nau-gt-prop-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--charcoal);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .nau-gt-date {
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--charcoal);
+      }
+
+      /* ── Status badges ─────────────────────────────────────── */
+      .nau-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+        display: inline-block;
+      }
+
+      .nau-badge-upcoming    { background: rgba(59,130,246,0.12);  color: #2563eb; }
+      .nau-badge-in-house    { background: rgba(22,163,74,0.13);   color: #15803d; }
+      .nau-badge-checked-out { background: rgba(100,100,110,0.1);  color: #555; }
+
+      /* ── Empty & no-results states ─────────────────────────── */
+      .nau-ops-empty {
+        padding: 44px 24px;
+        text-align: center;
+        border-radius: 12px;
+        border: 1.5px dashed rgba(15,23,42,0.1);
+        margin-top: 12px;
+      }
+
+      .nau-ops-empty-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--charcoal);
+        margin: 0 0 6px;
+      }
+
+      .nau-ops-empty-sub {
+        font-size: 0.86rem;
+        color: var(--stone);
+        margin: 0;
+      }
+
+      /* ── Right panel stat rows ─────────────────────────────── */
+      .nau-stat-grid { display: grid; gap: 10px; margin-top: 14px; }
+
+      .nau-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.05);
+      }
+
+      .nau-stat-label { font-size: 0.84rem; color: var(--stone); font-weight: 600; }
+      .nau-stat-value { font-size: 1rem; font-weight: 900; color: var(--charcoal); }
+
+      .nau-next-arrival {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #fffaf4;
+        border: 1px solid rgba(15,23,42,0.05);
+      }
+
+      .nau-next-arrival-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--stone);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+
+      .nau-next-arrival-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--charcoal);
+      }
+
+      .nau-next-arrival-date {
+        font-size: 0.78rem;
+        color: var(--stone);
+      }
+
+      /* ── Responsive ────────────────────────────────────────── */
+      @media (max-width: 900px) {
+        .nau-ops-stats { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      @media (max-width: 640px) {
+        .nau-gt-header { display: none; }
+        .nau-gt-row {
+          grid-template-columns: 1fr 1fr;
+        }
+        .nau-gt-row > div:first-child { grid-column: 1 / -1; }
+        .nau-gt-row > div:last-child  { grid-column: 1 / -1; }
+      }
+    </style>
   </head>
   <body class="homeowner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -38,12 +311,12 @@
         <div class="dashboard-topbar">
           <div class="topbar-left">
             <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
-            <h1 class="dashboard-title">Guests</h1>
-            <div class="topbar-sub">Guest profiles, visit history and preferences</div>
+            <h1 class="dashboard-title">Guests Overview</h1>
+            <div class="topbar-sub">Cross-property guest operations hub</div>
           </div>
           <div class="topbar-right">
             <div class="topbar-search">
-              <input type="search" placeholder="Search guests, stays, properties" id="globalSearch" />
+              <input type="search" placeholder="Search name, phone, property…" id="globalSearch" />
             </div>
             <div class="topbar-controls">
               <button class="icon-btn" aria-label="Notifications">🔔</button>
@@ -65,23 +338,61 @@
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Guest directory</h2>
-                  <p class="dashboard-card-text">Manage your guest relationships and stay history</p>
+                  <h2 class="dashboard-section-title">Guest roster</h2>
+                  <p class="dashboard-card-text">All guests across your property portfolio</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Guest management coming soon</h3>
-                <p>Guest profiles, communication history, preferences and repeat visitor tracking will be available here.</p>
+
+              <!-- Stats strip -->
+              <div class="nau-ops-stats" id="statsStrip">
+                <div class="nau-ops-stat">
+                  <span class="nau-ops-stat-value">—</span>
+                  <span class="nau-ops-stat-label">Total guests</span>
+                </div>
+                <div class="nau-ops-stat is-upcoming">
+                  <span class="nau-ops-stat-value">—</span>
+                  <span class="nau-ops-stat-label">Upcoming</span>
+                </div>
+                <div class="nau-ops-stat is-inhouse">
+                  <span class="nau-ops-stat-value">—</span>
+                  <span class="nau-ops-stat-label">In house</span>
+                </div>
+                <div class="nau-ops-stat">
+                  <span class="nau-ops-stat-value">—</span>
+                  <span class="nau-ops-stat-label">Checked out</span>
+                </div>
               </div>
+
+              <!-- Filters -->
+              <div class="nau-ops-filters" id="filtersBar">
+                <select class="nau-ops-filter-select" id="filterProperty" aria-label="Filter by property">
+                  <option value="">All properties</option>
+                </select>
+                <select class="nau-ops-filter-select" id="filterStatus" aria-label="Filter by status">
+                  <option value="">All statuses</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="in_house">In house</option>
+                  <option value="checked_out">Checked out</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="no_show">No show</option>
+                </select>
+                <select class="nau-ops-filter-select" id="filterMonth" aria-label="Filter by check-in month">
+                  <option value="">All months</option>
+                </select>
+                <button class="nau-ops-clear-btn" id="clearFilters" type="button">&#215; Clear filters</button>
+                <span class="nau-ops-result-count" id="resultCount"></span>
+              </div>
+
+              <!-- Guest table -->
+              <div id="guestTable"></div>
             </div>
           </div>
+
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">Recent guests</h3>
-              <p class="dashboard-card-text">Last arrivals and upcoming check-ins</p>
-              <div class="empty-state-card">
-                <p>No recent guest data yet.</p>
-              </div>
+              <h3 class="dashboard-section-title">Portfolio snapshot</h3>
+              <p class="dashboard-card-text">Guest stats across all properties</p>
+              <div id="rightPanel"></div>
             </div>
           </div>
         </section>
@@ -90,19 +401,402 @@
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
-    <script>
-      (function () {
-        const accountType = NauxicaShared.resolveAccountType();
-        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
-        NauxicaShared.setActivePage('guests');
-        NauxicaShared.updateTopbar(accountType);
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module">
+    (async () => {
 
-        const chip = document.getElementById('date-chip');
-        if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      /* ── Shared setup ─────────────────────────────────────────── */
+      const accountType = NauxicaShared.resolveAccountType();
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), accountType);
+      NauxicaShared.setActivePage('guests');
+      NauxicaShared.updateTopbar(accountType);
 
-        document.getElementById('logout-button')
-          ?.addEventListener('click', NauxicaShared.handleLogout);
-      })();
+      const chip = document.getElementById('date-chip');
+      if (chip) chip.textContent = NauxicaShared.formatDateChip();
+      document.getElementById('logout-button')?.addEventListener('click', async () => {
+        await window.NauxicaSupabase.auth.signOut();
+        localStorage.clear();
+        window.location.href = 'login.html';
+      });
+
+      /* ── Auth guard ──────────────────────────────────────────── */
+      const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+      if (!sessData.session) { window.location.replace('login.html'); return; }
+
+      /* ── Escape helper ─────────────────────────────────────────── */
+      function esc(s) {
+        if (s == null) return '';
+        return String(s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      /* ── Date helpers ─────────────────────────────────────────── */
+      function fmtDate(d) {
+        if (!d) return '—';
+        return new Date(d + 'T00:00:00')
+          .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      function fmtDateShort(d) {
+        if (!d) return '—';
+        return new Date(d + 'T00:00:00')
+          .toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      }
+
+      function fmtYearMonth(ym) {
+        if (!ym) return '';
+        const [y, m] = ym.split('-');
+        return new Date(+y, +m - 1, 1)
+          .toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      }
+
+      /* ── Status mapping ──────────────────────────────────────── */
+      function dbStatusToUI(s) {
+        if (s === 'checked_in')  return 'in_house';
+        if (s === 'checked_out') return 'checked_out';
+        if (s === 'cancelled')   return 'cancelled';
+        if (s === 'no_show')     return 'no_show';
+        return 'upcoming'; // confirmed, pre_arrival
+      }
+
+      const STATUS_LABEL = {
+        upcoming:    'Upcoming',
+        in_house:    'In house',
+        checked_out: 'Checked out',
+        cancelled:   'Cancelled',
+        no_show:     'No show'
+      };
+      const STATUS_CLASS = {
+        upcoming:    'nau-badge-upcoming',
+        in_house:    'nau-badge-in-house',
+        checked_out: 'nau-badge-checked-out',
+        cancelled:   'nau-badge-checked-out',
+        no_show:     'nau-badge-checked-out'
+      };
+
+      /* ── Fetch Supabase data ──────────────────────────────────── */
+      const [resResult, propsResult] = await Promise.all([
+        window.NauxicaSupabase
+          .from('reservations')
+          .select('id, guest_name, guest_phone, checkin_date, checkout_date, guest_count, reservation_status, booking_source, confirmation_number, property_id, properties(display_name, property_code)')
+          .order('checkin_date', { ascending: false }),
+        window.NauxicaSupabase
+          .from('properties')
+          .select('id, display_name, property_code')
+          .order('display_name')
+      ]);
+
+      const ownedProps = propsResult.data || [];
+      let _allGuests = (resResult.data || []).map(function (r) {
+        const prop = r.properties || {};
+        return Object.assign({}, r, {
+          _property_name: prop.display_name  || 'Unknown Property',
+          _property_code: prop.property_code || '—',
+          _status:        dbStatusToUI(r.reservation_status)
+        });
+      });
+
+      /* Back-compat shim: expose as buildGuestView for filter callbacks */
+      function buildGuestView() { return _allGuests; }
+
+      /* ── Active filter state ──────────────────────────────────── */
+      const filters = { propertyId: '', status: '', month: '', search: '' };
+
+      function hasActiveFilters() {
+        return !!(filters.propertyId || filters.status || filters.month || filters.search);
+      }
+
+      /* ── Apply filters + sort ─────────────────────────────────── */
+      function applyFilters(guests) {
+        let result = guests;
+
+        if (filters.propertyId) {
+          result = result.filter(function (g) {
+            return g.property_id === filters.propertyId;
+          });
+        }
+
+        if (filters.status) {
+          result = result.filter(function (g) {
+            return g._status === filters.status;
+          });
+        }
+
+        if (filters.month) {
+          result = result.filter(function (g) {
+            return g.checkin_date &&
+              g.checkin_date.substring(0, 7) === filters.month;
+          });
+        }
+
+        if (filters.search) {
+          const q = filters.search.toLowerCase();
+          result = result.filter(function (g) {
+            return (
+              (g.guest_name       || '').toLowerCase().includes(q) ||
+              (g.guest_phone      || '').toLowerCase().includes(q) ||
+              (g._property_name   || '').toLowerCase().includes(q) ||
+              (g._property_code   || '').toLowerCase().includes(q) ||
+              (g.confirmation_number || '').toLowerCase().includes(q)
+            );
+          });
+        }
+
+        /* Sort: check-in date descending */
+        result = result.slice().sort(function (a, b) {
+          return (b.checkin_date || '').localeCompare(a.checkin_date || '');
+        });
+
+        return result;
+      }
+
+      /* ── Populate filter dropdowns ────────────────────────────── */
+      function populateFilterDropdowns(allGuests) {
+        /* Property dropdown */
+        const propSel  = document.getElementById('filterProperty');
+        const savedVal = propSel.value;
+
+        propSel.innerHTML = '<option value="">All properties</option>';
+        ownedProps.forEach(function (p) {
+          const code = p.property_code || '';
+          const name = p.display_name  || 'Property';
+          const opt  = document.createElement('option');
+          opt.value       = p.id;
+          opt.textContent = (code ? code + ' · ' : '') + name;
+          if (p.id === savedVal) opt.selected = true;
+          propSel.appendChild(opt);
+        });
+
+        /* Month dropdown — derived from existing check-in dates */
+        const monthSel   = document.getElementById('filterMonth');
+        const savedMonth = monthSel.value;
+        const monthSet   = {};
+        const months     = [];
+
+        allGuests.forEach(function (g) {
+          if (g.checkin_date) {
+            const ym = g.checkin_date.substring(0, 7);
+            if (!monthSet[ym]) { monthSet[ym] = true; months.push(ym); }
+          }
+        });
+        months.sort().reverse();
+
+        monthSel.innerHTML = '<option value="">All months</option>';
+        months.forEach(function (ym) {
+          const opt = document.createElement('option');
+          opt.value       = ym;
+          opt.textContent = fmtYearMonth(ym);
+          if (ym === savedMonth) opt.selected = true;
+          monthSel.appendChild(opt);
+        });
+      }
+
+      /* ── Render stats strip ───────────────────────────────────── */
+      function renderStats(allGuests) {
+        const total      = allGuests.length;
+        const upcoming   = allGuests.filter(function (g) { return g._status === 'upcoming'; }).length;
+        const inHouse    = allGuests.filter(function (g) { return g._status === 'in_house'; }).length;
+        const checkedOut = allGuests.filter(function (g) { return g._status === 'checked_out'; }).length;
+
+        document.getElementById('statsStrip').innerHTML =
+          '<div class="nau-ops-stat">' +
+            '<span class="nau-ops-stat-value">' + total + '</span>' +
+            '<span class="nau-ops-stat-label">Total guests</span>' +
+          '</div>' +
+          '<div class="nau-ops-stat is-upcoming">' +
+            '<span class="nau-ops-stat-value">' + upcoming + '</span>' +
+            '<span class="nau-ops-stat-label">Upcoming</span>' +
+          '</div>' +
+          '<div class="nau-ops-stat is-inhouse">' +
+            '<span class="nau-ops-stat-value">' + inHouse + '</span>' +
+            '<span class="nau-ops-stat-label">In house</span>' +
+          '</div>' +
+          '<div class="nau-ops-stat">' +
+            '<span class="nau-ops-stat-value">' + checkedOut + '</span>' +
+            '<span class="nau-ops-stat-label">Checked out</span>' +
+          '</div>';
+      }
+
+      /* ── Render right panel ───────────────────────────────────── */
+      function renderRightPanel(allGuests) {
+        const propsWithGuests = new Set(
+          allGuests.map(function (g) { return g.property_id; }).filter(Boolean)
+        ).size;
+
+        const upcomingGuests = allGuests
+          .filter(function (g) { return g._status === 'upcoming' && g.checkin_date; })
+          .sort(function (a, b) { return a.checkin_date.localeCompare(b.checkin_date); });
+
+        function statRow(label, value) {
+          return '<div class="nau-stat-row">' +
+            '<span class="nau-stat-label">' + esc(String(label)) + '</span>' +
+            '<span class="nau-stat-value">' + esc(String(value)) + '</span>' +
+          '</div>';
+        }
+
+        let nextArrivalHTML;
+        if (upcomingGuests.length) {
+          const g = upcomingGuests[0];
+          nextArrivalHTML =
+            '<div class="nau-next-arrival">' +
+              '<span class="nau-next-arrival-label">Next arrival</span>' +
+              '<span class="nau-next-arrival-name">' + esc(g.guest_name || 'Guest') + '</span>' +
+              '<span class="nau-next-arrival-date">' +
+                esc(fmtDate(g.checkin_date)) + ' · ' + esc(g._property_name) +
+              '</span>' +
+            '</div>';
+        } else {
+          nextArrivalHTML =
+            '<div class="nau-next-arrival">' +
+              '<span class="nau-next-arrival-label">Next arrival</span>' +
+              '<span class="nau-next-arrival-date" style="color:var(--stone);font-style:italic">' +
+                'No upcoming arrivals' +
+              '</span>' +
+            '</div>';
+        }
+
+        document.getElementById('rightPanel').innerHTML =
+          '<div class="nau-stat-grid">' +
+            statRow('Properties', ownedProps.length) +
+            statRow('Properties with guests', propsWithGuests) +
+            statRow('Total guest records', allGuests.length) +
+            nextArrivalHTML +
+          '</div>';
+      }
+
+      /* ── Render guest table ───────────────────────────────────── */
+      function renderTable(guests) {
+        const container = document.getElementById('guestTable');
+        document.getElementById('resultCount').textContent =
+          guests.length + (guests.length === 1 ? ' guest' : ' guests');
+
+        if (!guests.length) {
+          container.innerHTML =
+            '<div class="nau-ops-empty">' +
+              '<p class="nau-ops-empty-title">' +
+                (hasActiveFilters() ? 'No guests match your filters' : 'No guests registered yet') +
+              '</p>' +
+              '<p class="nau-ops-empty-sub">' +
+                (hasActiveFilters()
+                  ? 'Try adjusting or clearing your current filters.'
+                  : 'Guests added from a Property Detail page will appear here.') +
+              '</p>' +
+            '</div>';
+          return;
+        }
+
+        const headerRow =
+          '<div class="nau-gt-row nau-gt-header" aria-hidden="true">' +
+            '<div class="nau-gt-col-label">Guest</div>' +
+            '<div class="nau-gt-col-label">Property</div>' +
+            '<div class="nau-gt-col-label">Check-in</div>' +
+            '<div class="nau-gt-col-label">Check-out</div>' +
+            '<div class="nau-gt-col-label">Status</div>' +
+          '</div>';
+
+        const rows = guests.map(function (g) {
+          const name   = esc(g.guest_name) || '<span style="color:var(--muted);font-style:italic">Unknown guest</span>';
+          const phone  = g.guest_phone
+            ? '<div class="nau-gt-phone">'       + esc(g.guest_phone) + '</div>'
+            : '<div class="nau-gt-phone-empty">Not provided</div>';
+          const status = g._status;
+
+          return '<div class="nau-gt-row" data-guest-id="' + esc(g.id) + '">' +
+            '<div>' +
+              '<div class="nau-gt-name">' + name + '</div>' +
+              phone +
+            '</div>' +
+            '<div>' +
+              '<div><span class="nau-gt-prop-code">' + esc(g._property_code) + '</span></div>' +
+              '<div class="nau-gt-prop-name">' + esc(g._property_name) + '</div>' +
+            '</div>' +
+            '<div class="nau-gt-date">' + esc(fmtDateShort(g.checkin_date)) + '</div>' +
+            '<div class="nau-gt-date">' + esc(fmtDateShort(g.checkout_date)) + '</div>' +
+            '<div>' +
+              '<span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' +
+                esc(STATUS_LABEL[status] || status) +
+              '</span>' +
+            '</div>' +
+          '</div>';
+        });
+
+        container.innerHTML =
+          '<div class="nau-guest-table">' + headerRow + rows.join('') + '</div>';
+      }
+
+      /* ── Clear-button visibility ──────────────────────────────── */
+      function updateClearBtn() {
+        document.getElementById('clearFilters')
+          .classList.toggle('is-visible', hasActiveFilters());
+      }
+
+      /* ── Master render ────────────────────────────────────────── */
+      function render() {
+        const all      = buildGuestView();
+        const filtered = applyFilters(all);
+        renderStats(all);
+        renderRightPanel(all);
+        renderTable(filtered);
+        updateClearBtn();
+      }
+
+      /* ── Wire up all filter controls ──────────────────────────── */
+      function wireFilters() {
+        const all = buildGuestView();
+        populateFilterDropdowns(all);
+
+        document.getElementById('filterProperty').addEventListener('change', function () {
+          filters.propertyId = this.value;
+          renderTable(applyFilters(buildGuestView()));
+          updateClearBtn();
+        });
+
+        document.getElementById('filterStatus').addEventListener('change', function () {
+          filters.status = this.value;
+          renderTable(applyFilters(buildGuestView()));
+          updateClearBtn();
+        });
+
+        document.getElementById('filterMonth').addEventListener('change', function () {
+          filters.month = this.value;
+          renderTable(applyFilters(buildGuestView()));
+          updateClearBtn();
+        });
+
+        document.getElementById('globalSearch').addEventListener('input', function () {
+          filters.search = this.value.trim();
+          renderTable(applyFilters(buildGuestView()));
+          updateClearBtn();
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', function () {
+          filters.propertyId = '';
+          filters.status     = '';
+          filters.month      = '';
+          filters.search     = '';
+          document.getElementById('filterProperty').value = '';
+          document.getElementById('filterStatus').value   = '';
+          document.getElementById('filterMonth').value    = '';
+          document.getElementById('globalSearch').value   = '';
+          render();
+        });
+      }
+
+      /* ── Row click → Guest Detail ────────────────────────────── */
+      document.getElementById('guestTable').addEventListener('click', function (e) {
+        const row = e.target.closest('.nau-gt-row[data-guest-id]');
+        if (!row) return;
+        const id = row.getAttribute('data-guest-id');
+        if (id) window.location.href = 'guest-detail.html?id=' + encodeURIComponent(id);
+      });
+
+      /* ── Boot ────────────────────────────────────────────────── */
+      wireFilters();
+      render();
+
+    })();
     </script>
+
   </body>
 </html>

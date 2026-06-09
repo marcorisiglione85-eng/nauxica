@@ -7,3 +7,7 @@ accomodation contact and sheets/
 business file/
 guestpal_whatsapp_conversation.html
 nauxica_landing.html
+
+# Supabase local dev
+supabase/.temp/
+supabase/.env

@@ -84,6 +84,7 @@
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
     <script>
       (function () {
         const accountType = NauxicaShared.resolveAccountType();
@@ -101,31 +102,8 @@
           ? 'Set and manage your service availability windows'
           : 'View and manage availability for your properties';
 
-        const availContent = document.getElementById('avail-content');
-        const availSummary = document.getElementById('avail-summary');
-        const availCardTitle = document.getElementById('avail-card-title');
-        const availCardSub = document.getElementById('avail-card-sub');
+        if (accountType !== 'partner') return; // homeowner path handled by module script below
 
-        // Demo availability windows per property index (homeowner)
-        const homeownerDemoWindows = [
-          [
-            { range: '28 May – 3 Jun 2026', status: 'Blocked', reason: 'Owner use' },
-            { range: '4 Jun – 14 Jun 2026', status: 'Available', reason: '' },
-            { range: '15 Jun – 20 Jun 2026', status: 'Blocked', reason: 'Maintenance' },
-            { range: '21 Jun – 31 Aug 2026', status: 'Available', reason: '' }
-          ],
-          [
-            { range: '28 May – 7 Jun 2026', status: 'Available', reason: '' },
-            { range: '8 Jun – 14 Jun 2026', status: 'Blocked', reason: 'Guest reservation' },
-            { range: '15 Jun – 31 Aug 2026', status: 'Available', reason: '' }
-          ],
-          [
-            { range: '28 May – 10 Jun 2026', status: 'Blocked', reason: 'Deep clean & refresh' },
-            { range: '11 Jun – 31 Aug 2026', status: 'Available', reason: '' }
-          ]
-        ];
-
-        // Demo weekly schedule (partner)
         const partnerSchedule = [
           { day: 'Monday',    morning: true,  afternoon: true,  evening: false },
           { day: 'Tuesday',   morning: true,  afternoon: true,  evening: false },
@@ -136,101 +114,208 @@
           { day: 'Sunday',    morning: false, afternoon: false, evening: false }
         ];
 
-        function renderHomeownerAvailability() {
-          const state = window.NauxicaDemoData.loadState();
-          const properties = state.properties || [];
+        const availContent   = document.getElementById('avail-content');
+        const availSummary   = document.getElementById('avail-summary');
+        const availCardTitle = document.getElementById('avail-card-title');
+        const availCardSub   = document.getElementById('avail-card-sub');
 
-          availCardTitle.textContent = 'Property Availability';
+        availCardTitle.textContent = 'Weekly Schedule';
+        availCardSub.textContent   = 'Your current service availability';
 
-          if (!properties.length) {
-            availCardSub.textContent = 'No properties found';
-            availContent.innerHTML = '<div class="empty-state-card"><h3>No properties yet</h3><p>Add a property to manage its availability.</p></div>';
-            availSummary.textContent = 'No properties managed';
-            return;
-          }
+        const activeDays = partnerSchedule.filter(function (d) {
+          return d.morning || d.afternoon || d.evening;
+        }).length;
 
-          const propWord = properties.length === 1 ? 'property' : 'properties';
-          availCardSub.textContent = properties.length + ' ' + propWord + ' · Select one to view windows';
-          availSummary.innerHTML = '<strong>' + properties.length + '</strong> ' + propWord + ' managed<br><span>Next opening: 4 Jun 2026</span>';
-
-          let selectedIndex = 0;
-
-          function renderPropertyContent() {
-            const windows = homeownerDemoWindows[Math.min(selectedIndex, homeownerDemoWindows.length - 1)];
-            availContent.innerHTML =
-              '<div class="message-filters">' +
-              properties.map(function (p, i) {
-                return '<button class="message-filter' + (i === selectedIndex ? ' active' : '') + '" data-prop-index="' + i + '">' +
-                  (p.name || p.title || 'Property ' + (i + 1)) + '</button>';
-              }).join('') +
+        availContent.innerHTML =
+          '<div class="messages-list">' +
+          partnerSchedule.map(function (d) {
+            const slots = [];
+            if (d.morning)   slots.push('Morning');
+            if (d.afternoon) slots.push('Afternoon');
+            if (d.evening)   slots.push('Evening');
+            const available = slots.length > 0;
+            return '<article class="message-row' + (available ? '' : ' is-read') + '">' +
+              '<div class="message-row-main">' +
+              '<div class="message-meta-row">' +
+              (slots.length > 0
+                ? slots.map(function (s) { return '<span class="message-type-pill">' + s + '</span>'; }).join('')
+                : '<span class="message-type-pill">Off</span>') +
               '</div>' +
-              '<div class="messages-list">' +
-              windows.map(function (w) {
-                return '<article class="message-row">' +
-                  '<div class="message-row-main">' +
-                  '<div class="message-meta-row">' +
-                  '<span class="message-type-pill">' + w.status + '</span>' +
-                  '<span class="message-date">' + w.range + '</span>' +
-                  '</div>' +
-                  (w.reason ? '<p>' + w.reason + '</p>' : '') +
-                  '</div>' +
-                  '</article>';
-              }).join('') +
-              '</div>';
-          }
+              '<h3>' + d.day + '</h3>' +
+              '</div>' +
+              '<div class="message-actions">' +
+              '<span class="read-label">' + (available ? 'Available' : 'Unavailable') + '</span>' +
+              '</div>' +
+              '</article>';
+          }).join('') +
+          '</div>';
 
-          renderPropertyContent();
+        availSummary.innerHTML =
+          '<strong>' + activeDays + '</strong> active days this week<br>' +
+          '<span>Service: Cleaning · Zone: Taormina area</span>';
+      })();
+    </script>
 
-          availContent.addEventListener('click', function (e) {
-            const btn = e.target.closest('[data-prop-index]');
-            if (!btn) return;
-            selectedIndex = parseInt(btn.dataset.propIndex, 10);
-            renderPropertyContent();
-          });
+    <script type="module">
+      (async () => {
+        if (NauxicaShared.resolveAccountType() === 'partner') return;
+
+        const { data: sessData } = await window.NauxicaSupabase.auth.getSession();
+        if (!sessData || !sessData.session) {
+          window.location.replace('login.html');
+          throw 0;
         }
 
-        function renderPartnerAvailability() {
-          availCardTitle.textContent = 'Weekly Schedule';
-          availCardSub.textContent = 'Your current service availability';
+        const availContent   = document.getElementById('avail-content');
+        const availSummary   = document.getElementById('avail-summary');
+        const availCardTitle = document.getElementById('avail-card-title');
+        const availCardSub   = document.getElementById('avail-card-sub');
 
-          const activeDays = partnerSchedule.filter(function (d) {
-            return d.morning || d.afternoon || d.evening;
-          }).length;
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
 
-          availContent.innerHTML =
-            '<div class="messages-list">' +
-            partnerSchedule.map(function (d) {
-              const slots = [];
-              if (d.morning) slots.push('Morning');
-              if (d.afternoon) slots.push('Afternoon');
-              if (d.evening) slots.push('Evening');
-              const available = slots.length > 0;
-              return '<article class="message-row' + (available ? '' : ' is-read') + '">' +
-                '<div class="message-row-main">' +
-                '<div class="message-meta-row">' +
-                (slots.length > 0
-                  ? slots.map(function (s) { return '<span class="message-type-pill">' + s + '</span>'; }).join('')
-                  : '<span class="message-type-pill">Off</span>') +
-                '</div>' +
-                '<h3>' + d.day + '</h3>' +
-                '</div>' +
-                '<div class="message-actions">' +
-                '<span class="read-label">' + (available ? 'Available' : 'Unavailable') + '</span>' +
-                '</div>' +
-                '</article>';
+        function addDays(dateStr, n) {
+          const d = new Date(dateStr + 'T00:00:00');
+          d.setDate(d.getDate() + n);
+          return d.toISOString().split('T')[0];
+        }
+
+        function fmtDate(dateStr) {
+          return new Date(dateStr + 'T00:00:00')
+            .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function fmtDateShort(dateStr) {
+          return new Date(dateStr + 'T00:00:00')
+            .toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        }
+
+        function fmtRange(start, end) {
+          return (start.substring(0, 4) === end.substring(0, 4)
+            ? fmtDateShort(start)
+            : fmtDate(start)) + ' – ' + fmtDate(end);
+        }
+
+        // Build availability windows by merging blocking reservations into [rangeStart, rangeEnd].
+        // Reservations are sorted by checkin_date and already filtered to overlap the range.
+        function generateWindows(reservations, rangeStart, rangeEnd) {
+          const windows = [];
+          let cursor = rangeStart;
+
+          for (const r of reservations) {
+            const ci = r.checkin_date < rangeStart ? rangeStart : r.checkin_date;
+            // checkout_date is exclusive — guest leaves on that day, so last blocked night = checkout - 1
+            const coRaw    = r.checkout_date > addDays(rangeEnd, 1) ? addDays(rangeEnd, 1) : r.checkout_date;
+            const blockEnd = addDays(coRaw, -1);
+
+            if (ci > cursor) {
+              windows.push({ start: cursor, end: addDays(ci, -1), status: 'Available', reason: '' });
+            }
+            windows.push({ start: ci, end: blockEnd, status: 'Blocked', reason: r.guest_name || '' });
+            cursor = coRaw;
+          }
+
+          if (cursor <= rangeEnd) {
+            windows.push({ start: cursor, end: rangeEnd, status: 'Available', reason: '' });
+          }
+
+          return windows;
+        }
+
+        availCardTitle.textContent = 'Property Availability';
+        availCardSub.textContent   = 'Loading properties…';
+        availContent.innerHTML     = '';
+        availSummary.textContent   = 'Loading…';
+
+        const { data: props, error: propsErr } = await window.NauxicaSupabase
+          .from('properties')
+          .select('id, display_name')
+          .order('display_name', { ascending: true });
+
+        if (propsErr || !props || !props.length) {
+          availCardSub.textContent = 'No properties found';
+          availContent.innerHTML   = '<div class="empty-state-card"><h3>No properties yet</h3>' +
+            '<p>Add a property to manage its availability.</p></div>';
+          availSummary.textContent = 'No properties managed';
+          return;
+        }
+
+        const propWord = props.length === 1 ? 'property' : 'properties';
+        availCardSub.textContent = props.length + ' ' + propWord + ' · Select one to view availability';
+
+        const today   = new Date().toISOString().split('T')[0];
+        const endDate = addDays(today, 89); // ~3 months forward
+
+        let selectedPropId = props[0].id;
+
+        async function loadAndRender() {
+          const tabsHtml =
+            '<div class="message-filters">' +
+            props.map(function (p) {
+              return '<button class="message-filter' + (p.id === selectedPropId ? ' active' : '') +
+                '" data-prop-id="' + esc(p.id) + '">' + esc(p.display_name || 'Property') + '</button>';
             }).join('') +
             '</div>';
 
+          availContent.innerHTML = tabsHtml +
+            '<div id="avail-windows-list"><p style="color:var(--stone);font-size:0.85rem;padding:8px 0">Loading…</p></div>';
+
+          availContent.querySelector('.message-filters').addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-prop-id]');
+            if (!btn) return;
+            selectedPropId = btn.dataset.propId;
+            loadAndRender();
+          });
+
+          const windowsList = document.getElementById('avail-windows-list');
+
+          const { data: reservations, error: resErr } = await window.NauxicaSupabase
+            .from('reservations')
+            .select('id, guest_name, checkin_date, checkout_date')
+            .eq('property_id', selectedPropId)
+            .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in'])
+            .lte('checkin_date', endDate)
+            .gt('checkout_date', today)
+            .order('checkin_date', { ascending: true });
+
+          if (resErr) {
+            windowsList.innerHTML = '<div class="empty-state-card"><p>Failed to load reservations.</p></div>';
+            availSummary.textContent = 'Error loading data';
+            return;
+          }
+
+          const res     = reservations || [];
+          const windows = generateWindows(res, today, endDate);
+
+          windowsList.innerHTML =
+            '<div class="messages-list">' +
+            windows.map(function (w) {
+              return '<article class="message-row' + (w.status === 'Blocked' ? '' : ' is-read') + '">' +
+                '<div class="message-row-main">' +
+                '<div class="message-meta-row">' +
+                '<span class="message-type-pill">' + w.status + '</span>' +
+                '<span class="message-date">' + esc(fmtRange(w.start, w.end)) + '</span>' +
+                '</div>' +
+                (w.reason ? '<p>' + esc(w.reason) + '</p>' : '') +
+                '</div>' +
+                '</article>';
+            }).join('') +
+            '</div>' +
+            '<p style="margin-top:12px;font-size:0.78rem;color:var(--stone)">' +
+            'Availability is calculated from confirmed and active reservations.</p>';
+
+          const nextRes      = res[0]; // already sorted ascending
+          const blockedCount = res.length;
           availSummary.innerHTML =
-            '<strong>' + activeDays + '</strong> active days this week<br>' +
-            '<span>Service: Cleaning · Zone: Taormina area</span>';
+            '<strong>' + blockedCount + '</strong> active reservation' + (blockedCount !== 1 ? 's' : '') + '<br>' +
+            (nextRes
+              ? '<span>Next check-in: ' + esc(fmtDate(nextRes.checkin_date)) + ' · ' + esc(nextRes.guest_name || 'Guest') + '</span>'
+              : '<span>No upcoming reservations</span>');
         }
 
-        if (accountType === 'partner') {
-          renderPartnerAvailability();
-        } else {
-          renderHomeownerAvailability();
-        }
+        await loadAndRender();
       })();
     </script>
   </body>

@@ -25,6 +25,7 @@ window.NauxicaShared = (function () {
     '<a class="dashboard-nav-item" data-page="operations" href="operations.html">Operations</a>',
     '<a class="dashboard-nav-item" data-page="tasks" href="tasks.html">Tasks</a>',
     '<a class="dashboard-nav-item" data-page="properties" href="properties.html">Properties</a>',
+    '<a class="dashboard-nav-item" data-page="activity" href="activity.html">Activity</a>',
     '<a class="dashboard-nav-item" data-page="reports" href="reports.html">Reports</a>',
     '<a class="dashboard-nav-item" data-page="revenue" href="revenue.html">Revenue</a>',
     '<a class="dashboard-nav-item" data-page="reviews" href="reviews.html">Reviews</a>',
@@ -44,10 +45,23 @@ window.NauxicaShared = (function () {
     );
   }
 
-  function handleLogout() {
+  async function handleLogout(event) {
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+    }
+    try {
+      if (window.NauxicaSupabase && window.NauxicaSupabase.auth) {
+        var result = await window.NauxicaSupabase.auth.signOut();
+        if (result && result.error) {
+          console.error('Supabase signOut error:', result.error);
+        }
+      }
+    } catch (err) {
+      console.error('Supabase signOut exception:', err);
+    }
     localStorage.removeItem('accountType');
     localStorage.removeItem('nauxicaAccountType');
-    window.location.href = 'index.html';
+    window.location.replace('login.html');
   }
 
   function filterByAccountType(collection, accountType) {

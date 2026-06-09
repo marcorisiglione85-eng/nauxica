@@ -1,0 +1,8 @@
+-- Nauxica — Sprint 1 seed
+--
+-- This file is intentionally empty of data.
+-- Users, properties, and reservations are created through the application
+-- API after registration — no credentials or demo data are seeded here.
+--
+-- For local development: register a homeowner via POST /v1/auth/register/homeowner,
+-- then add properties through the dashboard or API.

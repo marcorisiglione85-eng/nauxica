@@ -75,15 +75,30 @@
               </div>
             </div>
 
-            <div class="dashboard-card">
+            <div class="dashboard-card" id="faq">
               <div class="card-heading-row">
                 <div>
                   <h2 class="dashboard-section-title">FAQs</h2>
-                  <p class="dashboard-card-text">Answers to common questions</p>
+                  <p class="dashboard-card-text">Answers to common questions about Nauxica</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <p>FAQ content coming soon.</p>
+              <div style="display:grid;gap:10px;margin-top:4px">
+                <a href="faq-viewer.html?type=guest" class="dashboard-card" style="display:block;text-decoration:none;padding:14px 16px;border-radius:10px;background:#fffaf4;border:1px solid rgba(15,23,42,0.07);transition:border-color .15s" onmouseover="this.style.borderColor='var(--terracotta)'" onmouseout="this.style.borderColor='rgba(15,23,42,0.07)'">
+                  <div style="font-weight:800;font-size:0.92rem;color:var(--charcoal)">Guest FAQ</div>
+                  <div style="font-size:0.82rem;color:var(--stone);margin-top:3px">Questions guests ask before, during and after their stay</div>
+                </a>
+                <a href="faq-viewer.html?type=homeowner" class="dashboard-card" style="display:block;text-decoration:none;padding:14px 16px;border-radius:10px;background:#fffaf4;border:1px solid rgba(15,23,42,0.07);transition:border-color .15s" onmouseover="this.style.borderColor='var(--terracotta)'" onmouseout="this.style.borderColor='rgba(15,23,42,0.07)'">
+                  <div style="font-weight:800;font-size:0.92rem;color:var(--charcoal)">Homeowner FAQ</div>
+                  <div style="font-size:0.82rem;color:var(--stone);margin-top:3px">Managing properties, reservations, guests and operations</div>
+                </a>
+                <a href="faq-viewer.html?type=partner" class="dashboard-card" style="display:block;text-decoration:none;padding:14px 16px;border-radius:10px;background:#fffaf4;border:1px solid rgba(15,23,42,0.07);transition:border-color .15s" onmouseover="this.style.borderColor='var(--terracotta)'" onmouseout="this.style.borderColor='rgba(15,23,42,0.07)'">
+                  <div style="font-weight:800;font-size:0.92rem;color:var(--charcoal)">Partner FAQ</div>
+                  <div style="font-size:0.82rem;color:var(--stone);margin-top:3px">Receiving, managing and completing operational work</div>
+                </a>
+                <a href="faq-viewer.html?type=concierge" class="dashboard-card" style="display:block;text-decoration:none;padding:14px 16px;border-radius:10px;background:#fffaf4;border:1px solid rgba(15,23,42,0.07);transition:border-color .15s" onmouseover="this.style.borderColor='var(--terracotta)'" onmouseout="this.style.borderColor='rgba(15,23,42,0.07)'">
+                  <div style="font-weight:800;font-size:0.92rem;color:var(--charcoal)">Concierge FAQ</div>
+                  <div style="font-size:0.82rem;color:var(--stone);margin-top:3px">About the Nauxica AI hospitality assistant</div>
+                </a>
               </div>
             </div>
           </div>
@@ -102,6 +117,7 @@
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
     <script>
       (function () {
         const accountType = NauxicaShared.resolveAccountType();
