@@ -76,6 +76,17 @@
         color: var(--stone);
       }
 
+      /* ── KPI trend indicators ──────────────────────────────── */
+      .nau-kpi-trend         { font-size: 0.77rem; font-weight: 700; }
+      .nau-kpi-trend.is-up   { color: #15803d; }
+      .nau-kpi-trend.is-down { color: #b91c1c; }
+      .nau-kpi-trend.is-flat { color: var(--stone); }
+      .nau-kpi-trend-label   { font-size: 0.75rem; color: var(--stone); font-weight: 400; }
+
+      .nau-top-prop-trend         { margin-top: 6px; margin-bottom: 10px; font-size: 0.8rem; font-weight: 700; }
+      .nau-top-prop-trend.is-up   { color: #15803d; }
+      .nau-top-prop-trend.is-down { color: #b91c1c; }
+
       /* ── Section heading ───────────────────────────────────── */
       .nau-rev-section-head {
         font-size: 0.78rem;
@@ -907,8 +918,16 @@
 
         var hasAnyRevenue = withRevenue.length > 0;
 
+        /* Trend: build current metrics object and calculate previous period for comparison */
+        var currMetrics = hasAnyRevenue ? {
+          grossRevenue: grossRevenue, opCost: opCost, grossMargin: grossMargin, marginPct: marginPct
+        } : null;
+        var prevBounds  = previousPeriodBounds(activePeriod);
+        var prevMetrics = prevBounds ? calculatePeriodMetrics(prevBounds.from, prevBounds.to) : null;
+        var trendLabel  = trendPeriodLabel(activePeriod);
+
         /* HOMEOWNER PAGE — never reference commission, payout, partner earning, or Nauxica fee. */
-        renderKPIs(hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? opCost : null, hasAnyRevenue ? grossMargin : null, marginPct);
+        renderKPIs(hasAnyRevenue ? grossRevenue : null, hasAnyRevenue ? opCost : null, hasAnyRevenue ? grossMargin : null, marginPct, currMetrics, prevMetrics, trendLabel);
 
         /* Apply chart month filter to reservation list only — KPIs reflect the full period */
         var listFiltered        = selectedChartMonth
@@ -923,8 +942,84 @@
         renderTopProperty(filtered);
       }
 
+      /* ── Trend calculation helpers ─────────────────────────── */
+      function previousPeriodBounds(period) {
+        var now = new Date();
+        var y   = now.getFullYear();
+        var m   = now.getMonth(); // 0-based
+        if (period === 'month') {
+          return { from: isoDate(new Date(y, m - 1, 1)), to: isoDate(new Date(y, m, 0)) };
+        }
+        if (period === '3months') {
+          /* Previous 3-month window: 3 months ending the day before current window starts */
+          return { from: isoDate(new Date(y, m - 5, 1)), to: isoDate(new Date(y, m - 2, 0)) };
+        }
+        if (period === 'year') {
+          /* Year-to-date last year — same calendar day in prior year as today */
+          var todayLastYear = new Date(y - 1, m, now.getDate());
+          return { from: (y - 1) + '-01-01', to: isoDate(todayLastYear) };
+        }
+        return null; // all time — no comparison
+      }
+
+      function calculatePeriodMetrics(fromStr, toStr) {
+        var res = allReservations.filter(function (r) {
+          var ci = (r.checkin_date || '').slice(0, 10);
+          return ci >= fromStr && ci <= toStr;
+        });
+        var eurRes  = res.filter(function (r) { return !r.reservation_value_currency || r.reservation_value_currency === 'EUR'; });
+        var withRev = eurRes.filter(function (r) { return r.reservation_value_amount != null; });
+        if (!withRev.length) return null;
+        var grossRevenue = withRev.reduce(function (sum, r) { return sum + parseFloat(r.reservation_value_amount); }, 0);
+        var opCost = 0;
+        withRev.forEach(function (r) {
+          var entry = taskCostByReservation.get(r.id);
+          if (entry) opCost += entry.total;
+        });
+        var grossMargin = grossRevenue - opCost;
+        return {
+          grossRevenue: grossRevenue,
+          opCost:       opCost,
+          grossMargin:  grossMargin,
+          marginPct:    grossRevenue > 0 ? (grossMargin / grossRevenue * 100) : null
+        };
+      }
+
+      function calculateTrendDelta(currMetrics, prevMetrics, metric) {
+        if (!currMetrics || !prevMetrics) return null;
+        var curr = currMetrics[metric];
+        var prev = prevMetrics[metric];
+        if (curr == null || prev == null) return null;
+        return curr - prev;
+      }
+
+      function trendPeriodLabel(period) {
+        if (period === 'month')   return 'prev month';
+        if (period === '3months') return 'prev 3 months';
+        if (period === 'year')    return 'prev YTD';
+        return null; // all time
+      }
+
+      function formatTrendSub(delta, metric, label) {
+        if (delta == null || !label) return null;
+        var invertColor = (metric === 'cost');
+        var arrow, cls, valueStr;
+        if (metric === 'marginpct') {
+          valueStr = (delta >= 0 ? '+' : '') + parseFloat(delta).toFixed(1) + ' pts';
+        } else {
+          var abs    = Math.abs(delta);
+          var absStr = '€' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          valueStr   = (delta >= 0 ? '+' : '−') + absStr;
+        }
+        if (delta > 0)      { arrow = '↑'; cls = invertColor ? 'is-down' : 'is-up'; }
+        else if (delta < 0) { arrow = '↓'; cls = invertColor ? 'is-up'  : 'is-down'; }
+        else                { arrow = '→'; cls = 'is-flat'; }
+        return '<span class="nau-kpi-trend ' + cls + '">' + arrow + ' ' + esc(valueStr) + '</span>' +
+          '<span class="nau-kpi-trend-label"> vs ' + esc(label) + '</span>';
+      }
+
       /* ── KPI strip ──────────────────────────────────────────── */
-      function renderKPIs(grossRevenue, opCost, grossMargin, marginPct) {
+      function renderKPIs(grossRevenue, opCost, grossMargin, marginPct, currMetrics, prevMetrics, trendLabel) {
         var revEl       = document.getElementById('kpiRevenue');
         var revSub      = document.getElementById('kpiRevenueSub');
         var costEl      = document.getElementById('kpiCost');
@@ -933,6 +1028,8 @@
         var margSub     = document.getElementById('kpiMarginSub');
         var margPctEl   = document.getElementById('kpiMarginPct');
         var margPctSub  = document.getElementById('kpiMarginPctSub');
+
+        var lifetimeLabel = 'Lifetime performance';
 
         if (grossRevenue == null) {
           revEl.className      = 'nau-rev-kpi-value is-null';
@@ -943,28 +1040,55 @@
           costEl.textContent   = '—';
           margEl.textContent   = '—';
           margPctEl.textContent= '—';
-          revSub.textContent   = 'No revenue values recorded';
-          costSub.textContent  = 'No linked task costs';
-          margSub.textContent  = 'Requires revenue values';
-          margPctSub.textContent = 'Requires revenue values';
+          if (!trendLabel) {
+            revSub.textContent     = lifetimeLabel;
+            costSub.textContent    = lifetimeLabel;
+            margSub.textContent    = lifetimeLabel;
+            margPctSub.textContent = lifetimeLabel;
+          } else {
+            revSub.textContent     = 'No revenue values recorded';
+            costSub.textContent    = 'No linked task costs';
+            margSub.textContent    = 'Requires revenue values';
+            margPctSub.textContent = 'Requires revenue values';
+          }
           return;
         }
 
-        revEl.className      = 'nau-rev-kpi-value';
-        revEl.textContent    = fmtEur(grossRevenue);
-        revSub.textContent   = 'EUR reservations only';
+        revEl.className   = 'nau-rev-kpi-value';
+        revEl.textContent = fmtEur(grossRevenue);
+        if (!trendLabel) {
+          revSub.textContent = lifetimeLabel;
+        } else {
+          revSub.innerHTML = formatTrendSub(calculateTrendDelta(currMetrics, prevMetrics, 'grossRevenue'), 'revenue', trendLabel)
+            || 'EUR reservations only';
+        }
 
-        costEl.className     = 'nau-rev-kpi-value';
-        costEl.textContent   = fmtEur(opCost);
-        costSub.textContent  = 'Linked non-cancelled tasks';
+        costEl.className   = 'nau-rev-kpi-value';
+        costEl.textContent = fmtEur(opCost);
+        if (!trendLabel) {
+          costSub.textContent = lifetimeLabel;
+        } else {
+          costSub.innerHTML = formatTrendSub(calculateTrendDelta(currMetrics, prevMetrics, 'opCost'), 'cost', trendLabel)
+            || 'Linked non-cancelled tasks';
+        }
 
-        margEl.className     = 'nau-rev-kpi-value' + (grossMargin >= 0 ? ' is-positive' : '');
-        margEl.textContent   = fmtEur(grossMargin);
-        margSub.textContent  = 'Revenue minus operational cost';
+        margEl.className   = 'nau-rev-kpi-value' + (grossMargin >= 0 ? ' is-positive' : '');
+        margEl.textContent = fmtEur(grossMargin);
+        if (!trendLabel) {
+          margSub.textContent = lifetimeLabel;
+        } else {
+          margSub.innerHTML = formatTrendSub(calculateTrendDelta(currMetrics, prevMetrics, 'grossMargin'), 'margin', trendLabel)
+            || 'Revenue minus operational cost';
+        }
 
-        margPctEl.className  = 'nau-rev-kpi-value' + (marginPct != null && marginPct >= 0 ? ' is-positive' : '');
+        margPctEl.className   = 'nau-rev-kpi-value' + (marginPct != null && marginPct >= 0 ? ' is-positive' : '');
         margPctEl.textContent = marginPct != null ? fmtPct(marginPct) : '—';
-        margPctSub.textContent = marginPct != null ? 'Of gross revenue' : 'Requires revenue values';
+        if (!trendLabel) {
+          margPctSub.textContent = lifetimeLabel;
+        } else {
+          margPctSub.innerHTML = formatTrendSub(calculateTrendDelta(currMetrics, prevMetrics, 'marginPct'), 'marginpct', trendLabel)
+            || (marginPct != null ? 'Of gross revenue' : 'Requires revenue values');
+        }
       }
 
       /* ── Reservation list ───────────────────────────────────── */
@@ -1437,8 +1561,10 @@
           }
           propMap.set(pid, e);
         });
-        var top = null;
-        propMap.forEach(function (p) { if (!top || p.revenue > top.revenue) top = p; });
+        var top = null; var topPid = null;
+        propMap.forEach(function (p, pid) {
+          if (!top || p.revenue > top.revenue) { top = p; topPid = pid; }
+        });
         if (!top || top.revenue === 0) {
           el.innerHTML = '<p style="color:var(--stone);font-size:0.88rem;margin:0">No revenue values recorded for this period.</p>';
           return;
@@ -1446,8 +1572,30 @@
         var margin = top.revenue - top.cost;
         var mPct   = top.revenue > 0 ? (margin / top.revenue * 100) : null;
         var mClass = margin >= 0 ? 'nau-rev-margin-positive' : 'nau-rev-margin-negative';
+
+        /* Trend: compare top property revenue against previous equivalent period */
+        var trendHTML  = '';
+        var prevBounds = previousPeriodBounds(activePeriod);
+        if (prevBounds && topPid && topPid !== '__unknown__') {
+          var prevRev = 0;
+          allReservations.forEach(function (r) {
+            if (r.property_id !== topPid) return;
+            var ci = (r.checkin_date || '').slice(0, 10);
+            if (ci < prevBounds.from || ci > prevBounds.to) return;
+            if (r.reservation_value_amount == null) return;
+            if (r.reservation_value_currency && r.reservation_value_currency !== 'EUR') return;
+            prevRev += parseFloat(r.reservation_value_amount);
+          });
+          if (top.revenue > prevRev) {
+            trendHTML = '<div class="nau-top-prop-trend is-up">Trending &#8593;</div>';
+          } else if (top.revenue < prevRev) {
+            trendHTML = '<div class="nau-top-prop-trend is-down">Trending &#8595;</div>';
+          }
+        }
+
         el.innerHTML =
           '<div class="nau-top-prop-name">' + esc(top.name) + '</div>' +
+          trendHTML +
           '<div class="nau-rev-summary-row"><span class="label">Revenue</span><span class="value">' + esc(fmtEur(top.revenue)) + '</span></div>' +
           '<div class="nau-rev-summary-row"><span class="label">Gross margin</span><span class="value ' + mClass + '">' + esc(fmtEur(margin)) + '</span></div>' +
           '<div class="nau-rev-summary-row"><span class="label">Margin %</span><span class="value ' + mClass + '">' + esc(fmtPct(mPct)) + '</span></div>';
