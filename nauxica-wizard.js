@@ -7,23 +7,28 @@
  */
 window.NauxicaWizard = (function () {
 
-  var _initialized = false;
-  var _wizardData  = {};
-  var _editId      = null;
-  var _currentStep = 1;
-  var _afterSave   = null;
-  var _mode        = 'property'; // 'property' | 'guest'
-  var _guestData   = {};
-  var _guestPropId = null;
+  var _initialized    = false;
+  var _wizardData     = {};
+  var _editId         = null;
+  var _currentStep    = 1;
+  var _afterSave      = null;
+  var _mode           = 'property'; // 'property' | 'guest'
+  var _guestData      = {};
+  var _guestPropId    = null;
+  var _emergencyData  = {};
+  var _contactsData   = { owner: {}, caretaker: {} };
 
-  var TOTAL_STEPS = 6;
+  var TOTAL_STEPS = 9;
   var STEP_TITLES = [
     'Property Identity',
     'Location',
     'Configuration & Amenities',
     'Access & Check-in',
     'House Rules',
-    'Registration & Compliance'
+    'Registration & Compliance',
+    'WiFi & Connectivity',
+    'Emergency Data',
+    'Emergency Contacts'
   ];
 
   var GUEST_TOTAL_STEPS = 4;
@@ -154,11 +159,13 @@ window.NauxicaWizard = (function () {
   /* ── Public: open ─────────────────────────────────────────── */
   function open(existingProp, afterSaveFn) {
     _ensureInit();
-    _mode        = 'property';
-    _editId      = existingProp ? existingProp.id : null;
-    _wizardData  = existingProp ? Object.assign({}, existingProp) : {};
-    _afterSave   = typeof afterSaveFn === 'function' ? afterSaveFn : null;
-    _currentStep = 1;
+    _mode          = 'property';
+    _editId        = existingProp ? existingProp.id : null;
+    _wizardData    = existingProp ? Object.assign({}, existingProp) : {};
+    _emergencyData = {};
+    _contactsData  = { owner: {}, caretaker: {} };
+    _afterSave     = typeof afterSaveFn === 'function' ? afterSaveFn : null;
+    _currentStep   = 1;
     _renderStep();
     document.getElementById('wizardOverlay').classList.add('is-visible');
     document.getElementById('wizardModal').classList.add('is-visible');
@@ -249,6 +256,12 @@ window.NauxicaWizard = (function () {
       '</div>',
       '<label>Area / neighbourhood description <span class="wizard-optional">(recommended)</span>',
         '<textarea id="wf_area_description" placeholder="Describe the area to help guests orient themselves…">' + e(v('area_description')) + '</textarea>',
+      '</label>',
+      '<label>Property description <span class="wizard-optional">(recommended — shown to AI concierge)</span>',
+        '<textarea id="wf_property_summary" placeholder="A brief, welcoming description of your property for guests…">' + e(v('property_summary')) + '</textarea>',
+      '</label>',
+      '<label>Nearest airport <span class="wizard-optional">(optional)</span>',
+        '<input type="text" id="wf_nearest_airport" placeholder="e.g. Catania-Fontanarossa (CTA), 45 km" value="' + e(v('nearest_airport')) + '">',
       '</label>',
       _errorBox()
     ].join('');
@@ -357,6 +370,32 @@ window.NauxicaWizard = (function () {
           '<input type="text" id="wf_late_checkout_notes" placeholder="e.g. €20 per stay" value="' + e(v('late_checkout_notes')) + '">',
         '</label>',
       '</div>',
+      '<p class="wizard-section-label">Entry & Access Details</p>',
+      '<div id="wf_keybox_row" style="display:' + (v('access_method')==='key_box' ? 'grid' : 'none') + '">',
+        '<div class="wizard-row-2">',
+          '<label>Key box location',
+            '<input type="text" id="wf_key_box_location" placeholder="e.g. Front gate, left pillar" value="' + e(v('key_box_location')) + '">',
+          '</label>',
+          '<label>Key box code',
+            '<input type="text" id="wf_key_box_code" placeholder="e.g. 1234" value="' + e(v('key_box_code')) + '">',
+          '</label>',
+        '</div>',
+      '</div>',
+      '<label>Entry instructions <span class="wizard-optional">(recommended)</span>',
+        '<textarea id="wf_entry_instructions" placeholder="Step-by-step directions to enter the property…">' + e(v('entry_instructions')) + '</textarea>',
+      '</label>',
+      '<label>Check-in instructions <span class="wizard-optional">(optional)</span>',
+        '<textarea id="wf_checkin_instructions" rows="3" placeholder="Welcome steps guests should follow on arrival…">' + e(v('checkin_instructions')) + '</textarea>',
+      '</label>',
+      '<label>Check-out tasks <span class="wizard-optional">(optional — one per line)</span>',
+        '<textarea id="wf_checkout_tasks" rows="3" placeholder="Lock all doors&#10;Leave keys in key box&#10;Turn off air conditioning">' + e(v('checkout_tasks')) + '</textarea>',
+      '</label>',
+      '<label>Key return instructions <span class="wizard-optional">(optional)</span>',
+        '<input type="text" id="wf_key_return_instructions" placeholder="e.g. Leave keys in the key box at the front gate" value="' + e(v('key_return_instructions')) + '">',
+      '</label>',
+      '<label>Lockout instructions <span class="wizard-optional">(optional)</span>',
+        '<textarea id="wf_lockout_instructions" rows="2" placeholder="If you are locked out, call…">' + e(v('lockout_instructions')) + '</textarea>',
+      '</label>',
       _errorBox()
     ].join('');
 
@@ -440,6 +479,14 @@ window.NauxicaWizard = (function () {
       '<label>Tax exemptions <span class="wizard-optional">(optional)</span>',
         '<textarea id="wf_tourist_tax_exemptions" rows="2" placeholder="e.g. Children under 14, residents…">' + e(v('tourist_tax_exemptions')) + '</textarea>',
       '</label>',
+      '<label>Tax collection method <span class="wizard-optional">(optional)</span>',
+        '<select id="wf_tourist_tax_collection_method">',
+          _opt('', 'Select method', v('tourist_tax_collection_method')),
+          _opt('host_collected', 'Collected by host', v('tourist_tax_collection_method')),
+          _opt('platform_collected', 'Collected by platform', v('tourist_tax_collection_method')),
+          _opt('guest_pays_directly', 'Guest pays at town hall', v('tourist_tax_collection_method')),
+        '</select>',
+      '</label>',
       '<p class="wizard-section-label">Listings</p>',
       '<label>Listing channels <span class="wizard-optional">(comma-separated)</span>',
         '<input type="text" id="wf_listing_channels" placeholder="Airbnb, Booking.com, direct" value="' + e(_arrToText(_wizardData.listing_channels, ', ')) + '">',
@@ -461,6 +508,103 @@ window.NauxicaWizard = (function () {
       _errorBox()
     ].join('');
 
+    if (step === 7) return [
+      '<p style="margin:0 0 4px;font-size:.84rem;color:var(--stone)">WiFi credentials are revealed to guests only after check-in.</p>',
+      '<label>Network name (SSID) <span style="color:var(--terracotta)">*</span>',
+        '<input type="text" id="wf_wifi_network_name" placeholder="e.g. VillaChloe_WiFi" value="' + e(v('wifi_network_name')) + '">',
+      '</label>',
+      '<label>Password <span style="color:var(--terracotta)">*</span>',
+        '<input type="text" id="wf_wifi_password" placeholder="Network password" value="' + e(v('wifi_password')) + '">',
+      '</label>',
+      '<label>Backup note <span class="wizard-optional">(optional)</span>',
+        '<input type="text" id="wf_wifi_backup_note" placeholder="e.g. Router is in the living room cabinet" value="' + e(v('wifi_backup_note')) + '">',
+      '</label>',
+      _errorBox()
+    ].join('');
+
+    if (step === 8) {
+      var ed = _emergencyData;
+      function edv(k) { return ed[k] != null ? ed[k] : ''; }
+      return [
+        '<p style="margin:0 0 4px;font-size:.84rem;color:var(--stone)">Required to activate your property. Not shared with guests verbatim.</p>',
+        '<p class="wizard-section-label">Owner Emergency Contact</p>',
+        '<div class="wizard-row-2">',
+          '<label>Name <span style="color:var(--terracotta)">*</span>',
+            '<input type="text" id="wf_em_owner_name" placeholder="Your full name" value="' + e(String(edv('owner_emergency_name'))) + '">',
+          '</label>',
+          '<label>Phone <span style="color:var(--terracotta)">*</span>',
+            '<input type="tel" id="wf_em_owner_phone" placeholder="+39 333 000 0000" value="' + e(String(edv('owner_emergency_phone'))) + '">',
+          '</label>',
+        '</div>',
+        '<p class="wizard-section-label">Nearest Hospital</p>',
+        '<div class="wizard-row-2">',
+          '<label>Hospital name <span style="color:var(--terracotta)">*</span>',
+            '<input type="text" id="wf_em_hospital_name" placeholder="e.g. Ospedale Cannizzaro" value="' + e(String(edv('nearest_hospital_name'))) + '">',
+          '</label>',
+          '<label>Distance <span class="wizard-optional">(optional)</span>',
+            '<input type="text" id="wf_em_hospital_distance" placeholder="e.g. 3.2 km" value="' + e(String(edv('nearest_hospital_distance'))) + '">',
+          '</label>',
+        '</div>',
+        '<label>Hospital address <span style="color:var(--terracotta)">*</span>',
+          '<input type="text" id="wf_em_hospital_address" placeholder="Via Messina, 95126 Catania CT" value="' + e(String(edv('nearest_hospital_address'))) + '">',
+        '</label>',
+        '<p class="wizard-section-label">Utility Shutoffs</p>',
+        '<label>Gas shutoff instructions',
+          '<textarea id="wf_em_gas_shutoff" rows="2" placeholder="e.g. Red valve behind the kitchen stove — turn clockwise">' + e(String(edv('gas_shutoff_instructions'))) + '</textarea>',
+        '</label>',
+        '<label>Water shutoff instructions',
+          '<textarea id="wf_em_water_shutoff" rows="2" placeholder="e.g. Stopcock under the kitchen sink">' + e(String(edv('water_shutoff_instructions'))) + '</textarea>',
+        '</label>',
+        '<label>Electricity shutoff instructions',
+          '<textarea id="wf_em_electricity_shutoff" rows="2" placeholder="e.g. Circuit breaker in the hallway cupboard">' + e(String(edv('electricity_shutoff_instructions'))) + '</textarea>',
+        '</label>',
+        '<p class="wizard-section-label">Evacuation</p>',
+        '<label>Evacuation route description',
+          '<textarea id="wf_em_evacuation_route" rows="2" placeholder="e.g. Exit via main staircase, do not use the lift">' + e(String(edv('evacuation_route_description'))) + '</textarea>',
+        '</label>',
+        '<label>Assembly point',
+          '<input type="text" id="wf_em_assembly_point" placeholder="e.g. Car park opposite the main entrance" value="' + e(String(edv('evacuation_assembly_point'))) + '">',
+        '</label>',
+        '<label>Property-specific hazards <span class="wizard-optional">(optional)</span>',
+          '<textarea id="wf_em_hazards" rows="2" placeholder="e.g. Pool edge has no rail, uneven terrace steps">' + e(String(edv('property_specific_hazards'))) + '</textarea>',
+        '</label>',
+        _errorBox()
+      ].join('');
+    }
+
+    if (step === 9) {
+      var oc = _contactsData.owner    || {};
+      var cc = _contactsData.caretaker || {};
+      return [
+        '<p style="margin:0 0 4px;font-size:.84rem;color:var(--stone)">These contacts are used by the AI concierge to assist guests.</p>',
+        '<p class="wizard-section-label">Owner Contact</p>',
+        '<div class="wizard-row-2">',
+          '<label>Display name',
+            '<input type="text" id="wf_ct_owner_name" placeholder="Your name" value="' + e(oc.contact_name || '') + '">',
+          '</label>',
+          '<label>Phone',
+            '<input type="tel" id="wf_ct_owner_phone" placeholder="+39 333 000 0000" value="' + e(oc.contact_phone || '') + '">',
+          '</label>',
+        '</div>',
+        '<label>Available hours <span class="wizard-optional">(optional)</span>',
+          '<input type="text" id="wf_ct_owner_hours" placeholder="e.g. 09:00–21:00 daily" value="' + e(oc.available_hours || '') + '">',
+        '</label>',
+        '<p class="wizard-section-label">Caretaker / Property Manager <span class="wizard-optional">(optional)</span></p>',
+        '<div class="wizard-row-2">',
+          '<label>Display name',
+            '<input type="text" id="wf_ct_caretaker_name" placeholder="Caretaker name" value="' + e(cc.contact_name || '') + '">',
+          '</label>',
+          '<label>Phone',
+            '<input type="tel" id="wf_ct_caretaker_phone" placeholder="+39 333 000 0000" value="' + e(cc.contact_phone || '') + '">',
+          '</label>',
+        '</div>',
+        '<label>Available hours <span class="wizard-optional">(optional)</span>',
+          '<input type="text" id="wf_ct_caretaker_hours" placeholder="e.g. 08:00–18:00 Mon–Sat" value="' + e(cc.available_hours || '') + '">',
+        '</label>',
+        _errorBox()
+      ].join('');
+    }
+
     return '';
   }
 
@@ -474,6 +618,11 @@ window.NauxicaWizard = (function () {
       });
     }
     if (step === 4) {
+      var accessSel = document.getElementById('wf_access_method');
+      if (accessSel) accessSel.addEventListener('change', function () {
+        var row = document.getElementById('wf_keybox_row');
+        if (row) row.style.display = this.value === 'key_box' ? 'grid' : 'none';
+      });
       ['wf_early_checkin_policy','wf_late_checkout_policy'].forEach(function (selId) {
         var sel = document.getElementById(selId);
         if (!sel) return;
@@ -556,6 +705,16 @@ window.NauxicaWizard = (function () {
     if (step === 6) {
       req('wf_alloggiati_web_required', 'Alloggiati Web required');
     }
+    if (step === 7) {
+      req('wf_wifi_network_name', 'WiFi network name');
+      req('wf_wifi_password', 'WiFi password');
+    }
+    if (step === 8) {
+      req('wf_em_owner_name',      'Owner emergency name');
+      req('wf_em_owner_phone',     'Owner emergency phone');
+      req('wf_em_hospital_name',   'Nearest hospital name');
+      req('wf_em_hospital_address','Nearest hospital address');
+    }
 
     if (missing.length) {
       _showError('Please complete: ' + missing.join(', ') + '.');
@@ -594,7 +753,9 @@ window.NauxicaWizard = (function () {
       display_name:         fld('wf_display_name') || '',
       property_type:        fld('wf_property_type') || '',
       property_type_custom: fld('wf_property_type_custom') || null,
-      area_description:     fld('wf_area_description') || null
+      area_description:     fld('wf_area_description') || null,
+      property_summary:     fld('wf_property_summary') || null,
+      nearest_airport:      fld('wf_nearest_airport') || null
     });
 
     if (step === 2) Object.assign(_wizardData, {
@@ -622,14 +783,21 @@ window.NauxicaWizard = (function () {
     });
 
     if (step === 4) Object.assign(_wizardData, {
-      checkin_time_from:    fld('wf_checkin_time_from') || '',
-      checkin_time_to:      fld('wf_checkin_time_to') || '',
-      checkout_time:        fld('wf_checkout_time') || '',
-      access_method:        fld('wf_access_method') || '',
-      early_checkin_policy: fld('wf_early_checkin_policy') || null,
-      late_checkout_policy: fld('wf_late_checkout_policy') || null,
-      early_checkin_notes:  fld('wf_early_checkin_notes') || null,
-      late_checkout_notes:  fld('wf_late_checkout_notes') || null
+      checkin_time_from:       fld('wf_checkin_time_from') || '',
+      checkin_time_to:         fld('wf_checkin_time_to') || '',
+      checkout_time:           fld('wf_checkout_time') || '',
+      access_method:           fld('wf_access_method') || '',
+      early_checkin_policy:    fld('wf_early_checkin_policy') || null,
+      late_checkout_policy:    fld('wf_late_checkout_policy') || null,
+      early_checkin_notes:     fld('wf_early_checkin_notes') || null,
+      late_checkout_notes:     fld('wf_late_checkout_notes') || null,
+      key_box_location:        fld('wf_key_box_location') || null,
+      key_box_code:            fld('wf_key_box_code') || null,
+      entry_instructions:      fld('wf_entry_instructions') || null,
+      checkin_instructions:    fld('wf_checkin_instructions') || null,
+      checkout_tasks:          fld('wf_checkout_tasks') || null,
+      key_return_instructions: fld('wf_key_return_instructions') || null,
+      lockout_instructions:    fld('wf_lockout_instructions') || null
     });
 
     if (step === 5) Object.assign(_wizardData, {
@@ -647,16 +815,60 @@ window.NauxicaWizard = (function () {
     if (step === 6) {
       var allog = fld('wf_alloggiati_web_required');
       Object.assign(_wizardData, {
-        cir_code:                fld('wf_cir_code') || null,
-        alloggiati_web_required: allog === 'true' ? true : allog === 'false' ? false : null,
-        tourist_tax_amount_eur:  fldNum('wf_tourist_tax_amount_eur'),
-        tourist_tax_max_nights:  fldNum('wf_tourist_tax_max_nights'),
-        tourist_tax_exemptions:  fld('wf_tourist_tax_exemptions') || null,
-        listing_channels:        fldCSV('wf_listing_channels'),
-        listing_urls:            fldCSV('wf_listing_urls'),
-        availability_status:     fld('wf_availability_status') || 'available',
-        owner_notes:             fld('wf_owner_notes') || null
+        cir_code:                        fld('wf_cir_code') || null,
+        alloggiati_web_required:         allog === 'true' ? true : allog === 'false' ? false : null,
+        tourist_tax_amount_eur:          fldNum('wf_tourist_tax_amount_eur'),
+        tourist_tax_max_nights:          fldNum('wf_tourist_tax_max_nights'),
+        tourist_tax_exemptions:          fld('wf_tourist_tax_exemptions') || null,
+        tourist_tax_collection_method:   fld('wf_tourist_tax_collection_method') || null,
+        listing_channels:                fldCSV('wf_listing_channels'),
+        listing_urls:                    fldCSV('wf_listing_urls'),
+        availability_status:             fld('wf_availability_status') || 'available',
+        owner_notes:                     fld('wf_owner_notes') || null
       });
+    }
+
+    if (step === 7) Object.assign(_wizardData, {
+      wifi_network_name: fld('wf_wifi_network_name') || null,
+      wifi_password:     fld('wf_wifi_password') || null,
+      wifi_backup_note:  fld('wf_wifi_backup_note') || null
+    });
+
+    if (step === 8) {
+      function emFld(id) {
+        var el = document.getElementById(id);
+        return el ? el.value.trim() || null : null;
+      }
+      Object.assign(_emergencyData, {
+        owner_emergency_name:              emFld('wf_em_owner_name'),
+        owner_emergency_phone:             emFld('wf_em_owner_phone'),
+        nearest_hospital_name:             emFld('wf_em_hospital_name'),
+        nearest_hospital_address:          emFld('wf_em_hospital_address'),
+        nearest_hospital_distance:         emFld('wf_em_hospital_distance'),
+        gas_shutoff_instructions:          emFld('wf_em_gas_shutoff'),
+        water_shutoff_instructions:        emFld('wf_em_water_shutoff'),
+        electricity_shutoff_instructions:  emFld('wf_em_electricity_shutoff'),
+        evacuation_route_description:      emFld('wf_em_evacuation_route'),
+        evacuation_assembly_point:         emFld('wf_em_assembly_point'),
+        property_specific_hazards:         emFld('wf_em_hazards')
+      });
+    }
+
+    if (step === 9) {
+      function ctFld(id) {
+        var el = document.getElementById(id);
+        return el ? el.value.trim() || null : null;
+      }
+      _contactsData.owner = {
+        contact_name:    ctFld('wf_ct_owner_name'),
+        contact_phone:   ctFld('wf_ct_owner_phone'),
+        available_hours: ctFld('wf_ct_owner_hours')
+      };
+      _contactsData.caretaker = {
+        contact_name:    ctFld('wf_ct_caretaker_name'),
+        contact_phone:   ctFld('wf_ct_caretaker_phone'),
+        available_hours: ctFld('wf_ct_caretaker_hours')
+      };
     }
   }
 
@@ -991,8 +1203,31 @@ window.NauxicaWizard = (function () {
         di.rules.quiet_hours = data.quiet_hours_from + ' – ' + data.quiet_hours_to;
       if (data.min_stay_nights != null) di.rules.min_stay_nights = data.min_stay_nights;
     }
-    if (data.tourist_tax_max_nights != null)
-      di.compliance = { tourist_tax_max_nights: data.tourist_tax_max_nights };
+    if (data.tourist_tax_max_nights != null || data.tourist_tax_collection_method) {
+      di.compliance = {};
+      if (data.tourist_tax_max_nights != null) di.compliance.tourist_tax_max_nights = data.tourist_tax_max_nights;
+      if (data.tourist_tax_collection_method)  di.compliance.tourist_tax_collection_method = data.tourist_tax_collection_method;
+    }
+    if (data.property_summary) di.property_summary = data.property_summary;
+    if (data.nearest_airport)  di.nearest_airport  = data.nearest_airport;
+    if (data.wifi_network_name || data.wifi_password || data.wifi_backup_note) {
+      di.wifi = {};
+      if (data.wifi_network_name) di.wifi.network_name = data.wifi_network_name;
+      if (data.wifi_password)     di.wifi.password     = data.wifi_password;
+      if (data.wifi_backup_note)  di.wifi.backup_note  = data.wifi_backup_note;
+    }
+    if (data.entry_instructions || data.key_box_location || data.key_box_code ||
+        data.lockout_instructions || data.checkin_instructions ||
+        data.checkout_tasks || data.key_return_instructions) {
+      di.access = {};
+      if (data.entry_instructions)      di.access.entry_instructions      = data.entry_instructions;
+      if (data.key_box_location)        di.access.key_box_location        = data.key_box_location;
+      if (data.key_box_code)            di.access.key_box_code            = data.key_box_code;
+      if (data.lockout_instructions)    di.access.lockout_instructions    = data.lockout_instructions;
+      if (data.checkin_instructions)    di.access.checkin_instructions    = data.checkin_instructions;
+      if (data.checkout_tasks)          di.access.checkout_tasks          = data.checkout_tasks;
+      if (data.key_return_instructions) di.access.key_return_instructions = data.key_return_instructions;
+    }
 
     var checkinTime = data.checkin_time_from
       ? (data.checkin_time_to
@@ -1039,6 +1274,8 @@ window.NauxicaWizard = (function () {
     var rl   = di.rules      || {};
     var comp = di.compliance || {};
     var am   = di.amenities  || {};
+    var acc  = di.access     || {};
+    var wifi = di.wifi       || {};
 
     var checkinFrom = null, checkinTo = null;
     var timeStr = ck.window || row.checkin_time || '';
@@ -1118,12 +1355,168 @@ window.NauxicaWizard = (function () {
       cir_code:                row.cir_code             || null,
       alloggiati_web_required: row.alloggiati_web_required,
       tourist_tax_amount_eur:  row.tourist_tax_amount_eur,
-      tourist_tax_max_nights:  comp.tourist_tax_max_nights != null ? comp.tourist_tax_max_nights : null,
-      tourist_tax_exemptions:  taxExemptText,
-      listing_channels:        row.listing_channels     || [],
-      listing_urls:            listingUrls,
-      owner_notes:             row.owner_notes          || null
+      tourist_tax_max_nights:         comp.tourist_tax_max_nights != null ? comp.tourist_tax_max_nights : null,
+      tourist_tax_exemptions:         taxExemptText,
+      tourist_tax_collection_method:  comp.tourist_tax_collection_method || null,
+      listing_channels:               row.listing_channels     || [],
+      listing_urls:                   listingUrls,
+      owner_notes:                    row.owner_notes          || null,
+      property_summary:               di.property_summary      || null,
+      nearest_airport:                di.nearest_airport       || null,
+      wifi_network_name:              wifi.network_name        || null,
+      wifi_password:                  wifi.password            || null,
+      wifi_backup_note:               wifi.backup_note         || null,
+      entry_instructions:             acc.entry_instructions   || null,
+      key_box_location:               acc.key_box_location     || null,
+      key_box_code:                   acc.key_box_code         || null,
+      lockout_instructions:           acc.lockout_instructions || null,
+      checkin_instructions:           acc.checkin_instructions || null,
+      checkout_tasks:                 acc.checkout_tasks       || null,
+      key_return_instructions:        acc.key_return_instructions || null
     };
+  }
+
+  /* ── KB block builder: wizard data → knowledge-writer payload ─ */
+  // Builds the blocks[] array for knowledge-writer, merging wizard-sourced
+  // fields on top of any existing content so manually-edited fields (e.g.
+  // fallback_support, checkout_instructions) are preserved.
+  // Only blocks that have at least one non-empty value are included.
+  function _buildKbBlocks(data, existingBlocks) {
+    existingBlocks = existingBlocks || {};
+
+    function exRow(type)     { return existingBlocks[type] || null; }
+    function exContent(type) { var r = exRow(type); return (r && r.content_jsonb) ? r.content_jsonb : {}; }
+    function exActive(type)  { var r = exRow(type); return r ? r.is_active !== false : true; }
+    function exScope(type)   { var r = exRow(type); return (r && r.visibility_scope) || null; }
+    function exPhase(type)   { var r = exRow(type); return (r && r.session_phase_gate) || null; }
+
+    // Start with existing content; overlay wizard values including explicit nulls
+    // (so a user-cleared wizard field clears the KB value). Then strip nulls so
+    // the stored JSONB is clean and the KB editor reads fields as 'Not set'.
+    function merge(type, wizContent) {
+      var out = {};
+      var exC = exContent(type);
+      var k;
+      for (k in exC)       { out[k] = exC[k]; }
+      for (k in wizContent){ out[k] = wizContent[k]; }
+      var cleaned = {};
+      for (k in out) {
+        if (out[k] !== null && out[k] !== undefined && out[k] !== '') {
+          cleaned[k] = out[k];
+        }
+      }
+      return cleaned;
+    }
+
+    function makeBlock(type, wizContent) {
+      var merged = merge(type, wizContent);
+      if (!Object.keys(merged).length) return null;
+      return {
+        block_type:         type,
+        content_jsonb:      merged,
+        is_active:          exActive(type),
+        visibility_scope:   exScope(type),
+        session_phase_gate: exPhase(type),
+      };
+    }
+
+    var EARLY_LABELS = {
+      'yes_free':    'Yes, free of charge',
+      'yes_paid':    'Yes, with a fee',
+      'exceptional': 'On request only',
+      'no':          'Not available',
+    };
+    var PET_LABELS = {
+      'no_pets':          'No pets',
+      'pets_allowed':     'Pets allowed',
+      'pets_on_request':  'On request',
+      'small_pets_only':  'Small pets only',
+    };
+    var SMOKE_LABELS = {
+      'no_smoking':      'No smoking',
+      'outdoor_only':    'Outdoor only',
+      'designated_area': 'Designated area',
+      'smoking_allowed': 'Smoking allowed',
+    };
+    var PARTY_LABELS = {
+      'no_events':      'No events or parties',
+      'on_request':     'On request only',
+      'events_allowed': 'Events allowed',
+    };
+
+    var blocks = [];
+    var b;
+
+    // property_summary
+    b = makeBlock('property_summary', {
+      summary:         data.property_summary || null,
+      nearest_airport: data.nearest_airport  || null,
+    });
+    if (b) blocks.push(b);
+
+    // wifi
+    b = makeBlock('wifi', {
+      network_name: data.wifi_network_name || null,
+      password:     data.wifi_password     || null,
+      backup_note:  data.wifi_backup_note  || null,
+    });
+    if (b) blocks.push(b);
+
+    // access
+    b = makeBlock('access', {
+      entry_instructions:      data.entry_instructions      || null,
+      key_return_instructions: data.key_return_instructions || null,
+      lockout_instructions:    data.lockout_instructions    || null,
+    });
+    if (b) blocks.push(b);
+
+    // check_in
+    var ckTime = data.checkin_time_from
+      ? (data.checkin_time_to
+          ? data.checkin_time_from + ' – ' + data.checkin_time_to
+          : data.checkin_time_from)
+      : null;
+    b = makeBlock('check_in', {
+      checkin_time:         ckTime,
+      early_checkin_policy: (data.early_checkin_policy && EARLY_LABELS[data.early_checkin_policy])
+                              || data.early_checkin_policy || null,
+      checkin_instructions: data.checkin_instructions || null,
+    });
+    if (b) blocks.push(b);
+
+    // check_out
+    b = makeBlock('check_out', {
+      checkout_time:  data.checkout_time  || null,
+      checkout_tasks: data.checkout_tasks || null,
+    });
+    if (b) blocks.push(b);
+
+    // house_rules
+    var quietHours = (data.quiet_hours_from && data.quiet_hours_to)
+      ? data.quiet_hours_from + ' – ' + data.quiet_hours_to
+      : null;
+    b = makeBlock('house_rules', {
+      rules_summary:   data.house_rules    || null,
+      pet_policy:      (data.pet_policy     && PET_LABELS[data.pet_policy])   || data.pet_policy     || null,
+      smoking_policy:  (data.smoking_policy && SMOKE_LABELS[data.smoking_policy]) || data.smoking_policy || null,
+      party_policy:    (data.party_policy   && PARTY_LABELS[data.party_policy])   || data.party_policy   || null,
+      quiet_hours:     quietHours,
+      max_guests_note: data.max_guests != null ? 'Maximum ' + data.max_guests + ' guests per booking' : null,
+    });
+    if (b) blocks.push(b);
+
+    // tourist_tax  (amount/max_nights can be 0, so use != null not || null)
+    b = makeBlock('tourist_tax', {
+      amount_eur:        data.tourist_tax_amount_eur        != null ? data.tourist_tax_amount_eur        : null,
+      max_nights:        data.tourist_tax_max_nights        != null ? data.tourist_tax_max_nights        : null,
+      exemptions:        data.tourist_tax_exemptions        || null,
+      collection_method: data.tourist_tax_collection_method || null,
+    });
+    if (b) blocks.push(b);
+
+    // fallback_support: no wizard fields — not included; manual edits preserved untouched.
+
+    return blocks;
   }
 
   /* ── Save ─────────────────────────────────────────────────── */
@@ -1156,6 +1549,100 @@ window.NauxicaWizard = (function () {
       }
 
       if (dbRes.error) throw dbRes.error;
+
+      var propId = _editId || dbRes.data.id;
+
+      // ── Sync to operational tables via Edge Functions ──────────────
+      // Both knowledge-writer and emergency-writer are awaited before _afterSave
+      // fires (and property-detail.html's reload runs), so the page always loads
+      // fresh data. Failures are non-fatal — the property row is already saved.
+
+      // 1. Read existing KB blocks (homeowner SELECT is allowed by RLS) so we can
+      //    merge wizard fields on top of manual edits in content_jsonb.
+      var existingKbBlocks = {};
+      try {
+        var kbReadRes = await window.NauxicaSupabase
+          .from('property_knowledge_blocks')
+          .select('block_type, content_jsonb, is_active, visibility_scope, session_phase_gate')
+          .eq('property_id', propId);
+        if (kbReadRes.data) {
+          kbReadRes.data.forEach(function (b) { existingKbBlocks[b.block_type] = b; });
+        }
+      } catch (kbReadErr) {
+        console.warn('Nauxica: could not read existing KB blocks, will write fresh:', kbReadErr);
+      }
+
+      // 2. Write Knowledge Base blocks via knowledge-writer Edge Function.
+      var kbBlocks = _buildKbBlocks(_wizardData, existingKbBlocks);
+      if (kbBlocks.length) {
+        var kwRes = await window.NauxicaSupabase.functions.invoke('knowledge-writer', {
+          body: { property_id: propId, blocks: kbBlocks },
+        });
+        if (kwRes.error) {
+          console.warn('Nauxica: knowledge-writer failed:',
+            kwRes.error.message, (kwRes.data && kwRes.data.error) || '');
+        }
+      }
+
+      // 3. Write emergency data and contacts via emergency-writer Edge Function.
+      //    Direct browser writes to emergency_data / emergency_contacts are blocked
+      //    by RLS (homeowners have SELECT only); the Edge Function uses service_role.
+      var hasEmName  = !!(_emergencyData.owner_emergency_name);
+      var hasEmPhone = !!(_emergencyData.owner_emergency_phone);
+      if (hasEmName || hasEmPhone) {
+        var emPayload = {
+          owner_emergency_name:             _emergencyData.owner_emergency_name             || null,
+          owner_emergency_phone:            _emergencyData.owner_emergency_phone            || null,
+          nearest_hospital_name:            _emergencyData.nearest_hospital_name            || null,
+          nearest_hospital_address:         _emergencyData.nearest_hospital_address         || null,
+          nearest_hospital_distance:        _emergencyData.nearest_hospital_distance        || null,
+          gas_shutoff_instructions:         _emergencyData.gas_shutoff_instructions         || null,
+          water_shutoff_instructions:       _emergencyData.water_shutoff_instructions       || null,
+          electricity_shutoff_instructions: _emergencyData.electricity_shutoff_instructions || null,
+          evacuation_route_description:     _emergencyData.evacuation_route_description     || null,
+          evacuation_assembly_point:        _emergencyData.evacuation_assembly_point        || null,
+          property_specific_hazards:        _emergencyData.property_specific_hazards        || null,
+        };
+
+        var emContacts = {};
+        var oc = _contactsData.owner     || {};
+        var cc = _contactsData.caretaker || {};
+        if (oc.contact_name || oc.contact_phone) {
+          emContacts.owner = {
+            contact_name:        oc.contact_name    || null,
+            contact_phone:       oc.contact_phone   || null,
+            available_hours:     oc.available_hours  || null,
+            escalation_priority: 1,
+            is_active:           true,
+            guest_visible:       false,
+            ai_usable:           false,
+          };
+        }
+        if (cc.contact_name || cc.contact_phone) {
+          emContacts.caretaker = {
+            contact_name:        cc.contact_name    || null,
+            contact_phone:       cc.contact_phone   || null,
+            available_hours:     cc.available_hours  || null,
+            escalation_priority: 2,
+            is_active:           true,
+            guest_visible:       false,
+            ai_usable:           false,
+          };
+        }
+
+        var ewRes = await window.NauxicaSupabase.functions.invoke('emergency-writer', {
+          body: {
+            property_id:    propId,
+            emergency_data: emPayload,
+            contacts:       Object.keys(emContacts).length ? emContacts : undefined,
+          },
+        });
+        if (ewRes.error) {
+          console.warn('Nauxica: emergency-writer failed:',
+            ewRes.error.message, (ewRes.data && ewRes.data.error) || '');
+        }
+      }
+
       var savedProp = _fromSupabaseToWizard(dbRes.data);
       _close();
       if (_afterSave) _afterSave(savedProp);
@@ -1203,9 +1690,33 @@ window.NauxicaWizard = (function () {
   }
 
   /* ── Public API ───────────────────────────────────────────── */
-  function fromSupabase(row, afterSaveFn) {
+  async function fromSupabase(row, afterSaveFn) {
+    var propId = row.id;
+    var preloadedEmergency = {};
+    var preloadedContacts  = { owner: {}, caretaker: {} };
+
+    if (propId) {
+      try {
+        var emRes = await window.NauxicaSupabase
+          .from('emergency_data').select('*').eq('property_id', propId).maybeSingle();
+        if (emRes.data) preloadedEmergency = emRes.data;
+      } catch (e) { console.warn('Nauxica: could not load emergency_data:', e); }
+
+      try {
+        var ctRes = await window.NauxicaSupabase
+          .from('emergency_contacts').select('*').eq('property_id', propId)
+          .in('contact_type', ['owner', 'caretaker']);
+        if (ctRes.data) ctRes.data.forEach(function (ct) {
+          preloadedContacts[ct.contact_type] = ct;
+        });
+      } catch (e) { console.warn('Nauxica: could not load emergency_contacts:', e); }
+    }
+
     var wizardData = _fromSupabaseToWizard(row);
     open(wizardData, afterSaveFn);
+    // Restore pre-loaded data after open() resets the stores
+    _emergencyData = preloadedEmergency;
+    _contactsData  = preloadedContacts;
   }
 
   return { open: open, openGuest: openGuest, fromSupabase: fromSupabase };

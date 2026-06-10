@@ -340,6 +340,7 @@
     <script src="nauxica-shared.js"></script>
     <script src="nauxica-wizard.js"></script>
     <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-knowledge.js"></script>
     <script src="nauxica-timeline.js"></script>
     <script type="module">
 
@@ -566,17 +567,9 @@
           '<div id="guestsSection"></div>' +
         '</div>';
 
-      const knowledgeCard = lockedModule(
-        'Knowledge Base',
-        'AI concierge content and property knowledge',
-        'Configure Knowledge Base'
-      );
+      const knowledgeCard = '<div id="nk-kb-slot" class="dashboard-card"></div>';
 
-      const emergencyCard = lockedModule(
-        'Emergency Data',
-        'Emergency contacts and utility shutoff locations',
-        'Set up Emergency Data'
-      );
+      const emergencyCard = '<div id="nk-em-slot" class="dashboard-card"></div>';
 
       const availabilityCard = lockedModule(
         'Availability Calendar',
@@ -612,6 +605,11 @@
           conciergeCard +
           activityCard +
         '</div>';
+
+      /* ── Knowledge Base & Emergency Data modules ───────────────── */
+      if (window.NauxicaKnowledge) {
+        NauxicaKnowledge.init(propertyId);
+      }
 
       /* ── Guests section (Supabase reservations) ─────────────── */
       const STATUS_LABELS = {
