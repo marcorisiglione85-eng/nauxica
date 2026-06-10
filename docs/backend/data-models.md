@@ -1,10 +1,18 @@
 # Data Models
 
-**Version:** 1.7
+**Version:** 1.11
 **Status:** Draft — Architecture phase
 **Scope:** Sicily launch — pre-backend implementation reference
-**Last updated:** 2026-06-09
+**Last updated:** 2026-06-10
 **Related:** [property-data-schema.md](../property-intake/property-data-schema.md) · [api-overview.md](../api/api-overview.md) · [localStorage-to-backend-migration.md](localStorage-to-backend-migration.md) · [data-visibility-model.md](../architecture/data-visibility-model.md) · [auth-strategy.md](auth-strategy.md)
+
+> **v1.11 changes (2026-06-10):** Sprint 012B Final Micro-Correction (pre-Supabase). DM-17: Model 16 (EmergencyContacts) updated — Correction E: `available_hours text NULL` added. Human-readable availability guidance (e.g. "24/7", "Emergency only"); informational only; does not affect `escalation_priority` or RLS. Resolves last mismatch between `ConciergeContext.emergency_contacts` and migration 013. `ConciergeContext.emergency_contacts` is now fully satisfied by the migration schema. Source: database-schema.md v1.10 DS-18, migrations/013_emergency_contacts.sql.
+
+> **v1.10 changes (2026-06-10):** Sprint 012B Corrective Pass (pre-Supabase patch — migrations 012 and 013 patched before any database application). DM-15: Model 6 (EmergencyData) updated — Correction A: 7 named procedure columns added back: `gas_shutoff_instructions`, `water_shutoff_instructions`, `electricity_shutoff_instructions`, `evacuation_route_description`, `evacuation_assembly_point`, `property_specific_hazards`, `nearest_hospital_distance`. These were erroneously consolidated into `emergency_instructions` in v1.9; the `ConciergeContext.emergency` design contract requires named columns for `buildEmergencyResponseContext()`. `emergency_instructions` retained as prose supplement. Model sprint note updated to reflect dual-field approach. DM-16: Model 16 (EmergencyContacts) updated — Correction B: `guest_visible boolean DEFAULT false` and `ai_usable boolean DEFAULT false` columns added. Required by `loadEmergencyContacts()` filter contract (`WHERE guest_visible = true AND ai_usable = true`). Without these, trade contacts (plumber, electrician, gas_provider) cannot be safely excluded from guest-facing AI context. Source: database-schema.md v1.9 DS-16, DS-17.
+
+> **v1.9 changes (2026-06-09):** Sprint 012B — Emergency & Knowledge Database Foundation. DM-12: Model 3 (PropertyKnowledgeBlock) updated — logical overview revised to reflect the Sprint 012B multi-row database implementation; Model 15 added for the full database table schema. DM-13: Model 6 (EmergencyData) updated to reflect migration 012 schema — `emergency_instructions` replaces individual procedure columns; static national numbers removed; `nearest_hospital_phone` and `created_at` added; field count reduced from 20 to 11. DM-14: New Model 16 (EmergencyContacts) added — per-property contact registry with `emergency_contact_type` enum (12 values); `nauxica_operator` rows Nauxica-owned and DB-protected. Model Overview table updated.
+
+> **v1.8 changes (2026-06-09):** Sprint 011B — Model 5 (WhatsAppSession) synced with migration 010 (corrected). DM-5: `session_status` enum updated to 4 canonical values — `waiting` added as a durable state required for the disambiguation flow. DM-6: `is_escalated` field removed — not stored; derived at runtime as `session_status = 'escalated'`. DM-7: `session_cache`, `updated_at`, and `last_message_at` fields added. DM-8: `context_loaded_at`, `message_count`, `escalation_trigger`, `human_takeover_at`, `session_closed_at` marked as deferred (Sprint 012+). DM-9: `conversation_id` design decision documented — not stored; derived via `reservation_id`. DM-10: live-session uniqueness rule documented as `(guest_phone, reservation_id)` — not `reservation_id` alone; multiple guests on one reservation may hold independent sessions (whatsapp-session-anchor.md §10). DM-11: `session_cache` governance rule added.
 
 > **v1.7 changes (2026-06-09):** Sprint 010A Documentation Alignment. DM-1: `reservation_value_amount` and `reservation_value_currency` added to Model 4 (Reservation) — from migration 007. DM-2: `reservation_id`, `task_value_amount`, and `task_value_currency` added to Model 10 (Task) — from migrations 002 and 006. DM-3: `task_type` enum corrected to live values (`cleaning`, `maintenance`, `inspection`, `laundry`, `guest_request`, `other`); `priority` enum corrected (`important` → `high`); `status` enum corrected to live values (`open`, `assigned`, `accepted`, `in_progress`, `completed`, `cancelled`). DM-4: New Model 14 (CommissionRules) added — from migration 009; commission applies only between Nauxica and partner; homeowner-facing pages must never reference this model.
 
@@ -49,7 +57,7 @@ Visibility scopes align with the [Data Visibility Model](../architecture/data-vi
 |---|---|---|
 | `User` | Homeowner or partner account | Homeowner, Partner |
 | `Property` | A managed rental property | Homeowner |
-| `PropertyKnowledgeBlock` | AI-ready content layer for a property | AI concierge, Nauxica staff |
+| `PropertyKnowledgeBlock` | AI-ready content layer for a property (logical overview; see Model 15 for database schema) | AI concierge, Nauxica staff |
 | `Reservation` | A guest stay linked to a property (replaces Booking) | Homeowner, Guest (no account) |
 | `GuestStayContext` | Operational check-in/check-out data for a specific stay | AI concierge, Homeowner |
 | `WhatsAppSession` | Active WhatsApp conversation bound to a reservation | AI concierge |
@@ -62,6 +70,8 @@ Visibility scopes align with the [Data Visibility Model](../architecture/data-vi
 | `Message` | An in-platform message between platform users | Homeowner, Partner |
 | `Review` | A post-stay or post-job rating and comment | Homeowner, Partner, Guest |
 | `CommissionRules` | Platform commission rate table (Nauxica ↔ Partner only) | Nauxica (internal) |
+| `PropertyKnowledgeBlock (DB)` | Database table schema for the AI block registry (multi-row; migration 011) | AI concierge, Nauxica staff |
+| `EmergencyContacts` | Per-property contact registry for escalation and emergency routing | AI concierge, Homeowner, Nauxica |
 
 **Note on Booking vs Reservation:** The former `Booking` model has been renamed `Reservation` and expanded to include full guest stay operational data. The term "Booking" referred to the commercial act; "Reservation" reflects the full stay lifecycle including check-in, check-out, and AI session context.
 
@@ -168,26 +178,61 @@ The central model. Full field specification in [property-data-schema.md](../prop
 
 ---
 
-## Model 3 — PropertyKnowledgeBlock
+## Model 3 — PropertyKnowledgeBlock (Logical Overview)
 
-The AI-ready content layer for a property. A curated, guest-safe subset of the full Property record, written in prose for AI consumption. Stored separately from the Property model to allow independent versioning and update cycles.
+The AI-ready content layer for a property. A curated, guest-safe set of structured content blocks transformed from the full Property record. Stored separately from the Property model to allow independent versioning and update cycles.
 
-Full schema: [property-knowledge-schema.md](../ai-concierge/property-knowledge-schema.md)
+**Sprint 012B implementation:** See **Model 15** for the full database table schema (`property_knowledge_blocks`). The Sprint 012A design (single row per property with an open-ended field set) has been superseded by a typed multi-row block registry (one row per block type, up to 14 rows per property). The logical relationships below remain accurate.
+
+Full content architecture: [property-knowledge-schema.md](../ai-concierge/property-knowledge-schema.md)
+
+**Relationships:**
+- One `Property` has up to 14 `property_knowledge_blocks` rows (one per canonical block type)
+- The `property_knowledge_blocks` table is the only data source the AI concierge reads — it never queries the `properties` table directly
+- Block activation is per-row (`is_active` flag); the KBB pipeline loads only active blocks relevant to the session phase and query
+
+---
+
+## Model 15 — PropertyKnowledgeBlock (Database Table)
+
+The `property_knowledge_blocks` table schema as implemented in `migrations/011_property_knowledge_blocks.sql` (Sprint 012B). One row per block type per property. The AI concierge KBB (Knowledge Block Builder) pipeline loads rows from this table to assemble `ConciergeContext.knowledge`.
+
+See [property-knowledge-schema.md](../ai-concierge/property-knowledge-schema.md) for: 14 block type definitions, KBB 7-step pipeline, per-block content_jsonb structure, session phase gate semantics, and emergency override rules.
 
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | Primary key |
-| `property_id` | uuid → Property.id | `INT` | No | Yes | Foreign key. |
-| `schema_version` | string | `INT` | No | Yes | Knowledge block version |
-| `is_complete` | boolean | `INT` | No | Yes | Set to true after quality review |
-| `last_reviewed_at` | datetime | `INT` | No | Recommended | Date Nauxica staff last verified accuracy |
-| `…all fields from property-knowledge-schema.md` | various | `GST` or `PUB` | Yes | various | See full schema reference |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | Foreign key. `ON DELETE CASCADE`. |
+| `block_type` | enum (14 values) | `INT` | No | Yes | One of the 14 canonical block types. UNIQUE with `property_id`. |
+| `visibility_scope` | string | `INT` | No | Yes | `PUB` / `GST` / `PTR` / `INT`. KBB step 1 scope filter. Only PUB and GST blocks are loaded into guest-facing AI context. Default: `GST`. |
+| `session_phase_gate` | string | `INT` | No | No | Null = no gate (load in any phase). Otherwise: comma-separated `session_phase` values. KBB step 2 activation gate. |
+| `title` | string | `INT` | No | No | Human-readable label for admin tooling and onboarding UI. |
+| `content_jsonb` | jsonb | `GST` / `PUB` | Yes | Yes | Guest-safe structured block data for AI context. Schema is block-type-specific — see property-knowledge-schema.md. Default: `{}`. |
+| `source_jsonb` | jsonb | `INT` | No | Yes | Provenance metadata: `{updated_by, updated_at, source_field, pipeline_version}`. Replaces `schema_version` and `last_reviewed_at` from the prior design. Default: `{}`. |
+| `is_active` | boolean | `INT` | No | Yes | KBB activation flag. `false` = block skipped during AI context assembly. Default: `false`. |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |
-| `updated_at` | datetime | `INT` | No | Yes (auto) | |
+| `updated_at` | datetime | `INT` | No | Yes (auto) | Auto-updated via trigger. |
 
-**Relationships:**
-- One `Property` has exactly one `PropertyKnowledgeBlock`
-- The `PropertyKnowledgeBlock` is the only model the AI concierge reads from — it never queries the `Property` model directly
+**`block_type` enum values (14 canonical types):**
+
+| Value | Always Loaded | Phase Default | Emergency Override |
+|---|---|---|---|
+| `emergency` | Yes | All phases | N/A |
+| `property_summary` | Yes | All phases | No |
+| `access` | No | `check_in` | Yes (lockout) |
+| `check_in` | No | `pre_arrival`, `check_in` | No |
+| `check_out` | No | `check_out` | No |
+| `wifi` | No | — | No |
+| `amenities` | No | — | Yes (safety-critical) |
+| `house_rules` | No | — | No |
+| `local_area` | No | — | No |
+| `services` | No | — | No |
+| `maintenance` | No | — | Yes (safety implication) |
+| `tourist_tax` | No | — | No |
+| `booking_policy` | No | — | No |
+| `fallback_support` | No | Degraded mode | Yes |
+
+**RLS:** Homeowners may SELECT blocks for own properties. INSERT/UPDATE/DELETE require service_role.
 
 ---
 
@@ -281,53 +326,103 @@ Represents an active or historical WhatsApp conversation between the AI concierg
 
 See [WhatsApp Session Anchor](../ai-concierge/whatsapp-session-anchor.md) for the full resolution and context binding model.
 
+**Live-session uniqueness:** One active/waiting/escalated session per `(guest_phone, reservation_id)`. Multiple guests on the same reservation may each hold an independent session from their own phone — see whatsapp-session-anchor.md §10. Multiple `closed` sessions per `(guest_phone, reservation_id)` are permitted (historical record).
+
+**`conversation_id` not stored:** The linked `Conversation` record is always derivable via `conversations WHERE reservation_id = session.reservation_id` (UNIQUE constraint, O(1)). Storing a FK here would create a NULL-window at session open and stale-FK risk. The session writes messages into the conversation — it does not own it. `conversations.status` (homeowner semantic) and `session_status` (concierge runtime) are distinct concepts.
+
+**`is_escalated` not stored:** Derived at runtime as `session_status = 'escalated'`. Storing it would require atomic sync on every state transition, creating a class of inconsistency bugs for no query benefit.
+
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
 | `guest_phone` | string | `INT` | No | Yes | Normalised E.164. The lookup key. |
-| `reservation_id` | uuid → Reservation | `INT` | No | Yes | Resolved reservation. |
+| `reservation_id` | uuid → Reservation | `INT` | No | Yes | Resolved reservation. FK anchor for conversation derivation. |
 | `property_id` | uuid → Property.id | `INT` | No | Yes | Denormalised for fast context loading. |
-| `session_status` | enum | `INT` | No | Yes | Values: `active` / `escalated` / `closed` |
-| `context_loaded_at` | datetime | `INT` | No | Yes | When the property knowledge block was loaded into context. |
-| `detected_language` | string | `INT` | Yes | Recommended | ISO 639-1 code detected from guest messages. |
-| `message_count` | integer | `INT` | No | Yes (computed) | Total messages in session. |
-| `last_message_at` | datetime | `INT` | No | Yes | Last activity timestamp. Used for session timeout. |
-| `session_phase` | enum | `INT` | Yes | Yes | Values: `pre_arrival` / `check_in` / `in_stay` / `check_out` / `post_stay`. Drives AI response context. |
-| `unresolved_query_count` | integer | `INT` | No | Yes | Count of consecutive unanswered questions. Triggers escalation at threshold. |
-| `escalation_trigger` | string | `INT` | No | Conditional | Reason code if session was escalated. |
-| `human_takeover_at` | datetime | `INT` | No | Conditional | When an operator took over. |
-| `session_closed_at` | datetime | `INT` | No | Conditional | |
+| `session_status` | enum | `INT` | No | Yes | Values: `active` / `waiting` / `closed` / `escalated`. See state notes below. |
+| `session_phase` | enum | `INT` | Yes | Yes | Values: `pre_arrival` / `check_in` / `in_stay` / `check_out` / `post_stay`. Re-evaluated on every inbound message. |
+| `detected_language` | string | `INT` | Yes | Recommended | ISO 639-1. Locked after consistent detection across messages. |
+| `unresolved_query_count` | integer | `INT` | No | Yes | Consecutive unanswered questions. Triggers escalation at threshold (TBD Sprint 012). |
+| `last_message_at` | datetime | `INT` | No | No | Null until first message. Updated on every inbound message. Used for session timeout. |
+| `session_cache` | jsonb | `INT` | No | No | **Transient resolver workflow state only** (e.g. `disambiguation_reservation_ids`). Governance rule: any field read by business logic across more than one sprint must graduate to a typed column before that sprint ships. |
 | `created_at` | datetime | `INT` | No | Yes (auto) | |
+| `updated_at` | datetime | `INT` | No | Yes (auto) | |
+| ⏳ `context_loaded_at` | datetime | `INT` | No | — | Deferred Sprint 012 — when PropertyKnowledgeBlock was loaded. |
+| ⏳ `message_count` | integer | `INT` | No | — | Deferred Sprint 012. |
+| ⏳ `escalation_trigger` | string | `INT` | No | — | Deferred Sprint 013 — reason code if session was escalated. |
+| ⏳ `human_takeover_at` | datetime | `INT` | No | — | Deferred Sprint 013. |
+| ⏳ `session_closed_at` | datetime | `INT` | No | — | Deferred Sprint 015. |
+
+**`session_status` values:**
+
+| Value | Meaning |
+|---|---|
+| `active` | Session open; AI concierge responding normally. |
+| `waiting` | Disambiguation pending — guest phone matched multiple active reservations; session created immediately so the initial message is logged. Held until guest selects a booking. A canonical durable state, not a transient implementation detail. |
+| `closed` | Session ended — checkout grace period elapsed or explicit close. |
+| `escalated` | Human takeover active; AI does not respond; session holds for operator. |
 
 ---
 
 ## Model 6 — EmergencyData
 
-Property-level emergency contacts, utility controls, and procedures. Always pre-loaded into the AI concierge session context regardless of query type. See [Emergency Procedures](../ai-concierge/emergency-procedures.md) for the full structure.
+Property-level emergency contacts, nearest hospital data, and property-specific emergency procedures. One row per property. Always pre-loaded into the AI concierge session context regardless of query type.
+
+**Sprint 012B schema (migration 012, corrected in v1.10):** Static Italian national emergency numbers (112/113/115/118) removed — fixed constants not stored per-property (system prompt). `nearest_hospital_phone` and `created_at` added. **Correction A (v1.10):** The initial Sprint 012B migration brief consolidated utility procedure columns into a single `emergency_instructions` prose block. This was incompatible with the `ConciergeContext.emergency` design contract in property-knowledge-schema.md v1.3, which requires named columns for `buildEmergencyResponseContext()` to produce category-specific emergency guidance (gas shutoff, water shutoff, electrical, evacuation). Migration 012 was patched (before any Supabase application) to add the 7 individual named columns. `emergency_instructions` is retained alongside them as a general prose supplement.
+
+**`nauxica_ops_phone`:** Set and owned by Nauxica. Homeowners may call the API UPDATE endpoint for this record but `nauxica_ops_phone` is stripped from homeowner payloads at the API layer.
 
 | Field | Type | Visibility | AI | Required | Notes |
 |---|---|---|---|---|---|
 | `id` | uuid | `INT` | No | Yes (auto) | |
-| `property_id` | uuid → Property.id | `INT` | No | Yes | One-to-one relationship. |
-| `is_complete` | boolean | `INT` | No | Yes | Blocking flag — property cannot activate until this is true. |
-| `owner_emergency_name` | string | `GST` | Yes | Yes | Name of owner or designated emergency contact. |
-| `owner_emergency_phone` | string | `GST` | Yes | Yes | Always available to AI. Italian E.164 format. |
-| `nauxica_ops_phone` | string | `GST` | Yes | Yes | Nauxica 24/7 operations number. |
-| `local_emergency_number` | string | `GST` | Yes | Yes | Always 112 in Italy (EU general emergency). |
-| `police_number` | string | `GST` | Yes | Yes | 113 (Polizia di Stato). |
-| `fire_brigade_number` | string | `GST` | Yes | Yes | 115 (Vigili del Fuoco). |
-| `medical_emergency_number` | string | `GST` | Yes | Yes | 118 (Emergenza Sanitaria). |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | One row per property. |
+| `is_complete` | boolean | `INT` | No | Yes | Activation gate — must be `true` before property can move to `pending_activation`. |
+| `emergency_instructions` | text | `GST` | Yes | Optional | General prose supplement — catch-all for anything not covered by named procedure fields below. The AI reads both; named columns take precedence for structured response construction. |
+| `gas_shutoff_instructions` | text | `GST` | Yes | Recommended | Step-by-step gas shutoff procedure. Used by `buildEmergencyResponseContext()` for gas category. Added: Correction A (v1.10). |
+| `water_shutoff_instructions` | text | `GST` | Yes | Recommended | Step-by-step water shutoff procedure. Added: Correction A (v1.10). |
+| `electricity_shutoff_instructions` | text | `GST` | Yes | Recommended | Electricity isolation procedure (fuse box location + steps). Added: Correction A (v1.10). |
+| `evacuation_route_description` | text | `GST` | Yes | Recommended | Evacuation route description. Added: Correction A (v1.10). |
+| `evacuation_assembly_point` | text | `GST` | Yes | Recommended | Designated meeting point after evacuation. Added: Correction A (v1.10). |
+| `property_specific_hazards` | text | `GST` | Yes | Optional | Known property hazards (e.g. LPG tank location, steep stairs). Added: Correction A (v1.10). |
 | `nearest_hospital_name` | string | `GST` | Yes | Yes | |
+| `nearest_hospital_phone` | string | `GST` | Yes | Recommended | Hospital switchboard. E.164. |
 | `nearest_hospital_address` | string | `GST` | Yes | Yes | |
-| `nearest_hospital_distance` | string | `GST` | Yes | Recommended | e.g. "8 min by car". |
-| `nearest_pharmacy_name` | string | `GST` | Yes | Recommended | |
-| `nearest_pharmacy_address` | string | `GST` | Yes | Recommended | |
-| `gas_shutoff_instructions` | text | `GST` | Yes | Yes | Step-by-step. Pre-loaded into AI context. |
-| `water_shutoff_instructions` | text | `GST` | Yes | Yes | |
-| `electricity_shutoff_instructions` | text | `GST` | Yes | Yes | |
-| `evacuation_assembly_point` | text | `GST` | Yes | Recommended | Where guests should go if they must evacuate. |
-| `property_specific_hazards` | text | `GST` | Yes | No | Any specific risks the owner has flagged (e.g. steep external staircase, no handrail on terrace). |
-| `updated_at` | datetime | `INT` | No | Yes (auto) | Changes trigger a re-validation of the `is_complete` flag. |
+| `nearest_hospital_distance` | string | `GST` | Yes | Recommended | Travel time in natural language, e.g. "8 min by car". Added: Correction A (v1.10). |
+| `owner_emergency_name` | string | `GST` | Yes | Yes | Name of owner or designated emergency contact. |
+| `owner_emergency_phone` | string | `GST` | Yes | Yes | Always available to AI. Italian E.164. |
+| `nauxica_ops_phone` | string | `GST` | Yes | Yes | Nauxica 24/7 operations number. Nauxica-owned — not homeowner-editable via API. |
+| `created_at` | datetime | `INT` | No | Yes (auto) | |
+| `updated_at` | datetime | `INT` | No | Yes (auto) | Changes re-evaluated against `is_complete` by API. |
+
+**RLS:** Homeowners may SELECT and UPDATE (onboarding form). INSERT/DELETE require service_role.
+
+---
+
+## Model 16 — EmergencyContacts
+
+Per-property registry of reachable contacts for emergency routing and escalation. The AI concierge loads active contacts ordered by `escalation_priority` when assembling `ConciergeContext.emergency_contacts`. Separate from `EmergencyData` — that model stores procedures and facility data; this model stores the list of reachable people and services.
+
+**`nauxica_operator` rows:** Created and owned by Nauxica. RLS prevents homeowner INSERT, UPDATE, or DELETE of these rows at the database level.
+
+**`emergency_services` enum value:** This contact type MUST NOT be stored as a row. Italian national numbers (112/113/115/118) are static constants in the AI system prompt, not property data. The enum value exists for schema completeness only.
+
+**`guest_visible` / `ai_usable` (Correction B, v1.10):** Two boolean columns required by `loadEmergencyContacts()` to filter which contacts appear in the guest-facing AI context. `loadEmergencyContacts()` queries `WHERE guest_visible = true AND ai_usable = true`. Without these, trade contacts (plumber, electrician, gas_provider) could not be safely excluded from guest responses. Both default to `false` — rows must be opted in explicitly by the onboarding pipeline or homeowner.
+
+| Field | Type | Visibility | AI | Required | Notes |
+|---|---|---|---|---|---|
+| `id` | uuid | `INT` | No | Yes (auto) | |
+| `property_id` | uuid → Property.id | `INT` | No | Yes | Foreign key. Multiple rows per property. |
+| `contact_type` | enum (12 values) | `INT` | No | Yes | One of: `owner`, `property_manager`, `caretaker`, `maintenance`, `plumber`, `electrician`, `gas_provider`, `emergency_services`, `local_police`, `local_fire`, `local_medical`, `nauxica_operator`. `emergency_services` MUST NOT be stored as a row. |
+| `contact_name` | string | `GST` | Yes | Yes | Display name for AI context and escalation notifications. Maps to `display_name` in `ConciergeContext.emergency_contacts` — name mapping in `loadEmergencyContacts()`. |
+| `contact_phone` | string | `GST` | Yes | Yes | E.164 primary contact number. Maps to `phone` in `ConciergeContext.emergency_contacts`. |
+| `available_hours` | string | `GST` | Yes | Optional | Human-readable availability guidance. e.g. `"24/7"`, `"Mon–Fri 09:00–18:00"`, `"Emergency only"`. NULL if unknown. Informational only — does not replace `escalation_priority`. Added: Correction E (v1.11). |
+| `escalation_priority` | integer | `INT` | Yes | Yes | 0 = highest priority (escalate first); 3 = lowest. Range: 0–3. AI loads contacts in ascending priority order. |
+| `is_active` | boolean | `INT` | No | Yes | Soft-delete. `false` = excluded from AI context. Default: `true`. |
+| `guest_visible` | boolean | `INT` | Yes | Yes | If `true`, AI may share this contact's phone number directly with guests. Default: `false`. Added: Correction B (v1.10). |
+| `ai_usable` | boolean | `INT` | Yes | Yes | If `true`, AI may use this contact in emergency response context. `loadEmergencyContacts()` filters `WHERE guest_visible = true AND ai_usable = true`. Default: `false`. Added: Correction B (v1.10). |
+| `created_at` | datetime | `INT` | No | Yes (auto) | |
+| `updated_at` | datetime | `INT` | No | Yes (auto) | |
+
+**RLS:** Homeowners SELECT all own-property contacts (including `nauxica_operator`). INSERT/UPDATE restricted to non-`nauxica_operator` rows for own properties. No homeowner DELETE (soft-delete via `is_active = false`).
 
 ---
 

@@ -1,0 +1,14 @@
+{
+  // Activate Deno language server only for Edge Functions.
+  // All other files (HTML, JS, frontend TS) continue using VS Code's built-in tsserver.
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.configPath": "./supabase/functions/deno.json",
+
+  // Disable the built-in TypeScript server for Deno-managed paths to avoid
+  // dual-LS conflicts on .ts files inside supabase/functions/.
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  }
+}
