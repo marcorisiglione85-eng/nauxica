@@ -160,6 +160,21 @@
       .tl-dot[data-etype^="conversation_"]  { background: #7c3aed; }
       .tl-dot[data-etype^="message_"]       { background: #7c3aed; }
       .tl-dot[data-etype^="reservation_"]   { background: #ea580c; }
+      .tl-dot[data-etype="knowledge_gap_detected"]  { background: #f59e0b; }
+      .tl-dot[data-etype="low_confidence_response"] { background: #f59e0b; }
+      .tl-dot[data-etype="human_handoff_required"]  { background: #dc2626; }
+
+      /* AI notification badge classes */
+      .tl-badge-ai-gap     { background: rgba(245,158,11,0.12);  color: #b45309; }
+      .tl-badge-ai-low     { background: rgba(245,158,11,0.12);  color: #b45309; }
+      .tl-badge-ai-handoff { background: rgba(220,38,38,0.12);   color: #dc2626; }
+      .tl-badge-ai-task    { background: rgba(99,102,241,0.12);  color: #4338ca; }
+
+      /* Warning card for human_handoff_required */
+      .tl-card.tl-card-urgent {
+        background: rgba(254,242,242,0.95);
+        border-color: rgba(220,38,38,0.18);
+      }
 
       .tl-line {
         width: 2px;
@@ -400,6 +415,7 @@
                 <button class="quick-chip" type="button" data-chip="reservation">Reservations</button>
                 <button class="quick-chip" type="button" data-chip="message">Messages</button>
                 <button class="quick-chip" type="button" data-chip="partner">Partners</button>
+                <button class="quick-chip" type="button" data-chip="ai">AI events</button>
               </div>
 
               <!-- Sticky dropdown filters -->
@@ -420,6 +436,7 @@
                     <option value="message">Message</option>
                     <option value="reservation">Reservation</option>
                     <option value="property">Property</option>
+                    <option value="ai">AI events</option>
                   </select>
                 </label>
                 <label>Property
@@ -570,31 +587,37 @@
         /* ── lookups ──────────────────────────────────────────────────── */
 
         var EVENT_LABELS = {
-          task_created:         'Task created',
-          task_assigned:        'Assigned',
-          task_accepted:        'Accepted',
-          task_started:         'Started',
-          task_completed:       'Completed',
-          task_cancelled:       'Cancelled',
-          task_declined:        'Declined',
-          conversation_created: 'Conversation',
-          message_sent:         'Message'
+          task_created:            'Task created',
+          task_assigned:           'Assigned',
+          task_accepted:           'Accepted',
+          task_started:            'Started',
+          task_completed:          'Completed',
+          task_cancelled:          'Cancelled',
+          task_declined:           'Declined',
+          conversation_created:    'Conversation',
+          message_sent:            'Message',
+          knowledge_gap_detected:  'Knowledge gap',
+          low_confidence_response: 'Low confidence',
+          human_handoff_required:  'Human handoff'
         };
 
         /* Maps event_type to the tl-badge-* CSS class */
         var EVENT_BADGE_CLASS = {
-          task_created:         'tl-badge-created',
-          task_assigned:        'tl-badge-assigned',
-          task_accepted:        'tl-badge-accepted',
-          task_started:         'tl-badge-started',
-          task_completed:       'tl-badge-completed',
-          task_cancelled:       'tl-badge-cancelled',
-          task_declined:        'tl-badge-declined',
-          conversation_created: 'tl-badge-message',
-          message_sent:         'tl-badge-message',
-          reservation_created:  'tl-badge-reservation',
-          reservation_updated:  'tl-badge-reservation',
-          reservation_cancelled:'tl-badge-cancelled'
+          task_created:            'tl-badge-created',
+          task_assigned:           'tl-badge-assigned',
+          task_accepted:           'tl-badge-accepted',
+          task_started:            'tl-badge-started',
+          task_completed:          'tl-badge-completed',
+          task_cancelled:          'tl-badge-cancelled',
+          task_declined:           'tl-badge-declined',
+          conversation_created:    'tl-badge-message',
+          message_sent:            'tl-badge-message',
+          reservation_created:     'tl-badge-reservation',
+          reservation_updated:     'tl-badge-reservation',
+          reservation_cancelled:   'tl-badge-cancelled',
+          knowledge_gap_detected:  'tl-badge-ai-gap',
+          low_confidence_response: 'tl-badge-ai-low',
+          human_handoff_required:  'tl-badge-ai-handoff'
         };
 
         var STATUS_EVENT_TYPES = {
@@ -700,6 +723,8 @@
             query = query.or('event_type.like.message_%,event_type.like.conversation_%');
           } else if (currentFilters.quickChip === 'partner') {
             query = query.eq('actor_type', 'partner');
+          } else if (currentFilters.quickChip === 'ai') {
+            query = query.eq('actor_type', 'ai');
           } else {
             /* Category dropdown */
             if (currentFilters.category === 'task') {
@@ -712,6 +737,8 @@
               query = query.like('event_type', 'reservation_%');
             } else if (currentFilters.category === 'property') {
               query = query.like('event_type', 'property_%');
+            } else if (currentFilters.category === 'ai') {
+              query = query.eq('actor_type', 'ai');
             }
           }
 
@@ -772,12 +799,31 @@
               var href    = eventHref(ev);
               var isLast  = idx === g.events.length - 1;
 
+              /* AI origin overrides */
+              if (ev.actor_type === 'ai' && ev.event_type === 'task_created') {
+                label    = 'Nauxica Concierge';
+                badgeCls = 'tl-badge-ai-task';
+              }
+              /* Extra description from metadata for AI notification events */
+              var aiDesc = '';
+              if (ev.metadata) {
+                var preview = ev.metadata.guest_message_preview || '';
+                if (ev.event_type === 'knowledge_gap_detected') {
+                  var topic = ev.metadata.block_hint || ev.metadata.category || '';
+                  if (topic)   aiDesc += 'Missing: ' + topic;
+                  if (preview) aiDesc += (aiDesc ? ' \xb7 ' : '') + '“' + preview.slice(0, 60) + (preview.length > 60 ? '…' : '') + '”';
+                } else if (ev.event_type === 'low_confidence_response' || ev.event_type === 'human_handoff_required') {
+                  if (preview) aiDesc = '“' + preview.slice(0, 80) + (preview.length > 80 ? '…' : '') + '”';
+                }
+              }
+              var urgentCls = ev.event_type === 'human_handoff_required' ? ' tl-card-urgent' : '';
+
               return '<div class="timeline-event-item"' + (href ? ' data-href="' + esc(href) + '"' : '') + '>' +
                 '<div class="tl-node">' +
                   '<span class="tl-dot" data-etype="' + esc(ev.event_type) + '"></span>' +
                   (isLast ? '' : '<span class="tl-line"></span>') +
                 '</div>' +
-                '<div class="tl-card' + (href ? ' is-clickable' : '') + '">' +
+                '<div class="tl-card' + (href ? ' is-clickable' : '') + urgentCls + '">' +
                   '<div class="tl-card-top">' +
                     '<span class="tl-badge ' + esc(badgeCls) + '">' + esc(label) + '</span>' +
                     '<span class="tl-time">' + esc(fmtTime(ev.created_at)) + '</span>' +
@@ -785,6 +831,7 @@
                   '<div class="tl-title">' + esc(ev.event_title) + '</div>' +
                   (valStr ? '<div class="tl-value-row">' + esc(valStr) + '</div>' : '') +
                   (ev.event_description ? '<div class="tl-desc">' + esc(ev.event_description) + '</div>' : '') +
+                  (aiDesc ? '<div class="tl-desc">' + esc(aiDesc) + '</div>' : '') +
                   (metaParts.length ? '<div class="tl-meta">' + metaParts.join(' \xb7 ') + '</div>' : '') +
                 '</div>' +
               '</div>';
@@ -807,12 +854,14 @@
           var taskCount    = events.filter(function(ev) { return ev.event_type && ev.event_type.startsWith('task_'); }).length;
           var msgCount     = events.filter(function(ev) { return ev.event_type && (ev.event_type.startsWith('message_') || ev.event_type.startsWith('conversation_')); }).length;
           var partnerCount = events.filter(function(ev) { return ev.actor_type === 'partner'; }).length;
+          var aiCount      = events.filter(function(ev) { return ev.actor_type === 'ai'; }).length;
           var otherCount   = events.length - taskCount - msgCount;
 
           breakdownEl.innerHTML = [
             ['Task events',    taskCount],
             ['Message events', msgCount],
             ['Partner events', partnerCount],
+            ['AI events',      aiCount],
             ['Other events',   Math.max(0, otherCount)]
           ].map(function(row) {
             return '<div class="act-summary-row">' +

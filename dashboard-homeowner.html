@@ -1700,11 +1700,13 @@ if (actionPanelOverlay) {
           var cls         = taskClass(t.priority);
           var valueStr    = fmtValue(t.task_value_amount, t.task_value_currency);
           var guestStr    = (t.reservations && t.reservations.guest_name) ? ' \xb7 Guest: ' + t.reservations.guest_name : '';
+          var isAiTask    = t.title && t.title.startsWith('[Nauxica Concierge]');
+          var aiBadge     = isAiTask ? '<span style="display:inline-block;font-size:0.63rem;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#4338ca;margin-left:6px;vertical-align:middle;white-space:nowrap">Nauxica Concierge</span>' : '';
           return '<div class="priority-task ' + esc(cls) + '" data-task-id="' + esc(t.id) + '">' +
             '<div class="task-main">' +
               '<span class="task-dot"></span>' +
               '<div>' +
-                '<strong>' + esc(t.title) + '</strong>' +
+                '<strong>' + esc(t.title) + '</strong>' + aiBadge +
                 '<p>' + esc(propName) + ' \xb7 ' + esc(typeLabel) + ' \xb7 ' + esc(t.priority) + ' priority' + esc(guestStr) + '</p>' +
                 '<small>' + esc(due) + ' \xb7 ' + esc(statusLabel) + (valueStr ? ' \xb7 ' + esc(valueStr) : '') + '</small>' +
               '</div>' +
@@ -1761,13 +1763,17 @@ if (actionPanelOverlay) {
       var ACTIVITY_LABELS = {
         task_created: 'Task', task_assigned: 'Assigned', task_accepted: 'Accepted',
         task_declined: 'Declined', task_started: 'Started', task_completed: 'Completed',
-        task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message'
+        task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message',
+        knowledge_gap_detected: 'Knowledge gap', low_confidence_response: 'Low confidence',
+        human_handoff_required: 'Human handoff'
       };
       var ACTIVITY_CLASS = {
         task_completed: 'positive', task_accepted: 'positive',
         task_started: 'neutral', task_assigned: 'neutral', task_created: 'neutral',
         task_declined: 'warning', task_cancelled: 'warning',
-        conversation_created: 'neutral', message_sent: 'neutral'
+        conversation_created: 'neutral', message_sent: 'neutral',
+        knowledge_gap_detected: 'warning', low_confidence_response: 'neutral',
+        human_handoff_required: 'warning'
       };
 
       function escAct(s) {
@@ -1800,7 +1806,7 @@ if (actionPanelOverlay) {
 
       var { data: events, error } = await sb
         .from('timeline_events')
-        .select('id, event_type, event_title, event_description, metadata, created_at')
+        .select('id, event_type, actor_type, event_title, event_description, metadata, created_at')
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -1817,6 +1823,7 @@ if (actionPanelOverlay) {
       actEl.innerHTML = events.map(function(ev) {
         var cls   = ACTIVITY_CLASS[ev.event_type]  || 'neutral';
         var label = ACTIVITY_LABELS[ev.event_type] || ev.event_type;
+        if (ev.actor_type === 'ai' && ev.event_type === 'task_created') { label = 'AI Task'; cls = 'neutral'; }
         var valStr = actEvtValue(ev);
         return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(15,23,42,0.06)">' +
           '<div style="flex:1;min-width:0">' +
@@ -1844,6 +1851,65 @@ if (actionPanelOverlay) {
       localStorage.removeItem('accountType');
       window.location.replace('login.html');
     });
+  </script>
+
+  <script type="module">
+    /* Live AI insights — replaces hardcoded grid if real AI events exist */
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var { data: aiEvents } = await sb
+        .from('timeline_events')
+        .select('event_type, event_title, metadata, created_at, property_id')
+        .in('event_type', ['knowledge_gap_detected', 'low_confidence_response', 'human_handoff_required'])
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      if (!aiEvents || !aiEvents.length) return;
+
+      var propIds = [];
+      aiEvents.forEach(function(e) {
+        if (e.property_id && propIds.indexOf(e.property_id) === -1) propIds.push(e.property_id);
+      });
+      var propNames = {};
+      if (propIds.length) {
+        var { data: propData } = await sb.from('properties').select('id, display_name').in('id', propIds);
+        (propData || []).forEach(function(p) { propNames[p.id] = p.display_name; });
+      }
+
+      var AI_CFG = {
+        knowledge_gap_detected:  { cls: 'warning', icon: '💡', title: 'Knowledge gap detected' },
+        low_confidence_response: { cls: 'neutral', icon: '🤖', title: 'Low confidence reply' },
+        human_handoff_required:  { cls: 'danger',  icon: '⚠️', title: 'Human handoff required' }
+      };
+
+      function escAi(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      var html = aiEvents.map(function(ev) {
+        var cfg      = AI_CFG[ev.event_type] || { cls: 'neutral', icon: '🤖', title: ev.event_type };
+        var propName = (ev.property_id && propNames[ev.property_id]) || '';
+        var preview  = (ev.metadata && ev.metadata.guest_message_preview) || '';
+        var topic    = (ev.metadata && ev.metadata.block_hint) || '';
+        var desc     = propName;
+        if (ev.event_type === 'knowledge_gap_detected' && topic) desc += (desc ? ' \xb7 ' : '') + 'Missing: ' + topic;
+        if (preview) desc += (desc ? ' \xb7 ' : '') + '“' + preview.slice(0, 50) + (preview.length > 50 ? '…' : '') + '”';
+        return '<div class="ai-insight-item ' + escAi(cfg.cls) + '">' +
+          '<div class="ai-icon">' + cfg.icon + '</div>' +
+          '<div class="ai-content">' +
+            '<strong>' + escAi(cfg.title) + '</strong>' +
+            '<p>' + escAi(desc || ev.event_title) + '</p>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      var gridEl = document.querySelector('.ai-insights-grid');
+      if (gridEl) gridEl.innerHTML = html;
+    })();
   </script>
 </body>
 </html>

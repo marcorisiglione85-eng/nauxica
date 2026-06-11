@@ -164,15 +164,18 @@
             return;
           }
           el.innerHTML = filtered.map(function(t) {
-            var propName  = (t.properties && t.properties.display_name) || 'Property';
-            var typeLabel = TASK_TYPE_LABELS[t.task_type] || t.task_type;
-            var cls       = priorityClass(t.priority);
-            var due       = t.due_date ? 'Due ' + t.due_date : '';
-            var valueStr  = fmtValue(t.task_value_amount, t.task_value_currency);
-            var valueLine = valueStr
+            var propName   = (t.properties && t.properties.display_name) || 'Property';
+            var typeLabel  = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+            var cls        = priorityClass(t.priority);
+            var due        = t.due_date ? 'Due ' + t.due_date : '';
+            var valueStr   = fmtValue(t.task_value_amount, t.task_value_currency);
+            var isAiTask   = t.title && t.title.startsWith('[Nauxica Concierge]');
+            var dispTitle  = isAiTask ? t.title.replace('[Nauxica Concierge] ', '') : t.title;
+            var aiBadge    = isAiTask ? '<span style="display:inline-block;font-size:0.63rem;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#4338ca;margin-left:6px;vertical-align:middle;white-space:nowrap">Nauxica Concierge</span>' : '';
+            var valueLine  = valueStr
               ? '<small style="color:var(--stone)">Value: ' + esc(valueStr) + '</small>'
               : '';
-            var guestLine = (t.reservations && t.reservations.guest_name)
+            var guestLine  = (t.reservations && t.reservations.guest_name)
               ? '<small style="color:var(--stone)">Guest: ' + esc(t.reservations.guest_name) + '</small>'
               : '';
             var assignLink = t.status === 'open'
@@ -187,7 +190,7 @@
               '<div class="task-main">' +
                 '<span class="task-dot"></span>' +
                 '<div>' +
-                  '<strong>' + esc(t.title) + '</strong>' +
+                  '<strong>' + esc(dispTitle) + '</strong>' + aiBadge +
                   '<p>' + esc(propName) + ' \xb7 ' + esc(typeLabel) + ' \xb7 ' + esc(t.priority) + ' priority</p>' +
                   (due ? '<small>' + esc(due) + '</small>' : '') +
                   guestLine +
