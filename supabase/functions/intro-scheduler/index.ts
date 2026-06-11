@@ -1,19 +1,17 @@
 // supabase/functions/intro-scheduler/index.ts
-// Sprint 014B — Automated Concierge Intro Scheduler
+// Sprint 015A — Delivery Adapter (Dry Run)
 //
-// Extends Sprint 014A with a tick mode that automatically:
-//   - Scans eligible reservations within a LOOKBACK_DAYS window
-//   - Sends intro messages within PRE_SEND_WINDOW_HOURS of check-in
-//   - Closes stale WhatsApp sessions after checkout
+// Extends Sprint 014B with a WhatsApp delivery adapter abstraction.
+// Sprint 015A: DELIVERY_PROVIDER defaults to 'dry_run' — no external requests,
+// no Twilio credentials required. Real send is deferred to Sprint 015B.
 //
 // Request body:
 //   Manual: { "reservation_id": "uuid" }
 //   Tick:   { "mode": "tick" }
 //
-// Tick flow per reservation: idempotency → timing check → process.
+// Tick flow per reservation: idempotency → timing check → process → deliver.
+// Delivery is non-fatal: message is persisted in DB regardless of delivery outcome.
 // Idempotency logic (conversations + messages) is unchanged from Sprint 014A.
-// No schema changes required: 'closed' and 'post_stay' are valid per
-// concierge-resolver SessionStatus / SessionPhase types.
 //
 // Uses service_role client only — bypasses RLS for all writes.
 // Phone numbers and credentials are never logged in full.
@@ -36,6 +34,8 @@ const PRE_ARRIVAL_WINDOW_DAYS = 2   // evaluateSessionPhase: pre_arrival if with
 const PRE_SEND_WINDOW_HOURS   = 2   // send intro this many hours before check-in time
 const LOOKBACK_DAYS           = 2   // tick: scan back this many days to catch missed sends
 const TICK_BATCH_LIMIT        = 50  // max reservations processed per tick invocation
+// Sprint 015A: 'dry_run' (default). Set WHATSAPP_DELIVERY_PROVIDER=twilio for Sprint 015B.
+const DELIVERY_PROVIDER = Deno.env.get('WHATSAPP_DELIVERY_PROVIDER') ?? 'dry_run'
 
 // Knowledge block types loaded for intro context.
 // 'access' is loaded but credentials are NEVER included in message text.
@@ -54,20 +54,31 @@ type SessionPhase  = 'pre_arrival' | 'check_in' | 'in_stay' | 'check_out' | 'pos
 // Canonical values from concierge-resolver — 'closed' confirmed as valid terminal state.
 type SessionStatus = 'active' | 'waiting' | 'closed' | 'escalated'
 
+type DeliveryProvider = 'dry_run' | 'twilio'
+type DeliveryStatus   = 'queued' | 'sent' | 'failed'
+
+type DeliveryResult = {
+  provider:            DeliveryProvider
+  status:              DeliveryStatus
+  external_message_id: string | null
+}
+
 type ProcessResult =
-  | { ok: true; skipped: false; reservation_id: string; conversation_id: string; message_id: string; session_id: string; message_preview: string }
+  | { ok: true; skipped: false; reservation_id: string; conversation_id: string; message_id: string; session_id: string; message_preview: string; delivery: DeliveryResult }
   | { ok: true; skipped: true; reason: string }
   | { ok: false; error: string; status: number; code?: string | null }
 
 type TickSummary = {
-  ok:              true
-  mode:            'tick'
-  processed:       number
-  sent:            number
-  skipped:         number
-  too_early:       number
-  errors:          number
-  sessions_closed: number
+  ok:               true
+  mode:             'tick'
+  processed:        number
+  sent:             number
+  skipped:          number
+  too_early:        number
+  errors:           number
+  sessions_closed:  number
+  delivery_queued:  number
+  delivery_failed:  number
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -278,6 +289,48 @@ async function findOrCreateConversation(
   }
 
   return created.id
+}
+
+// ── deliverWhatsAppMessage ────────────────────────────────────────────────
+//
+// Delivery adapter. Routes to the active provider controlled by DELIVERY_PROVIDER.
+//
+// Providers:
+//   dry_run — no external request (Sprint 015A default)
+//   twilio  — Twilio Conversations API send (Sprint 015B, not yet implemented)
+//
+// Delivery is non-fatal. The caller decides how to handle a 'failed' status.
+// toPhone must be E.164 format. Never logged in full — only first 5 chars.
+
+async function deliverWhatsAppMessage(
+  toPhone: string,
+  body:    string,
+): Promise<DeliveryResult> {
+  const phonePfx = toPhone.slice(0, 5)
+
+  if (DELIVERY_PROVIDER === 'dry_run') {
+    console.log('[is] delivery: dry_run queued', {
+      phone_prefix: phonePfx,
+      char_count:   body.length,
+    })
+    return {
+      provider:            'dry_run',
+      status:              'queued',
+      external_message_id: null,
+    }
+  }
+
+  // Sprint 015B: wire Twilio Conversations API here.
+  // Credentials needed: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM.
+  // Until implemented, degrade safely so the DB write is never blocked.
+  console.warn('[is] delivery: twilio provider selected but not yet implemented', {
+    phone_prefix: phonePfx,
+  })
+  return {
+    provider:            'twilio',
+    status:              'failed',
+    external_message_id: null,
+  }
 }
 
 // ── processReservation ────────────────────────────────────────────────────
@@ -570,19 +623,25 @@ async function processReservation(
     console.log('[is] whatsapp_sessions created', { session_id: sessionId, phase })
   }
 
-  // ── 11. WhatsApp send placeholder (Sprint 015: replace with Twilio) ───────
-  const phonePfx = (reservation.guest_phone as string).slice(0, 5)
-  console.log('[is] PLACEHOLDER intro message queued — real Twilio send deferred to Sprint 015', {
-    phone_prefix: phonePfx,
-    char_count:   introText.length,
+  // ── 11. Deliver via WhatsApp adapter ─────────────────────────────────────
+  // Non-fatal: message is already persisted in DB. A delivery failure is surfaced
+  // in the response and tick counters but does not roll back the DB write.
+  const delivery = await deliverWhatsAppMessage(
+    reservation.guest_phone as string,
+    introText,
+  )
+  console.log('[is] delivery result', {
+    provider: delivery.provider,
+    status:   delivery.status,
   })
 
   console.log('[is] success', {
-    reservation_id: reservationId,
-    property_id:    propertyId,
+    reservation_id:  reservationId,
+    property_id:     propertyId,
     phase,
-    skipped:        false,
-    sent:           true,
+    skipped:         false,
+    sent:            true,
+    delivery_status: delivery.status,
   })
 
   return {
@@ -593,6 +652,7 @@ async function processReservation(
     message_id:      messageId,
     session_id:      sessionId,
     message_preview: introText.slice(0, 300),
+    delivery,
   }
 }
 
@@ -700,7 +760,8 @@ async function runTick(
 
   const summary: TickSummary = {
     ok: true, mode: 'tick',
-    processed: 0, sent: 0, skipped: 0, too_early: 0, errors: 0, sessions_closed: 0,
+    processed: 0, sent: 0, skipped: 0, too_early: 0, errors: 0,
+    sessions_closed: 0, delivery_queued: 0, delivery_failed: 0,
   }
 
   for (const { id } of ((candidates ?? []) as { id: string }[])) {
@@ -721,6 +782,8 @@ async function runTick(
       }
     } else {
       summary.sent++
+      if (result.delivery.status === 'queued')  summary.delivery_queued++
+      else if (result.delivery.status === 'failed') summary.delivery_failed++
     }
   }
 
