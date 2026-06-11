@@ -160,7 +160,7 @@ function buildIntroMessage(params: {
 
   lines.push(greeting)
   lines.push('')
-  lines.push(`I am GuestPal, your AI concierge at ${propertyName} during your stay.`)
+  lines.push(`I am Nauxica, your AI concierge at ${propertyName} during your stay.`)
   lines.push('')
 
   // Check-in details
