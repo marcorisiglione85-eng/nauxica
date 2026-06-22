@@ -324,6 +324,16 @@
         border-radius: 22px !important;
       }
     }
+    .icon-btn { position: relative; }
+    .notif-badge {
+      position: absolute; top: -3px; right: -3px;
+      background: #c0392b; color: #fff;
+      font-size: 0.6rem; font-weight: 800;
+      min-width: 15px; height: 15px;
+      border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px; pointer-events: none; line-height: 1;
+    }
   </style>
 </head>
 <body class="homeowner-dashboard-page">
@@ -525,10 +535,10 @@
       <p class="dashboard-card-text">AI assisted conversations and guest requests</p>
     </div>
 
-    <span class="unread-badge">5 unread</span>
+    <span class="unread-badge" id="inboxUnreadBadge">5 unread</span>
   </div>
 
-  <div class="inbox-list">
+  <div class="inbox-list" id="inboxList">
     <div class="inbox-item urgent">
       <div class="inbox-avatar">OS</div>
 
@@ -1765,7 +1775,8 @@ if (actionPanelOverlay) {
         task_declined: 'Declined', task_started: 'Started', task_completed: 'Completed',
         task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message',
         knowledge_gap_detected: 'Knowledge gap', low_confidence_response: 'Low confidence',
-        human_handoff_required: 'Human handoff'
+        human_handoff_required: 'Human handoff',
+        unauthorized_guest_message: 'Security', unverified_guest_message: 'Unverified'
       };
       var ACTIVITY_CLASS = {
         task_completed: 'positive', task_accepted: 'positive',
@@ -1773,7 +1784,8 @@ if (actionPanelOverlay) {
         task_declined: 'warning', task_cancelled: 'warning',
         conversation_created: 'neutral', message_sent: 'neutral',
         knowledge_gap_detected: 'warning', low_confidence_response: 'neutral',
-        human_handoff_required: 'warning'
+        human_handoff_required: 'warning',
+        unauthorized_guest_message: 'warning', unverified_guest_message: 'warning'
       };
 
       function escAct(s) {
@@ -1863,7 +1875,7 @@ if (actionPanelOverlay) {
       var { data: aiEvents } = await sb
         .from('timeline_events')
         .select('event_type, event_title, metadata, created_at, property_id')
-        .in('event_type', ['knowledge_gap_detected', 'low_confidence_response', 'human_handoff_required'])
+        .in('event_type', ['knowledge_gap_detected', 'low_confidence_response', 'human_handoff_required', 'unauthorized_guest_message'])
         .order('created_at', { ascending: false })
         .limit(4);
 
@@ -1880,9 +1892,10 @@ if (actionPanelOverlay) {
       }
 
       var AI_CFG = {
-        knowledge_gap_detected:  { cls: 'warning', icon: '💡', title: 'Knowledge gap detected' },
-        low_confidence_response: { cls: 'neutral', icon: '🤖', title: 'Low confidence reply' },
-        human_handoff_required:  { cls: 'danger',  icon: '⚠️', title: 'Human handoff required' }
+        knowledge_gap_detected:     { cls: 'warning', icon: '💡', title: 'Knowledge gap detected' },
+        low_confidence_response:    { cls: 'neutral', icon: '🤖', title: 'Low confidence reply' },
+        human_handoff_required:     { cls: 'danger',  icon: '⚠️', title: 'Human handoff required' },
+        unauthorized_guest_message: { cls: 'danger',  icon: '🛡️', title: 'Unrecognised contact attempt' }
       };
 
       function escAi(s) {
@@ -1909,6 +1922,130 @@ if (actionPanelOverlay) {
 
       var gridEl = document.querySelector('.ai-insights-grid');
       if (gridEl) gridEl.innerHTML = html;
+    })();
+  </script>
+
+  <script type="module">
+    /* Notification bell — live badge count for open AI-generated tasks */
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var { count, error } = await sb
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .ilike('title', '[Nauxica Concierge]%')
+        .neq('status', 'completed')
+        .neq('status', 'cancelled');
+
+      if (error || !count) return;
+
+      var bell = document.querySelector('.icon-btn[aria-label="Notifications"]');
+      if (!bell) return;
+      var badge = document.createElement('span');
+      badge.className = 'notif-badge';
+      badge.textContent = count > 9 ? '9+' : String(count);
+      bell.appendChild(badge);
+    })();
+  </script>
+
+  <script type="module">
+    /* Guest inbox — live conversations replacing static markup */
+    (async () => {
+      var sb = window.NauxicaSupabase;
+      var { data: sessData } = await sb.auth.getSession();
+      if (!sessData.session) return;
+
+      var inboxList = document.getElementById('inboxList');
+      var badgeEl   = document.getElementById('inboxUnreadBadge');
+      if (!inboxList) return;
+
+      function esc(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function initials(name) {
+        if (!name) return '?';
+        return name.split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('').toUpperCase() || '?';
+      }
+      function relTime(iso) {
+        var diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+        if (diff < 60)    return 'Just now';
+        if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+      }
+
+      var { data: convs, error: convErr } = await sb
+        .from('conversations')
+        .select('id, created_at, last_message_at, reservations(guest_name)')
+        .order('last_message_at', { ascending: false, nullsFirst: false })
+        .limit(5);
+
+      if (convErr || !convs || !convs.length) return; /* silent: keep static markup */
+
+      var convIds = convs.map(function(c) { return c.id; });
+
+      var { data: msgs, error: msgErr } = await sb
+        .from('messages')
+        .select('id, conversation_id, sender_type, message_text, created_at, is_read')
+        .in('conversation_id', convIds)
+        .order('created_at', { ascending: false });
+
+      if (msgErr) return; /* silent: keep static markup */
+
+      var latestMsg = {};
+      (msgs || []).forEach(function(m) {
+        if (!latestMsg[m.conversation_id]) latestMsg[m.conversation_id] = m;
+      });
+
+      var unreadCount = 0;
+      var html = convs.map(function(conv) {
+        var msg       = latestMsg[conv.id];
+        var guestName = (conv.reservations && conv.reservations.guest_name) || 'Guest';
+        var msgText   = msg ? (msg.message_text || '') : '';
+        var time      = msg ? relTime(msg.created_at) : relTime(conv.created_at);
+        var sender    = msg ? msg.sender_type : null;
+
+        var itemClass  = '';
+        var avatarText = initials(guestName);
+        var tagsHtml   = '';
+
+        if (sender === 'guest') {
+          if (msg && !msg.is_read) unreadCount++;
+          itemClass = 'urgent';
+          tagsHtml  = '<span class="tag ai">AI suggested reply</span><span class="tag warning">Guest request</span>';
+        } else if (sender === 'ai') {
+          itemClass  = 'ai-active';
+          avatarText = 'AI';
+          tagsHtml   = '<span class="tag ai">AI handled</span>';
+        } else {
+          tagsHtml = '<span class="tag positive">Resolved</span>';
+        }
+
+        var preview = msgText.length > 80 ? msgText.slice(0, 80) + '…' : msgText;
+
+        return '<div class="inbox-item ' + itemClass + '">' +
+          '<div class="inbox-avatar">' + esc(avatarText) + '</div>' +
+          '<div class="inbox-content">' +
+            '<div class="inbox-top"><strong>' + esc(guestName) + '</strong><span>' + esc(time) + '</span></div>' +
+            '<p>' + esc(preview || '(no messages yet)') + '</p>' +
+            '<div class="inbox-tags">' + tagsHtml + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      inboxList.innerHTML = html || '<div class="empty-state-card"><p>No conversations yet.</p></div>';
+
+      if (badgeEl) {
+        if (unreadCount > 0) {
+          badgeEl.textContent = unreadCount + ' unread';
+          badgeEl.style.display = '';
+        } else {
+          badgeEl.style.display = 'none';
+        }
+      }
     })();
   </script>
 </body>
