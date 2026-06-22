@@ -42,3 +42,6 @@ enable_confirmations = true
 [auth.sms]
 enable_signup = true
 enable_confirmations = true
+
+[functions.concierge-inbound]
+verify_jwt = false
