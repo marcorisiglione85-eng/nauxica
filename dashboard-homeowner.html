@@ -334,6 +334,15 @@
       display: flex; align-items: center; justify-content: center;
       padding: 0 3px; pointer-events: none; line-height: 1;
     }
+    .ai-fillgap {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #b45309;
+      text-decoration: none;
+    }
+    .ai-fillgap:hover { text-decoration: underline; }
   </style>
 </head>
 <body class="homeowner-dashboard-page">
@@ -1911,11 +1920,15 @@ if (actionPanelOverlay) {
         var desc     = propName;
         if (ev.event_type === 'knowledge_gap_detected' && topic) desc += (desc ? ' \xb7 ' : '') + 'Missing: ' + topic;
         if (preview) desc += (desc ? ' \xb7 ' : '') + '“' + preview.slice(0, 50) + (preview.length > 50 ? '…' : '') + '”';
+        var fillGapHref = (ev.event_type === 'knowledge_gap_detected' && topic && ev.property_id)
+          ? 'property-detail.html?id=' + ev.property_id + '&kb_open=' + encodeURIComponent(topic)
+          : '';
         return '<div class="ai-insight-item ' + escAi(cfg.cls) + '">' +
           '<div class="ai-icon">' + cfg.icon + '</div>' +
           '<div class="ai-content">' +
             '<strong>' + escAi(cfg.title) + '</strong>' +
             '<p>' + escAi(desc || ev.event_title) + '</p>' +
+            (fillGapHref ? '<a class="ai-fillgap" href="' + escAi(fillGapHref) + '">Fill this gap →</a>' : '') +
           '</div>' +
         '</div>';
       }).join('');

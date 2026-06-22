@@ -266,6 +266,24 @@
       .nau-badge-upcoming    { background: rgba(59,130,246,0.12);  color: #2563eb; }
       .nau-badge-in-house    { background: rgba(22,163,74,0.13);   color: #15803d; }
       .nau-badge-checked-out { background: rgba(100,100,110,0.1);  color: #555; }
+
+      .nk-highlight {
+        animation: nk-pulse 2.5s ease-out 1;
+        border-radius: 10px;
+      }
+      @keyframes nk-pulse {
+        0%   { box-shadow: 0 0 0 3px rgba(232,93,4,0.45); }
+        100% { box-shadow: 0 0 0 3px rgba(232,93,4,0); }
+      }
+      .nk-fillgap-notice {
+        background: rgba(217,119,6,0.1);
+        border: 1px solid rgba(217,119,6,0.3);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.82rem;
+        color: #92400e;
+        margin-bottom: 12px;
+      }
     </style>
   </head>
   <body class="homeowner-dashboard-page">
@@ -608,7 +626,35 @@
 
       /* ── Knowledge Base & Emergency Data modules ───────────────── */
       if (window.NauxicaKnowledge) {
-        NauxicaKnowledge.init(propertyId);
+        await NauxicaKnowledge.init(propertyId);
+      }
+
+      /* ── Knowledge gap deep link (?kb_open=<block_hint>) ──────── */
+      // KB sections that exist in the editor (must match KB_BLOCKS in nauxica-knowledge.js).
+      const KB_KNOWN_SECTIONS = new Set([
+        'property_summary', 'wifi', 'access', 'check_in',
+        'check_out', 'house_rules', 'tourist_tax', 'fallback_support',
+      ]);
+      const kbOpen = params.get('kb_open');
+      if (kbOpen && document.getElementById('nk-kb-open-btn')) {
+        document.getElementById('nk-kb-open-btn').click();
+        const targetSec = KB_KNOWN_SECTIONS.has(kbOpen)
+          ? document.getElementById('nk-sec-' + kbOpen)
+          : null;
+        if (targetSec) {
+          targetSec.classList.add('open');
+          targetSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetSec.classList.add('nk-highlight');
+          setTimeout(() => targetSec.classList.remove('nk-highlight'), 2500);
+        } else {
+          const modalBody = document.querySelector('#nk-kb-overlay .nk-modal-body');
+          if (modalBody) {
+            const notice = document.createElement('div');
+            notice.className = 'nk-fillgap-notice';
+            notice.textContent = 'No dedicated knowledge block exists yet for ' + kbOpen + '. Please add this information to the most relevant existing section.';
+            modalBody.insertBefore(notice, modalBody.firstChild);
+          }
+        }
       }
 
       /* ── Guests section (Supabase reservations) ─────────────── */
