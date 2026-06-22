@@ -18,6 +18,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { normalizePhone } from '../concierge-resolver/index.ts'
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
@@ -360,7 +361,7 @@ async function processReservation(
   // ── 1. Load + validate reservation ───────────────────────────────────────
   const { data: reservation, error: resErr } = await svcClient
     .from('reservations')
-    .select('id, property_id, guest_name, guest_phone, guest_count, checkin_date, checkout_date, confirmation_number, reservation_status, special_requests')
+    .select('id, property_id, guest_name, guest_phone, guest_phone_verified, guest_count, checkin_date, checkout_date, confirmation_number, reservation_status, special_requests')
     .eq('id', reservationId)
     .single()
 
@@ -383,6 +384,25 @@ async function processReservation(
 
   if (!reservation.guest_phone) {
     return { ok: false, error: 'Reservation is missing guest_phone', status: 422 }
+  }
+  const normalizedGuestPhone = normalizePhone(reservation.guest_phone as string)
+  if (!normalizedGuestPhone) {
+    console.warn('[is] guest_phone is not valid E.164, reservation skipped', {
+      reservation_id: reservationId,
+      phone_prefix:   (reservation.guest_phone as string).slice(0, 6),
+    })
+    return {
+      ok:     false,
+      error:  'Reservation guest_phone is not valid E.164 format — session and delivery skipped',
+      status: 422,
+      code:   'INVALID_PHONE_FORMAT',
+    }
+  }
+  if (!reservation.guest_phone_verified) {
+    console.log('[is] guest_phone not verified by host, reservation skipped', {
+      reservation_id: reservationId,
+    })
+    return { ok: true, skipped: true, reason: 'phone_not_verified' }
   }
   if (!reservation.property_id) {
     return { ok: false, error: 'Reservation is missing property_id', status: 422 }
@@ -571,7 +591,7 @@ async function processReservation(
   const { data: existingSession } = await svcClient
     .from('whatsapp_sessions')
     .select('id, session_status')
-    .eq('guest_phone', reservation.guest_phone)
+    .eq('guest_phone', normalizedGuestPhone)
     .eq('reservation_id', reservationId)
     .in('session_status', ['active', 'waiting', 'escalated'])
     .maybeSingle()
@@ -601,7 +621,7 @@ async function processReservation(
     const { data: newSession, error: sessInsErr } = await svcClient
       .from('whatsapp_sessions')
       .insert({
-        guest_phone:     reservation.guest_phone,
+        guest_phone:     normalizedGuestPhone,
         reservation_id:  reservationId,
         property_id:     propertyId,
         session_status:  'active' as SessionStatus,
@@ -627,7 +647,7 @@ async function processReservation(
   // Non-fatal: message is already persisted in DB. A delivery failure is surfaced
   // in the response and tick counters but does not roll back the DB write.
   const delivery = await deliverWhatsAppMessage(
-    reservation.guest_phone as string,
+    normalizedGuestPhone,
     introText,
   )
   console.log('[is] delivery result', {
@@ -754,7 +774,8 @@ async function runTick(
     })
     return {
       ok: true, mode: 'tick',
-      processed: 0, sent: 0, skipped: 0, too_early: 0, errors: 1, sessions_closed: 0,
+      processed: 0, sent: 0, skipped: 0, too_early: 0, errors: 1,
+      sessions_closed: 0, delivery_queued: 0, delivery_failed: 0,
     }
   }
 

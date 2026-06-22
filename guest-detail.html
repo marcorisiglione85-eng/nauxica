@@ -728,7 +728,15 @@
               '<div class="nau-detail-badges">' +
                 '<span class="nau-badge ' + (STATUS_CLASS[status] || '') + '">' + esc(STATUS_LABEL[status] || status) + '</span>' +
                 (r.confirmation_number ? '<span class="nau-badge nau-badge-soon">' + esc(r.confirmation_number) + '</span>' : '') +
+                (r.guest_phone
+                  ? (r.guest_phone_verified
+                      ? '<span class="nau-badge nau-badge-in-house">Phone verified</span>'
+                      : '<span class="nau-badge nau-badge-override">Phone not verified</span>')
+                  : '') +
               '</div>' +
+              (r.guest_phone && !r.guest_phone_verified
+                ? '<div style="margin-top:10px"><button class="nau-status-btn" id="markPhoneVerifiedBtn" style="font-size:0.78rem;padding:6px 14px">Mark phone as verified</button></div>'
+                : '') +
               '<div class="nau-prop-context">' +
                 '<span class="nau-prop-code">' + esc(propCode) + '</span>' + propLink +
                 (prop.property_type ? '<span class="nau-prop-type-pill">' + esc(prettyType(prop.property_type)) + '</span>' : '') +
@@ -856,6 +864,26 @@
         const btnOut = document.getElementById('markCheckedOutBtn');
         if (btnIn)  btnIn.addEventListener('click',  function () { applyStatus('checked_in'); });
         if (btnOut) btnOut.addEventListener('click', function () { applyStatus('checked_out'); });
+
+        /* Wire phone verification button */
+        const btnVerify = document.getElementById('markPhoneVerifiedBtn');
+        if (btnVerify) btnVerify.addEventListener('click', async function () {
+          btnVerify.disabled = true;
+          btnVerify.textContent = 'Verifying…';
+          const { data: updated, error: updErr } = await window.NauxicaSupabase
+            .from('reservations')
+            .update({ guest_phone_verified: true })
+            .eq('id', resId)
+            .select('*, properties(id, display_name, property_code, property_type)')
+            .single();
+          if (updErr || !updated) {
+            btnVerify.disabled = false;
+            btnVerify.textContent = 'Mark phone as verified';
+            alert('Could not update. Please try again.');
+            return;
+          }
+          renderPage(updated);
+        });
 
         /* Wire edit button */
         document.getElementById('editResBtn')?.addEventListener('click', function () { renderEditForm(r); });
@@ -1009,7 +1037,7 @@
               '<p class="nau-section-label">Guest</p>' +
               '<div class="nau-edit-row-2">' +
                 '<label>Name <span class="nau-req">*</span><input type="text" id="ef_guest_name" maxlength="120" value="' + valStr(r.guest_name) + '" autocomplete="off"></label>' +
-                '<label>Phone <span class="nau-req">*</span><input type="tel" id="ef_guest_phone" placeholder="+39 333 000 0000" value="' + valStr(r.guest_phone) + '"></label>' +
+                '<label>Phone <span class="nau-req">*</span><input type="tel" id="ef_guest_phone" placeholder="+393331112222" value="' + valStr(r.guest_phone) + '"><small style="display:block;margin-top:3px;font-size:0.72rem;color:var(--stone);font-weight:500">Use international format, e.g. +393331112222</small></label>' +
               '</div>' +
               '<div class="nau-edit-row-2">' +
                 '<label>Email<input type="email" id="ef_guest_email" value="' + valStr(r.guest_email) + '"></label>' +
@@ -1071,17 +1099,28 @@
 
         document.getElementById('editCancelBtn').addEventListener('click', function () { renderPage(r); });
 
+        function normalizePhoneInput(raw) {
+          if (!raw) return null;
+          var cleaned = raw.replace(/[\s\-\.\(\)]/g, '');
+          if (/^\+\d{7,15}$/.test(cleaned))  return cleaned;
+          if (/^00\d{7,13}$/.test(cleaned))  return '+' + cleaned.slice(2);
+          if (/^[3]\d{9}$/.test(cleaned))    return '+39' + cleaned;
+          return null;
+        }
+
         document.getElementById('editForm').addEventListener('submit', async function () {
           clearEditError();
 
-          const guestName  = fldVal('ef_guest_name');
-          const guestPhone = fldVal('ef_guest_phone');
-          const checkin    = fldVal('ef_checkin_date');
-          const checkout   = fldVal('ef_checkout_date');
-          const guestCount = fldNum('ef_guest_count');
+          const guestName    = fldVal('ef_guest_name');
+          const rawPhone     = fldVal('ef_guest_phone');
+          const guestPhone   = normalizePhoneInput(rawPhone);
+          const checkin      = fldVal('ef_checkin_date');
+          const checkout     = fldVal('ef_checkout_date');
+          const guestCount   = fldNum('ef_guest_count');
 
           if (!guestName)  { showEditError('Guest name is required.'); return; }
-          if (!guestPhone) { showEditError('Phone number is required.'); return; }
+          if (!rawPhone)   { showEditError('Phone number is required.'); return; }
+          if (!guestPhone) { showEditError('Phone must be in international format, e.g. +393331112222. Include the country code.'); return; }
           if (!checkin)    { showEditError('Check-in date is required.'); return; }
           if (!checkout)   { showEditError('Check-out date is required.'); return; }
           if (checkout <= checkin) { showEditError('Check-out date must be after check-in date.'); return; }
@@ -1092,6 +1131,7 @@
           const payload = {
             guest_name:                    guestName,
             guest_phone:                   guestPhone,
+            guest_phone_verified:          guestPhone !== r.guest_phone ? false : r.guest_phone_verified,
             guest_email:                   fldVal('ef_guest_email') || null,
             guest_preferred_language:      fldVal('ef_guest_preferred_language') || 'en',
             guest_count:                   guestCount,
