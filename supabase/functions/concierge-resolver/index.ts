@@ -1,6 +1,7 @@
 // supabase/functions/concierge-resolver/index.ts
 // Sprint 011A — Concierge Session Resolver
 // Sprint 012C — Context Loader Layer (added)
+// Sprint 019A.1 — resolveByPhone, ResolvedInput, SimError exported (added)
 //
 // Resolves an inbound WhatsApp message to a session + ConciergeContext object.
 // Does NOT generate AI responses. Does NOT call any LLM.
@@ -232,6 +233,46 @@ interface ResolvedContext {
   error_detail?: string
 }
 
+// ResolvedInput — returned by resolveByPhone when a verified active reservation is found.
+// Consumed by concierge-inbound-sim and, when Sprint 019A.2 is wired, by concierge-inbound.
+export interface ResolvedInput {
+  ok:             true
+  sessionRow: {
+    id:                     string
+    session_status:         SessionStatus
+    session_phase:          SessionPhase
+    detected_language:      string | null
+    unresolved_query_count: number
+  }
+  reservationRow: {
+    id:                  string
+    property_id:         string
+    guest_name:          string
+    guest_phone:         string
+    guest_count:         number
+    checkin_date:        string
+    checkout_date:       string
+    confirmation_number: string
+    special_requests:    string | null
+  }
+  propertyRow: {
+    id:            string
+    display_name:  string
+    property_type: string
+    address_city:  string
+    owner_id:      string
+  }
+  conversationId: string
+}
+
+// SimError — returned by resolveByPhone when resolution fails.
+export interface SimError {
+  ok:     false
+  error:  string
+  code?:  string
+  status: number
+}
+
 // ── Phone normalisation ───────────────────────────────────────────────────
 
 // Accepts E.164 (+391234567890), Italian 00-prefix (0039...), or Italian mobile
@@ -270,7 +311,7 @@ export function evaluateSessionPhase(
 
 // ── Conversation: create or reuse ─────────────────────────────────────────
 
-async function findOrCreateConversation(
+export async function findOrCreateConversation(
   supabase:      SupabaseClient,
   reservationId: string,
   propertyId:    string,
@@ -329,7 +370,7 @@ export function isCredentialGateOpen(
 // blockTypes: empty array = load all active blocks for this property.
 // Only is_active=true rows are returned — inactive blocks are excluded at DB level.
 // Output: partial record — only block types found in the DB are present.
-async function loadPropertyKnowledge(
+export async function loadPropertyKnowledge(
   supabase:   SupabaseClient,
   propertyId: string,
   blockTypes: BlockType[],
@@ -359,7 +400,7 @@ async function loadPropertyKnowledge(
 // when no DB row exists, satisfying Rule EM-01 (emergency data always present).
 // The AI runtime uses static Italian emergency constants (112/113/115/118) from
 // the system prompt regardless of whether this data is complete.
-async function loadEmergencyData(
+export async function loadEmergencyData(
   supabase:   SupabaseClient,
   propertyId: string,
 ): Promise<EmergencyChunk> {
@@ -413,7 +454,7 @@ async function loadEmergencyData(
 //   contact_phone → phone
 // Returns empty array (never null) when no contacts match the filter.
 // Source: property-knowledge-schema.md v1.5 §loadEmergencyContacts() contract
-async function loadEmergencyContacts(
+export async function loadEmergencyContacts(
   supabase:   SupabaseClient,
   propertyId: string,
 ): Promise<EmergencyContact[]> {
@@ -635,6 +676,173 @@ async function loadAndBuildContext(
     )
   } catch {
     return null
+  }
+}
+
+// ── Phone-based identity resolver ─────────────────────────────────────────
+// Resolves an inbound phone number to a ResolvedInput (session + reservation +
+// property + conversation) for use by concierge-inbound-sim and concierge-inbound.
+// Resolution order:
+//   1. Normalize phone via normalizePhone (E.164, returns null on invalid)
+//   2. Active whatsapp_session with matching guest_phone → use its reservation
+//   3. Active reservation with matching guest_phone (status confirmed|pre_arrival|checked_in)
+//   4. Check guest_phone_verified on matched reservation (always — even when existing session found)
+//      → false: write unverified_guest_message timeline event, return UNVERIFIED_GUEST
+//   5. Create new session with phone populated (only when verified)
+//   6. Invalid format or no match → UNAUTHORIZED_GUEST (caller writes event, neutral reply)
+
+export async function resolveByPhone(
+  svcClient:  SupabaseClient,
+  guestPhone: string,
+  todayStr:   string,
+): Promise<ResolvedInput | SimError> {
+  const normalized = normalizePhone(guestPhone)
+  if (normalized === null) {
+    return { ok: false, error: 'invalid phone number format', code: 'UNAUTHORIZED_GUEST', status: 401 }
+  }
+
+  // Step 1: look for an active session for this phone
+  const { data: existingSession } = await svcClient
+    .from('whatsapp_sessions')
+    .select('id, reservation_id, session_status, session_phase, detected_language, unresolved_query_count')
+    .eq('guest_phone', normalized)
+    .in('session_status', ['active', 'waiting', 'escalated'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  // Step 2: if no session, find an active reservation by phone
+  let reservationId: string
+  if (existingSession) {
+    reservationId = existingSession.reservation_id as string
+  } else {
+    const { data: matchedRes } = await svcClient
+      .from('reservations')
+      .select('id')
+      .eq('guest_phone', normalized)
+      .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in'])
+      .order('checkin_date', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (!matchedRes) {
+      return { ok: false, error: 'no active reservation found for phone', code: 'UNAUTHORIZED_GUEST', status: 401 }
+    }
+    reservationId = matchedRes.id as string
+  }
+
+  // Load full reservation row
+  const { data: reservation, error: resErr } = await svcClient
+    .from('reservations')
+    .select('id, property_id, guest_name, guest_phone, guest_phone_verified, guest_count, checkin_date, checkout_date, confirmation_number, special_requests')
+    .eq('id', reservationId)
+    .maybeSingle()
+
+  if (resErr || !reservation) {
+    return { ok: false, error: 'reservation not found', code: 'RESERVATION_NOT_FOUND', status: 404 }
+  }
+
+  // Verification gate — always checked, even when an existing session was found
+  if (!reservation.guest_phone_verified) {
+    await svcClient.from('timeline_events').insert({
+      property_id:     reservation.property_id,
+      reservation_id:  reservation.id,
+      conversation_id: null,
+      task_id:         null,
+      actor_id:        null,
+      actor_type:      'system',
+      event_type:      'unverified_guest_message',
+      event_title:     'Concierge: inbound message from guest with unverified phone',
+      metadata:        { source: 'guestpal_ai', phone_verified: false },
+    })
+    return { ok: false, error: 'guest phone not verified by host', code: 'UNVERIFIED_GUEST', status: 403 }
+  }
+
+  // Load property
+  const { data: property, error: propErr } = await svcClient
+    .from('properties')
+    .select('id, display_name, property_type, address_city, owner_id')
+    .eq('id', reservation.property_id)
+    .maybeSingle()
+
+  if (propErr || !property) {
+    return { ok: false, error: 'property not found', code: 'PROPERTY_NOT_FOUND', status: 404 }
+  }
+
+  // Find or create conversation
+  const convId = await findOrCreateConversation(svcClient, reservation.id, reservation.property_id)
+  if (!convId) {
+    return { ok: false, error: 'failed to resolve conversation', code: 'CONVERSATION_ERROR', status: 500 }
+  }
+
+  const phase = evaluateSessionPhase(reservation.checkin_date, reservation.checkout_date, todayStr)
+
+  let sessionRow: ResolvedInput['sessionRow']
+
+  if (existingSession) {
+    sessionRow = {
+      id:                     existingSession.id as string,
+      session_status:         existingSession.session_status as SessionStatus,
+      session_phase:          phase,
+      detected_language:      existingSession.detected_language as string | null ?? null,
+      unresolved_query_count: (existingSession.unresolved_query_count as number) ?? 0,
+    }
+    svcClient
+      .from('whatsapp_sessions')
+      .update({ session_phase: phase, last_message_at: new Date().toISOString() })
+      .eq('id', existingSession.id as string)
+      .then(() => {/* non-fatal */})
+  } else {
+    const { data: newSession, error: sessErr } = await svcClient
+      .from('whatsapp_sessions')
+      .insert({
+        reservation_id:         reservation.id,
+        property_id:            reservation.property_id,
+        guest_phone:            normalized,
+        session_status:         'active',
+        session_phase:          phase,
+        detected_language:      'en',
+        unresolved_query_count: 0,
+        last_message_at:        new Date().toISOString(),
+      })
+      .select('id, session_status, session_phase, detected_language, unresolved_query_count')
+      .single()
+
+    if (sessErr || !newSession) {
+      return { ok: false, error: 'failed to create session', code: 'SESSION_CREATE_FAILED', status: 500 }
+    }
+
+    sessionRow = {
+      id:                     newSession.id,
+      session_status:         newSession.session_status  as SessionStatus,
+      session_phase:          newSession.session_phase   as SessionPhase,
+      detected_language:      newSession.detected_language ?? null,
+      unresolved_query_count: newSession.unresolved_query_count ?? 0,
+    }
+  }
+
+  return {
+    ok: true,
+    sessionRow,
+    reservationRow: {
+      id:                  reservation.id,
+      property_id:         reservation.property_id,
+      guest_name:          reservation.guest_name,
+      guest_phone:         reservation.guest_phone,
+      guest_count:         reservation.guest_count,
+      checkin_date:        reservation.checkin_date,
+      checkout_date:       reservation.checkout_date,
+      confirmation_number: reservation.confirmation_number,
+      special_requests:    reservation.special_requests ?? null,
+    },
+    propertyRow: {
+      id:            property.id,
+      display_name:  property.display_name,
+      property_type: property.property_type,
+      address_city:  property.address_city,
+      owner_id:      property.owner_id,
+    },
+    conversationId: convId,
   }
 }
 
