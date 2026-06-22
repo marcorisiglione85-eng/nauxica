@@ -119,21 +119,25 @@
         throw 0;
       }
 
-      // ── Check for deep-link ?conversation=<id> ─────────────────────
-      const urlParams     = new URLSearchParams(window.location.search);
+      // ── Deep-link support ──────────────────────────────────────────
+      const urlParams      = new URLSearchParams(window.location.search);
       const deepLinkConvId = urlParams.get('conversation');
 
-      const db             = window.NauxicaSupabase;
-      const messagesList   = document.getElementById('messages-list');
+      const db              = window.NauxicaSupabase;
+      const messagesList    = document.getElementById('messages-list');
       const messagesSummary = document.getElementById('messages-summary');
-      const threadPanel    = document.getElementById('thread-panel');
-      const threadCard     = document.getElementById('thread-card');
-      const datechip       = document.getElementById('date-chip');
+      const threadPanel     = document.getElementById('thread-panel');
+      const threadCard      = document.getElementById('thread-card');
+      const datechip        = document.getElementById('date-chip');
       if (datechip) datechip.textContent = NauxicaShared.formatDateChip();
 
-      let activeFilter   = 'all';
-      let allConversations = [];
-      let openConvId     = null;
+      const HANDOFF_URL = 'https://xhhcvpvemwsmmtjhbswa.supabase.co/functions/v1/session-handoff';
+
+      let activeFilter         = 'all';
+      let allConversations     = [];
+      let openConvId           = null;
+      let sessionByReservation = {};  // { [reservation_id]: { id, session_status } }
+      let unreadByConv         = {};  // { [conversation_id]: number }
 
       function esc(s) {
         if (!s) return '';
@@ -145,8 +149,8 @@
         const d    = new Date(isoStr);
         const now  = new Date();
         const diff = Math.floor((now - d) / 1000);
-        if (diff < 60)   return 'Just now';
-        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 60)    return 'Just now';
+        if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
         if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
         return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
       }
@@ -168,14 +172,60 @@
           return;
         }
         allConversations = data || [];
+
+        const reservationIds = allConversations.map(function(c) { return c.reservation_id; }).filter(Boolean);
+        const convIds        = allConversations.map(function(c) { return c.id; });
+
+        // Parallel fetch: active sessions + unread message counts
+        const [sessResult, unreadResult] = await Promise.all([
+          reservationIds.length
+            ? db.from('whatsapp_sessions')
+                .select('id, reservation_id, session_status')
+                .in('reservation_id', reservationIds)
+                .in('session_status', ['active', 'waiting', 'escalated'])
+            : Promise.resolve({ data: [] }),
+          convIds.length
+            ? db.from('messages')
+                .select('conversation_id')
+                .in('conversation_id', convIds)
+                .in('sender_type', ['guest', 'ai'])
+                .eq('is_read', false)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        sessionByReservation = {};
+        (sessResult.data || []).forEach(function(s) {
+          sessionByReservation[s.reservation_id] = s;
+        });
+
+        unreadByConv = {};
+        (unreadResult.data || []).forEach(function(m) {
+          unreadByConv[m.conversation_id] = (unreadByConv[m.conversation_id] || 0) + 1;
+        });
+
         renderList();
       }
 
       // ── Render conversation list ───────────────────────────────────
       function getFiltered() {
-        return allConversations.filter(function (c) {
+        const list = allConversations.filter(function(c) {
           if (activeFilter === 'all') return true;
           return c.status === activeFilter;
+        });
+
+        // Sort: escalated first → unread second → most recent last
+        return list.slice().sort(function(a, b) {
+          const aEsc = (sessionByReservation[a.reservation_id] || {}).session_status === 'escalated' ? 0 : 1;
+          const bEsc = (sessionByReservation[b.reservation_id] || {}).session_status === 'escalated' ? 0 : 1;
+          if (aEsc !== bEsc) return aEsc - bEsc;
+
+          const aUnread = (unreadByConv[a.id] || 0) > 0 ? 0 : 1;
+          const bUnread = (unreadByConv[b.id] || 0) > 0 ? 0 : 1;
+          if (aUnread !== bUnread) return aUnread - bUnread;
+
+          const aTime = new Date(a.last_message_at || a.created_at).getTime();
+          const bTime = new Date(b.last_message_at || b.created_at).getTime();
+          return bTime - aTime;
         });
       }
 
@@ -190,36 +240,55 @@
           return;
         }
 
-        messagesList.innerHTML = list.map(function (c) {
-          const guestName = (c.reservations && c.reservations.guest_name) || 'Guest';
-          const propName  = (c.properties  && c.properties.display_name)  || '';
-          const propCode  = (c.properties  && c.properties.property_code) || '';
-          const isActive  = c.id === openConvId;
-          const statusCls = c.status === 'open' ? 'is-unread' : 'is-read';
+        messagesList.innerHTML = list.map(function(c) {
+          const guestName  = (c.reservations && c.reservations.guest_name) || 'Guest';
+          const propName   = (c.properties   && c.properties.display_name)  || '';
+          const propCode   = (c.properties   && c.properties.property_code) || '';
+          const isActive   = c.id === openConvId;
+          const hasUnread  = (unreadByConv[c.id] || 0) > 0;
+          const statusCls  = hasUnread ? 'is-unread' : 'is-read';
+          const sessStatus = (sessionByReservation[c.reservation_id] || {}).session_status || null;
+
+          let sessBadge = '';
+          if (sessStatus === 'escalated') {
+            sessBadge = '<span class="message-type-pill" style="background:rgba(192,57,43,0.12);color:#c0392b;font-weight:800">Needs you</span>';
+          } else if (sessStatus === 'active') {
+            sessBadge = '<span class="message-type-pill" style="background:rgba(26,140,78,0.1);color:#1a8c4e">AI active</span>';
+          } else if (sessStatus === 'waiting') {
+            sessBadge = '<span class="message-type-pill" style="background:rgba(15,23,42,0.06);color:var(--stone)">Waiting</span>';
+          }
+
+          const unreadDot = hasUnread
+            ? '<span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:#c0392b;margin-top:5px;display:block"></span>'
+            : '<span style="flex-shrink:0;width:8px;display:block"></span>';
 
           return '<article class="message-row ' + statusCls + (isActive ? ' active' : '') +
             '" data-conv-id="' + esc(c.id) + '" style="cursor:pointer">' +
-            '<div class="message-row-main">' +
-              '<div class="message-meta-row">' +
-                '<span class="message-type-pill">' + esc(c.status) + '</span>' +
-                (propCode ? '<span class="message-type-pill" style="background:rgba(197,104,61,0.1);color:var(--terracotta)">' + esc(propCode) + '</span>' : '') +
-                '<span class="message-date">' + fmtRelative(c.last_message_at || c.created_at) + '</span>' +
+            '<div class="message-row-main" style="display:flex;gap:8px;align-items:flex-start">' +
+              unreadDot +
+              '<div style="flex:1;min-width:0">' +
+                '<div class="message-meta-row">' +
+                  '<span class="message-type-pill">' + esc(c.status) + '</span>' +
+                  sessBadge +
+                  (propCode ? '<span class="message-type-pill" style="background:rgba(197,104,61,0.1);color:var(--terracotta)">' + esc(propCode) + '</span>' : '') +
+                  '<span class="message-date">' + fmtRelative(c.last_message_at || c.created_at) + '</span>' +
+                '</div>' +
+                '<h3>' + esc(guestName) + '</h3>' +
+                '<p>' + esc(propName) + '</p>' +
               '</div>' +
-              '<h3>' + esc(guestName) + '</h3>' +
-              '<p>' + esc(propName) + '</p>' +
             '</div>' +
             '</article>';
         }).join('');
       }
 
-      // ── Render thread ──────────────────────────────────────────────
+      // ── Render thread messages ─────────────────────────────────────
       function renderThreadMessages(messages) {
         if (!messages.length) {
           return '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No messages yet.</p>';
         }
         const SENDER = { homeowner: 'You', guest: 'Guest', ai: 'AI Concierge', system: '', partner: 'Partner' };
         return '<div style="display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto" id="msgThread">' +
-          messages.map(function (m) {
+          messages.map(function(m) {
             const isOwner = m.sender_type === 'homeowner';
             const isSys   = m.sender_type === 'system';
             const bg = isOwner ? 'rgba(197,104,61,0.1)' :
@@ -228,8 +297,8 @@
             const border = isOwner ? '1px solid rgba(197,104,61,0.18)' :
                            isSys   ? '1px solid rgba(15,23,42,0.07)'   :
                                      '1px solid rgba(15,23,42,0.1)';
-            const align  = isOwner ? 'flex-end' : (isSys ? 'center' : 'flex-start');
-            const label  = SENDER[m.sender_type] || m.sender_type;
+            const align = isOwner ? 'flex-end' : (isSys ? 'center' : 'flex-start');
+            const label = SENDER[m.sender_type] || m.sender_type;
             return '<div style="display:flex;flex-direction:column;align-items:' + align + '">' +
               '<div style="max-width:90%;padding:9px 13px;border-radius:10px;background:' + bg +
                 ';border:' + border + ';font-size:0.85rem;line-height:1.45' +
@@ -244,11 +313,12 @@
           '</div>';
       }
 
+      // ── Open conversation thread ───────────────────────────────────
       async function openConversation(convId) {
         openConvId = convId;
-        renderList(); // re-render to highlight active row
+        renderList();
 
-        const conv = allConversations.find(function (c) { return c.id === convId; });
+        const conv = allConversations.find(function(c) { return c.id === convId; });
         if (!conv) return;
 
         threadPanel.style.display = '';
@@ -262,13 +332,68 @@
 
         if (msgsErr) { threadCard.innerHTML = '<p style="color:#c0392b">Failed to load messages.</p>'; return; }
 
+        // ── Mark guest/ai messages as read ─────────────────────────
+        // Update local state immediately so the dot disappears without waiting
+        // for the DB write. The DB write is fire-and-forget.
+        if ((unreadByConv[convId] || 0) > 0) {
+          unreadByConv[convId] = 0;
+          renderList();
+          db.from('messages')
+            .update({ is_read: true })
+            .eq('conversation_id', convId)
+            .in('sender_type', ['guest', 'ai'])
+            .eq('is_read', false)
+            .then(function() {}).catch(function() {});
+        }
+
         const guestName = (conv.reservations && conv.reservations.guest_name) || 'Guest';
-        const propName  = (conv.properties  && conv.properties.display_name)  || '';
+        const propName  = (conv.properties   && conv.properties.display_name)  || '';
+
+        // session state — let so handoff can mutate sessStatus to rebuild the banner
+        let sessStatus = (sessionByReservation[conv.reservation_id] || {}).session_status || null;
+        const sessId   = (sessionByReservation[conv.reservation_id] || {}).id             || null;
 
         const STATUS_LABEL = { open: 'Open', resolved: 'Resolved', archived: 'Archived' };
 
+        // Builds the session status banner with a stable id="session-banner"
+        // so the handoff handler can swap it in place without rebuilding the thread.
+        function buildSessionBanner(status) {
+          if (status === 'escalated') {
+            return '<div id="session-banner" style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);' +
+              'border-radius:9px;padding:10px 14px;margin-bottom:12px;' +
+              'display:flex;justify-content:space-between;align-items:center;gap:10px">' +
+              '<span style="font-size:0.84rem;color:#c0392b;font-weight:600">' +
+                'AI concierge is on hold — guest is waiting for your reply.' +
+              '</span>' +
+              (sessId
+                ? '<button data-handoff="active" data-session-id="' + esc(sessId) + '" ' +
+                  'style="flex-shrink:0;padding:5px 14px;border-radius:999px;background:#c0392b;color:#fff;' +
+                  'font:inherit;font-size:0.78rem;font-weight:700;border:none;cursor:pointer">' +
+                  'Hand back to AI</button>'
+                : '') +
+              '</div>';
+          }
+          if (status === 'active') {
+            return '<div id="session-banner" style="background:rgba(26,140,78,0.07);border:1px solid rgba(26,140,78,0.15);' +
+              'border-radius:9px;padding:10px 14px;margin-bottom:12px;' +
+              'display:flex;justify-content:space-between;align-items:center;gap:10px">' +
+              '<span style="font-size:0.84rem;color:#1a8c4e;font-weight:600">' +
+                'AI concierge is handling this conversation.' +
+              '</span>' +
+              (sessId
+                ? '<button data-handoff="escalated" data-session-id="' + esc(sessId) + '" ' +
+                  'style="flex-shrink:0;padding:5px 14px;border-radius:999px;' +
+                  'background:rgba(15,23,42,0.06);color:var(--charcoal);font:inherit;font-size:0.78rem;' +
+                  'font-weight:700;border:1px solid rgba(15,23,42,0.14);cursor:pointer">' +
+                  'Take over</button>'
+                : '') +
+              '</div>';
+          }
+          return '<div id="session-banner"></div>';
+        }
+
         function buildThread(messages) {
-          const statusBtns = ['open', 'resolved', 'archived'].map(function (s) {
+          const statusBtns = ['open', 'resolved', 'archived'].map(function(s) {
             return '<button style="padding:5px 14px;border-radius:999px;font:inherit;font-size:0.78rem;font-weight:700;' +
               'border:1px solid rgba(15,23,42,0.12);background:rgba(15,23,42,0.05);cursor:pointer;' +
               (conv.status === s ? 'opacity:.4;cursor:not-allowed' : '') +
@@ -285,6 +410,7 @@
             '<a href="guest-detail.html?id=' + esc(conv.reservation_id) + '" ' +
               'style="font-size:0.82rem;font-weight:700;color:var(--terracotta);text-decoration:none">View guest →</a>' +
             '</div>' +
+            buildSessionBanner(sessStatus) +
             '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + statusBtns + '</div>' +
             '<div id="threadWrap">' + renderThreadMessages(messages) + '</div>' +
             '<div style="margin-top:12px;border-top:1px solid rgba(15,23,42,0.07);padding-top:12px;display:flex;flex-direction:column;gap:8px">' +
@@ -296,12 +422,12 @@
 
         threadCard.innerHTML = buildThread(msgs || []);
 
-        // Scroll thread
+        // Scroll to latest message
         const t = document.getElementById('msgThread');
         if (t) t.scrollTop = t.scrollHeight;
 
-        // Send
-        document.getElementById('msgSendBtn')?.addEventListener('click', async function () {
+        // ── Send reply ─────────────────────────────────────────────
+        document.getElementById('msgSendBtn')?.addEventListener('click', async function() {
           const ta   = document.getElementById('msgComposer');
           const text = ta ? ta.value.trim() : '';
           if (!text) return;
@@ -314,21 +440,25 @@
           });
 
           if (sErr) { sendBtn.disabled = false; sendBtn.textContent = 'Send'; alert('Send failed.'); return; }
+
           window.NauxicaTimeline.log({
-            property_id:    conv.property_id || null,
-            conversation_id: convId,
-            actor_type:     'homeowner',
-            event_type:     'message_sent',
-            event_title:    'Message sent',
+            property_id:       conv.property_id || null,
+            conversation_id:   convId,
+            actor_type:        'homeowner',
+            event_type:        'message_sent',
+            event_title:       'Message sent',
             event_description: text.length > 60 ? text.substring(0, 60) + '…' : text,
-            metadata:       {}
+            metadata:          {}
           });
+
           ta.value = '';
           sendBtn.disabled = false; sendBtn.textContent = 'Send';
 
           // Refresh thread
-          const { data: fresh } = await db.from('messages').select('id, sender_type, message_text, is_read, created_at')
-            .eq('conversation_id', convId).order('created_at', { ascending: true });
+          const { data: fresh } = await db.from('messages')
+            .select('id, sender_type, message_text, is_read, created_at')
+            .eq('conversation_id', convId)
+            .order('created_at', { ascending: true });
           document.getElementById('threadWrap').innerHTML = renderThreadMessages(fresh || []);
           const t2 = document.getElementById('msgThread');
           if (t2) t2.scrollTop = t2.scrollHeight;
@@ -337,44 +467,89 @@
           await loadConversations();
         });
 
-        // Status change
-        threadCard.addEventListener('click', async function (e) {
-          const btn = e.target.closest('[data-set-status]');
-          if (!btn) return;
-          const newStatus = btn.dataset.setStatus;
+        // ── Status change + session handoff ────────────────────────
+        threadCard.addEventListener('click', async function(e) {
+          // Conversation status buttons (Open / Resolved / Archived)
+          const statusBtn = e.target.closest('[data-set-status]');
+          if (statusBtn) {
+            const newStatus = statusBtn.dataset.setStatus;
+            const { error: stErr } = await db.from('conversations').update({ status: newStatus }).eq('id', convId);
+            if (stErr) { alert('Could not update status.'); return; }
 
-          const { error: stErr } = await db.from('conversations').update({ status: newStatus }).eq('id', convId);
-          if (stErr) { alert('Could not update status.'); return; }
+            const c = allConversations.find(function(x) { return x.id === convId; });
+            if (c) c.status = newStatus;
 
-          // Update local state
-          const c = allConversations.find(function (x) { return x.id === convId; });
-          if (c) c.status = newStatus;
+            const lbl = document.getElementById('convStatusLabel');
+            if (lbl) lbl.textContent = STATUS_LABEL[newStatus] || newStatus;
 
-          const lbl = document.getElementById('convStatusLabel');
-          if (lbl) lbl.textContent = STATUS_LABEL[newStatus] || newStatus;
+            threadCard.querySelectorAll('[data-set-status]').forEach(function(b) {
+              b.disabled = (b.dataset.setStatus === newStatus);
+              b.style.opacity = (b.dataset.setStatus === newStatus) ? '0.4' : '';
+            });
 
-          threadCard.querySelectorAll('[data-set-status]').forEach(function (b) {
-            b.disabled = (b.dataset.setStatus === newStatus);
-            b.style.opacity = (b.dataset.setStatus === newStatus) ? '0.4' : '';
-          });
+            renderList();
+            return;
+          }
 
-          renderList();
+          // Session handoff buttons (Hand back to AI / Take over)
+          const handoffBtn = e.target.closest('[data-handoff]');
+          if (!handoffBtn) return;
+
+          const targetStatus = handoffBtn.dataset.handoff;
+          const targetSessId = handoffBtn.dataset.sessionId;
+          if (!targetStatus || !targetSessId) return;
+
+          handoffBtn.disabled = true;
+          handoffBtn.textContent = targetStatus === 'active' ? 'Handing back…' : 'Taking over…';
+
+          try {
+            const { data: authData } = await window.NauxicaSupabase.auth.getSession();
+            const jwt = authData?.session?.access_token;
+            if (!jwt) throw new Error('Not authenticated');
+
+            const resp = await fetch(HANDOFF_URL, {
+              method:  'POST',
+              headers: { 'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ session_id: targetSessId, new_status: targetStatus }),
+            });
+
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+            // Update local state and swap banner in place — no full re-open,
+            // avoids accumulating additional click listeners on threadCard.
+            if (sessionByReservation[conv.reservation_id]) {
+              sessionByReservation[conv.reservation_id].session_status = targetStatus;
+            }
+            sessStatus = targetStatus;
+            renderList();
+
+            const bannerEl = document.getElementById('session-banner');
+            if (bannerEl) bannerEl.outerHTML = buildSessionBanner(sessStatus);
+
+          } catch (err) {
+            handoffBtn.disabled = false;
+            handoffBtn.textContent = targetStatus === 'active' ? 'Hand back to AI' : 'Take over';
+            const errEl = document.createElement('p');
+            errEl.style.cssText = 'color:#c0392b;font-size:0.8rem;margin:4px 0 0';
+            errEl.textContent   = 'Could not update — please try again.';
+            handoffBtn.after(errEl);
+          }
         });
       }
 
       // ── Wire filter buttons ────────────────────────────────────────
-      document.getElementById('conv-filters')?.addEventListener('click', function (e) {
+      document.getElementById('conv-filters')?.addEventListener('click', function(e) {
         const btn = e.target.closest('[data-filter]');
         if (!btn) return;
         activeFilter = btn.dataset.filter;
-        document.querySelectorAll('#conv-filters .message-filter').forEach(function (b) {
+        document.querySelectorAll('#conv-filters .message-filter').forEach(function(b) {
           b.classList.toggle('active', b.dataset.filter === activeFilter);
         });
         renderList();
       });
 
       // ── Wire conversation list clicks ──────────────────────────────
-      messagesList.addEventListener('click', function (e) {
+      messagesList.addEventListener('click', function(e) {
         const row = e.target.closest('[data-conv-id]');
         if (!row) return;
         openConversation(row.dataset.convId);
@@ -384,8 +559,7 @@
       await loadConversations();
 
       if (deepLinkConvId) {
-        // Wait one tick for allConversations to be populated, then open
-        const target = allConversations.find(function (c) { return c.id === deepLinkConvId; });
+        const target = allConversations.find(function(c) { return c.id === deepLinkConvId; });
         if (target) openConversation(deepLinkConvId);
       }
     })();
