@@ -201,9 +201,16 @@
             : Promise.resolve({ data: [] }),
         ]);
 
+        // Precedence-aware merge: a reservation can have multiple live sessions
+        // (one per guest phone — see migrations/010_whatsapp_sessions.sql). When
+        // more than one exists, keep the most urgent rather than an arbitrary one.
+        var SESSION_PRECEDENCE = { escalated: 0, active: 1, waiting: 2 };
         sessionByReservation = {};
         (sessResult.data || []).forEach(function(s) {
-          sessionByReservation[s.reservation_id] = s;
+          var existing = sessionByReservation[s.reservation_id];
+          if (!existing || SESSION_PRECEDENCE[s.session_status] < SESSION_PRECEDENCE[existing.session_status]) {
+            sessionByReservation[s.reservation_id] = s;
+          }
         });
 
         unreadByConv = {};
