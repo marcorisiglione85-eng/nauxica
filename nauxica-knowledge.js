@@ -21,6 +21,10 @@ window.NauxicaKnowledge = (function () {
     { type: 'check_in',         label: 'Check-in' },
     { type: 'check_out',        label: 'Check-out' },
     { type: 'house_rules',      label: 'House Rules' },
+    { type: 'amenities',        label: 'Amenities' },
+    { type: 'local_area',       label: 'Local Area' },
+    { type: 'services',         label: 'Services' },
+    { type: 'maintenance',      label: 'Maintenance' },
     { type: 'tourist_tax',      label: 'Tourist Tax' },
     { type: 'fallback_support', label: 'Fallback Support' },
   ];
@@ -34,6 +38,10 @@ window.NauxicaKnowledge = (function () {
     check_in:         'PUB',
     check_out:        'PUB',
     house_rules:      'PUB',
+    amenities:        'GST',
+    local_area:       'GST',
+    services:         'GST',
+    maintenance:      'GST',
     tourist_tax:      'PUB',
     fallback_support: 'GST',
   };
@@ -216,6 +224,29 @@ window.NauxicaKnowledge = (function () {
           field(fid + '-quiet',   'Quiet hours',   'text',     val(c, 'quiet_hours'),   'e.g. 22:00 – 08:00') +
           field(fid + '-guests',  'Max guests note','text',    val(c, 'max_guests_note'),'e.g. Maximum 4 guests per booking');
         break;
+      case 'amenities':
+        formFields =
+          field(fid + '-notes', 'Amenity notes', 'textarea', val(c, 'amenity_notes'), 'General amenity information for guests…') +
+          field(fid + '-pool',  'Pool instructions',    'textarea', val(c, 'pool_instructions'),    'How to use the pool…') +
+          field(fid + '-tv',    'TV instructions',      'textarea', val(c, 'tv_instructions'),      'How to use the TV / streaming…') +
+          field(fid + '-heat',  'Heating instructions', 'textarea', val(c, 'heating_instructions'), 'How to use heating…') +
+          field(fid + '-cool',  'Cooling/AC instructions', 'textarea', val(c, 'cooling_instructions'), 'How to use air conditioning…');
+        break;
+      case 'local_area':
+        formFields =
+          field(fid + '-desc',   'Area description',    'textarea', val(c, 'area_description'),   'Describe the surrounding area…') +
+          field(fid + '-tips',   'Local tips',           'textarea', val(c, 'local_tips'),         'Recommendations for guests…') +
+          field(fid + '-market', 'Nearest supermarket',  'text',     val(c, 'nearest_supermarket'), 'e.g. Conad — 5 min walk') +
+          field(fid + '-beach',  'Nearest beach',        'text',     val(c, 'nearest_beach'),       'e.g. Spiaggia di San Vito — 10 min drive');
+        break;
+      case 'services':
+        formFields =
+          field(fid + '-notes', 'Service notes', 'textarea', val(c, 'notes'), 'What guests can ask the AI to arrange (transfers, tours, etc.)…');
+        break;
+      case 'maintenance':
+        formFields =
+          field(fid + '-notes', 'Maintenance contact notes', 'textarea', val(c, 'maintenance_contact_notes'), 'How maintenance issues are handled…');
+        break;
       case 'tourist_tax':
         formFields =
           field(fid + '-amount',  'Amount (EUR)', 'number', val(c, 'amount_eur'), '2.50') +
@@ -341,6 +372,29 @@ window.NauxicaKnowledge = (function () {
           break;
         case 'house_rules':
           content = { rules_summary: gv(fid + '-summary'), pet_policy: gv(fid + '-pets'), smoking_policy: gv(fid + '-smoke'), party_policy: gv(fid + '-party'), quiet_hours: gv(fid + '-quiet'), max_guests_note: gv(fid + '-guests') };
+          break;
+        case 'amenities':
+          content = {
+            amenity_notes:        gv(fid + '-notes'),
+            pool_instructions:    gv(fid + '-pool'),
+            tv_instructions:      gv(fid + '-tv'),
+            heating_instructions: gv(fid + '-heat'),
+            cooling_instructions: gv(fid + '-cool'),
+          };
+          break;
+        case 'local_area':
+          content = {
+            area_description:   gv(fid + '-desc'),
+            local_tips:          gv(fid + '-tips'),
+            nearest_supermarket: gv(fid + '-market'),
+            nearest_beach:       gv(fid + '-beach'),
+          };
+          break;
+        case 'services':
+          content = { notes: gv(fid + '-notes') };
+          break;
+        case 'maintenance':
+          content = { maintenance_contact_notes: gv(fid + '-notes') };
           break;
         case 'tourist_tax':
           content = {
