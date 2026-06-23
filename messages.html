@@ -73,6 +73,7 @@
 
       <div class="message-filters" aria-label="Message filters" id="conv-filters">
         <button class="message-filter active" data-filter="all">All</button>
+        <button class="message-filter" data-filter="attention">Needs attention</button>
         <button class="message-filter" data-filter="open">Open</button>
         <button class="message-filter" data-filter="resolved">Resolved</button>
         <button class="message-filter" data-filter="archived">Archived</button>
@@ -122,6 +123,7 @@
       // ── Deep-link support ──────────────────────────────────────────
       const urlParams      = new URLSearchParams(window.location.search);
       const deepLinkConvId = urlParams.get('conversation');
+      const deepLinkFilter = urlParams.get('filter');
 
       const db              = window.NauxicaSupabase;
       const messagesList    = document.getElementById('messages-list');
@@ -133,11 +135,17 @@
 
       const HANDOFF_URL = 'https://xhhcvpvemwsmmtjhbswa.supabase.co/functions/v1/session-handoff';
 
-      let activeFilter         = 'all';
+      const KNOWN_FILTERS = ['all', 'attention', 'open', 'resolved', 'archived'];
+
+      let activeFilter         = KNOWN_FILTERS.includes(deepLinkFilter) ? deepLinkFilter : 'all';
       let allConversations     = [];
       let openConvId           = null;
       let sessionByReservation = {};  // { [reservation_id]: { id, session_status } }
       let unreadByConv         = {};  // { [conversation_id]: number }
+
+      document.querySelectorAll('#conv-filters .message-filter').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.filter === activeFilter);
+      });
 
       function esc(s) {
         if (!s) return '';
@@ -210,6 +218,10 @@
       function getFiltered() {
         const list = allConversations.filter(function(c) {
           if (activeFilter === 'all') return true;
+          if (activeFilter === 'attention') {
+            const sess = sessionByReservation[c.reservation_id] || {};
+            return sess.session_status === 'escalated' || (unreadByConv[c.id] || 0) > 0;
+          }
           return c.status === activeFilter;
         });
 

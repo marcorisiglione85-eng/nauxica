@@ -401,7 +401,7 @@
     </div>
 
     <div class="topbar-controls">
-      <button class="icon-btn" aria-label="Notifications">
+      <button class="icon-btn" id="notifBell" aria-label="Notifications">
         🔔
       </button>
 
@@ -1939,27 +1939,68 @@ if (actionPanelOverlay) {
   </script>
 
   <script type="module">
-    /* Notification bell — live badge count for open AI-generated tasks */
+    /* Notification bell — navigates to attention-filtered messages; live badge count
+       mirrors the "Needs attention" predicate in messages.html (escalated session OR
+       unread guest/ai message), polled every 30s so it never goes stale. */
     (async () => {
       var sb = window.NauxicaSupabase;
       var { data: sessData } = await sb.auth.getSession();
       if (!sessData.session) return;
 
-      var { count, error } = await sb
-        .from('tasks')
-        .select('*', { count: 'exact', head: true })
-        .ilike('title', '[Nauxica Concierge]%')
-        .neq('status', 'completed')
-        .neq('status', 'cancelled');
-
-      if (error || !count) return;
-
-      var bell = document.querySelector('.icon-btn[aria-label="Notifications"]');
+      var bell = document.getElementById('notifBell');
       if (!bell) return;
+
+      bell.addEventListener('click', function() {
+        window.location.href = 'messages.html?filter=attention';
+      });
+
       var badge = document.createElement('span');
       badge.className = 'notif-badge';
-      badge.textContent = count > 9 ? '9+' : String(count);
+      badge.style.display = 'none';
       bell.appendChild(badge);
+
+      async function refreshAttentionBadge() {
+        var { data: convs, error: convErr } = await sb.from('conversations').select('id, reservation_id');
+        if (convErr || !convs || !convs.length) {
+          badge.style.display = 'none';
+          return;
+        }
+
+        var reservationIds = convs.map(function(c) { return c.reservation_id; }).filter(Boolean);
+        var convIds         = convs.map(function(c) { return c.id; });
+
+        var results = await Promise.all([
+          reservationIds.length
+            ? sb.from('whatsapp_sessions').select('reservation_id')
+                .in('reservation_id', reservationIds).eq('session_status', 'escalated')
+            : Promise.resolve({ data: [] }),
+          convIds.length
+            ? sb.from('messages').select('conversation_id')
+                .in('conversation_id', convIds).in('sender_type', ['guest', 'ai']).eq('is_read', false)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        var escReservationSet = new Set((results[0].data || []).map(function(s) { return s.reservation_id; }));
+        var unreadConvSet     = new Set((results[1].data || []).map(function(m) { return m.conversation_id; }));
+
+        var attentionConvSet = new Set();
+        convs.forEach(function(c) {
+          if (escReservationSet.has(c.reservation_id) || unreadConvSet.has(c.id)) {
+            attentionConvSet.add(c.id);
+          }
+        });
+
+        var count = attentionConvSet.size;
+        if (count === 0) {
+          badge.style.display = 'none';
+        } else {
+          badge.textContent = count > 9 ? '9+' : String(count);
+          badge.style.display = 'flex';
+        }
+      }
+
+      await refreshAttentionBadge();
+      setInterval(refreshAttentionBadge, 30000);
     })();
   </script>
 
