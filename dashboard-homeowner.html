@@ -1785,7 +1785,8 @@ if (actionPanelOverlay) {
         task_cancelled: 'Cancelled', conversation_created: 'Message', message_sent: 'Message',
         knowledge_gap_detected: 'Knowledge gap', low_confidence_response: 'Low confidence',
         human_handoff_required: 'Human handoff',
-        unauthorized_guest_message: 'Security', unverified_guest_message: 'Unverified'
+        unauthorized_guest_message: 'Security', unverified_guest_message: 'Unverified',
+        occupancy_gap_detected: 'Occupancy gap'
       };
       var ACTIVITY_CLASS = {
         task_completed: 'positive', task_accepted: 'positive',
@@ -1794,7 +1795,8 @@ if (actionPanelOverlay) {
         conversation_created: 'neutral', message_sent: 'neutral',
         knowledge_gap_detected: 'warning', low_confidence_response: 'neutral',
         human_handoff_required: 'warning',
-        unauthorized_guest_message: 'warning', unverified_guest_message: 'warning'
+        unauthorized_guest_message: 'warning', unverified_guest_message: 'warning',
+        occupancy_gap_detected: 'warning'
       };
 
       function escAct(s) {
@@ -1884,7 +1886,7 @@ if (actionPanelOverlay) {
       var { data: aiEvents } = await sb
         .from('timeline_events')
         .select('event_type, event_title, metadata, created_at, property_id')
-        .in('event_type', ['knowledge_gap_detected', 'low_confidence_response', 'human_handoff_required', 'unauthorized_guest_message'])
+        .in('event_type', ['knowledge_gap_detected', 'low_confidence_response', 'human_handoff_required', 'unauthorized_guest_message', 'occupancy_gap_detected'])
         .order('created_at', { ascending: false })
         .limit(4);
 
@@ -1904,7 +1906,8 @@ if (actionPanelOverlay) {
         knowledge_gap_detected:     { cls: 'warning', icon: '💡', title: 'Knowledge gap detected' },
         low_confidence_response:    { cls: 'neutral', icon: '🤖', title: 'Low confidence reply' },
         human_handoff_required:     { cls: 'danger',  icon: '⚠️', title: 'Human handoff required' },
-        unauthorized_guest_message: { cls: 'danger',  icon: '🛡️', title: 'Unrecognised contact attempt' }
+        unauthorized_guest_message: { cls: 'danger',  icon: '🛡️', title: 'Unrecognised contact attempt' },
+        occupancy_gap_detected:     { cls: 'warning', icon: '📅', title: 'Occupancy gap detected' }
       };
 
       function escAi(s) {
@@ -1919,6 +1922,9 @@ if (actionPanelOverlay) {
         var topic    = (ev.metadata && ev.metadata.block_hint) || '';
         var desc     = propName;
         if (ev.event_type === 'knowledge_gap_detected' && topic) desc += (desc ? ' \xb7 ' : '') + 'Missing: ' + topic;
+        if (ev.event_type === 'occupancy_gap_detected' && ev.metadata && ev.metadata.gap_nights) {
+          desc += (desc ? ' \xb7 ' : '') + ev.metadata.gap_nights + '-night gap: ' + ev.metadata.gap_start + ' → ' + ev.metadata.gap_end;
+        }
         if (preview) desc += (desc ? ' \xb7 ' : '') + '“' + preview.slice(0, 50) + (preview.length > 50 ? '…' : '') + '”';
         var fillGapHref = (ev.event_type === 'knowledge_gap_detected' && topic && ev.property_id)
           ? 'property-detail.html?id=' + ev.property_id + '&kb_open=' + encodeURIComponent(topic)

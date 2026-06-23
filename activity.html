@@ -163,12 +163,14 @@
       .tl-dot[data-etype="knowledge_gap_detected"]  { background: #f59e0b; }
       .tl-dot[data-etype="low_confidence_response"] { background: #f59e0b; }
       .tl-dot[data-etype="human_handoff_required"]  { background: #dc2626; }
+      .tl-dot[data-etype="occupancy_gap_detected"]  { background: #0d9488; }
 
       /* AI notification badge classes */
-      .tl-badge-ai-gap     { background: rgba(245,158,11,0.12);  color: #b45309; }
-      .tl-badge-ai-low     { background: rgba(245,158,11,0.12);  color: #b45309; }
-      .tl-badge-ai-handoff { background: rgba(220,38,38,0.12);   color: #dc2626; }
-      .tl-badge-ai-task    { background: rgba(99,102,241,0.12);  color: #4338ca; }
+      .tl-badge-ai-gap        { background: rgba(245,158,11,0.12);  color: #b45309; }
+      .tl-badge-ai-low        { background: rgba(245,158,11,0.12);  color: #b45309; }
+      .tl-badge-ai-handoff    { background: rgba(220,38,38,0.12);   color: #dc2626; }
+      .tl-badge-ai-task       { background: rgba(99,102,241,0.12);  color: #4338ca; }
+      .tl-badge-ai-occupancy  { background: rgba(13,148,136,0.12);  color: #0f766e; }
 
       /* Warning card for human_handoff_required */
       .tl-card.tl-card-urgent {
@@ -607,7 +609,8 @@
           message_sent:            'Message',
           knowledge_gap_detected:  'Knowledge gap',
           low_confidence_response: 'Low confidence',
-          human_handoff_required:  'Human handoff'
+          human_handoff_required:  'Human handoff',
+          occupancy_gap_detected:  'Occupancy gap'
         };
 
         /* Maps event_type to the tl-badge-* CSS class */
@@ -626,7 +629,8 @@
           reservation_cancelled:   'tl-badge-cancelled',
           knowledge_gap_detected:  'tl-badge-ai-gap',
           low_confidence_response: 'tl-badge-ai-low',
-          human_handoff_required:  'tl-badge-ai-handoff'
+          human_handoff_required:  'tl-badge-ai-handoff',
+          occupancy_gap_detected:  'tl-badge-ai-occupancy'
         };
 
         var STATUS_EVENT_TYPES = {
@@ -827,6 +831,13 @@
                   }
                 } else if (ev.event_type === 'low_confidence_response' || ev.event_type === 'human_handoff_required') {
                   if (preview) aiDesc = '“' + preview.slice(0, 80) + (preview.length > 80 ? '…' : '') + '”';
+                } else if (ev.event_type === 'occupancy_gap_detected') {
+                  var gapNights = ev.metadata.gap_nights;
+                  var gapStart  = ev.metadata.gap_start;
+                  var gapEnd    = ev.metadata.gap_end;
+                  if (gapNights && gapStart && gapEnd) {
+                    aiDesc = gapNights + '-night gap: ' + gapStart + ' → ' + gapEnd;
+                  }
                 }
               }
               var urgentCls = ev.event_type === 'human_handoff_required' ? ' tl-card-urgent' : '';
