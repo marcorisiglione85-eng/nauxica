@@ -887,7 +887,7 @@ window.NauxicaWizard = (function () {
         '</label>',
       '</div>',
       '<label>Phone number <span style="color:var(--terracotta)">*</span> <span class="wizard-optional">(E.164 format)</span>',
-        '<input type="tel" id="gf_phone_number" placeholder="+39 333 000 0000" value="' + e(gv('phone_number')) + '">',
+        '<input type="tel" id="gf_phone_number" placeholder="+393331234567" value="' + e(gv('phone_number')) + '">',
       '</label>',
       '<label>Email address <span class="wizard-optional">(optional)</span>',
         '<input type="email" id="gf_email" placeholder="maria.rossi@example.com" value="' + e(gv('email')) + '">',
@@ -983,6 +983,16 @@ window.NauxicaWizard = (function () {
     return '';
   }
 
+  /* ── Phone normalization (browser-side mirror of concierge-resolver.normalizePhone) ── */
+  function _normalizePhoneInput(raw) {
+    if (!raw) return null;
+    var cleaned = raw.replace(/[\s\-\.\(\)]/g, '');
+    if (/^\+\d{7,15}$/.test(cleaned)) return cleaned;
+    if (/^00\d{7,13}$/.test(cleaned)) return '+' + cleaned.slice(2);
+    if (/^3\d{9}$/.test(cleaned))     return '+39' + cleaned;
+    return null;
+  }
+
   /* ── Guest validation ─────────────────────────────────────── */
   function _validateGuestStep(step) {
     _clearError();
@@ -997,6 +1007,12 @@ window.NauxicaWizard = (function () {
       req('gf_first_name',   'First name');
       req('gf_last_name',    'Last name');
       req('gf_phone_number', 'Phone number');
+
+      var phoneEl = document.getElementById('gf_phone_number');
+      if (phoneEl && (phoneEl.value || '').trim() && !_normalizePhoneInput(phoneEl.value)) {
+        _showError('Please enter a valid phone number, e.g. +393331234567');
+        return false;
+      }
     }
     if (step === 2) {
       req('gf_check_in_date',    'Check-in date');
@@ -1082,7 +1098,7 @@ window.NauxicaWizard = (function () {
       var payload = {
         property_id:               _guestPropId,
         guest_name:                guestName,
-        guest_phone:               _guestData.phone_number,
+        guest_phone:               _normalizePhoneInput(_guestData.phone_number),
         guest_email:               _guestData.email        || null,
         checkin_date:              _guestData.check_in_date,
         checkout_date:             _guestData.check_out_date,
