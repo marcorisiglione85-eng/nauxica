@@ -77,41 +77,37 @@
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
       <span class="kpi-icon" id="partnerPrimaryKpiIcon">🧹</span>
-      <span class="kpi-trend positive">+25%</span>
     </div>
-    <div class="kpi-label" id="partnerPrimaryKpiLabel">Today’s jobs</div>
-    <div class="kpi-value">5</div>
-    <div class="kpi-sub">vs yesterday</div>
+    <div class="kpi-label" id="partnerPrimaryKpiLabel">New Requests</div>
+    <div class="kpi-value" id="partnerKpi1Value">0</div>
+    <div class="kpi-sub">Awaiting response</div>
   </div>
 
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
       <span class="kpi-icon">📅</span>
-      <span class="kpi-trend neutral">7 days</span>
     </div>
-    <div class="kpi-label">Upcoming jobs</div>
-    <div class="kpi-value">8</div>
-    <div class="kpi-sub">scheduled this week</div>
+    <div class="kpi-label" id="partnerKpi2Label">Active Jobs</div>
+    <div class="kpi-value" id="partnerKpi2Value">0</div>
+    <div class="kpi-sub">In progress</div>
   </div>
 
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
       <span class="kpi-icon">💶</span>
-      <span class="kpi-trend positive">+18%</span>
     </div>
-    <div class="kpi-label">Earnings today</div>
-    <div class="kpi-value">€380</div>
-    <div class="kpi-sub">vs yesterday</div>
+    <div class="kpi-label">Earnings This Month</div>
+    <div class="kpi-value" id="partnerKpi3Value">€0.00</div>
+    <div class="kpi-sub">Completed this month</div>
   </div>
 
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
       <span class="kpi-icon">⭐</span>
-      <span class="kpi-trend warning">128 reviews</span>
     </div>
     <div class="kpi-label">Rating</div>
-    <div class="kpi-value">4.9</div>
-    <div class="kpi-sub">partner quality score</div>
+    <div class="kpi-value">Not enough data</div>
+    <div class="kpi-sub">Client reviews coming soon</div>
   </div>
 </section>
 
@@ -389,13 +385,13 @@
       };
 
       const SERVICE_KPI = {
-        cleaning:    { icon: '🧹', label: "Today’s cleanings",       subtitle: 'Cleaning operations for your partner workspace today.' },
-        maintenance: { icon: '🔧', label: "Today’s maintenance jobs", subtitle: 'Maintenance operations for your partner workspace today.' },
-        laundry:     { icon: '🧺', label: "Today’s laundry jobs",     subtitle: 'Laundry operations for your partner workspace today.' },
-        transfers:   { icon: '🚐', label: "Today’s transfers",        subtitle: 'Transfer operations for your partner workspace today.' },
-        experiences: { icon: '🗺️', label: "Today’s experiences",      subtitle: 'Experience operations for your partner workspace today.' },
+        cleaning:    { icon: '🧹', label: 'New Cleanings',          subtitle: 'Cleaning operations for your partner workspace today.' },
+        maintenance: { icon: '🔧', label: 'New Maintenance Jobs',   subtitle: 'Maintenance operations for your partner workspace today.' },
+        laundry:     { icon: '🧺', label: 'New Laundry Jobs',       subtitle: 'Laundry operations for your partner workspace today.' },
+        transfers:   { icon: '🚐', label: 'New Transfers',          subtitle: 'Transfer operations for your partner workspace today.' },
+        experiences: { icon: '🗺️', label: 'New Experiences',        subtitle: 'Experience operations for your partner workspace today.' },
       };
-      const SERVICE_KPI_FALLBACK = { icon: '✨', label: "Today’s jobs", subtitle: 'Here’s what’s happening across your partner workspace today.' };
+      const SERVICE_KPI_FALLBACK = { icon: '✨', label: 'New Requests', subtitle: 'Here’s what’s happening across your partner workspace today.' };
 
       (async () => {
         const { data } = await window.NauxicaSupabase.auth.getSession();
@@ -416,6 +412,8 @@
           : null;
         const serviceLabel   = SERVICE_LABELS[serviceKey] || 'Partner services';
         const verifiedLabel  = profile.is_identity_verified ? '✓ Verified partner' : '⏳ Verification pending';
+
+        window.NauxicaPartnerServiceKey = serviceKey;
 
         document.getElementById('partnerCardName').textContent    = displayName;
         document.getElementById('partnerCardService').textContent = serviceLabel;
@@ -514,6 +512,15 @@ logoutButton?.addEventListener("click", async function (e) {
           laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
         };
 
+        var ACTIVE_LABEL_BY_TYPE = {
+          cleaning: 'Active Cleanings', maintenance: 'Active Jobs', laundry: 'Active Laundry Jobs',
+          transfers: 'Active Transfers', experiences: 'Active Experiences'
+        };
+
+        function currencySymbol(cur) {
+          return cur === 'EUR' ? '€' : cur === 'USD' ? '$' : cur === 'GBP' ? '£' : (cur || 'EUR') + ' ';
+        }
+
         function esc(s) {
           if (!s) return '';
           return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -522,7 +529,7 @@ logoutButton?.addEventListener("click", async function (e) {
         async function loadAndRender() {
           var { data: tasks, error } = await sb
             .from('tasks')
-            .select('id, property_id, title, task_type, priority, status, due_date, task_value_amount, task_value_currency, properties(display_name), reservation_id, reservations(guest_name, checkin_date, checkout_date)')
+            .select('id, property_id, title, task_type, priority, status, due_date, completed_at, task_value_amount, task_value_currency, properties(display_name), reservation_id, reservations(guest_name, checkin_date, checkout_date)')
             .eq('assigned_partner_id', uid)
             .order('due_date', { ascending: true, nullsFirst: false });
 
@@ -536,6 +543,29 @@ logoutButton?.addEventListener("click", async function (e) {
 
           var countEl = document.getElementById('jobRequestsCount');
           if (countEl) countEl.textContent = newRequests.length + ' new';
+
+          var kpi1ValueEl = document.getElementById('partnerKpi1Value');
+          if (kpi1ValueEl) kpi1ValueEl.textContent = newRequests.length;
+
+          var serviceKey = window.NauxicaPartnerServiceKey;
+          var kpi2LabelEl = document.getElementById('partnerKpi2Label');
+          var kpi2ValueEl = document.getElementById('partnerKpi2Value');
+          if (kpi2LabelEl) kpi2LabelEl.textContent = ACTIVE_LABEL_BY_TYPE[serviceKey] || 'Active Jobs';
+          if (kpi2ValueEl) kpi2ValueEl.textContent = myJobs.length;
+
+          var now = new Date();
+          var monthEarnings = 0;
+          var monthCurrency = null;
+          tasks.forEach(function(t) {
+            if (t.status !== 'completed' || !t.completed_at || t.task_value_amount == null) return;
+            var completedDate = new Date(t.completed_at);
+            if (completedDate.getFullYear() === now.getFullYear() && completedDate.getMonth() === now.getMonth()) {
+              monthEarnings += parseFloat(t.task_value_amount) * (1 - commissionRate);
+              if (!monthCurrency) monthCurrency = t.task_value_currency;
+            }
+          });
+          var kpi3ValueEl = document.getElementById('partnerKpi3Value');
+          if (kpi3ValueEl) kpi3ValueEl.textContent = currencySymbol(monthCurrency) + monthEarnings.toFixed(2);
 
           function taskCard(t, buttons) {
             var propName  = (t.properties && t.properties.display_name) || 'Property';
