@@ -4412,6 +4412,23 @@ body.homeowner-dashboard-page .dashboard-grid {
   grid-template-columns: minmax(0, 1.7fr) minmax(340px, 0.9fr) !important;
 }
 
+/* Mobile fix: the unconditional rule above (and every earlier
+   .dashboard-grid override in this file) hard-codes a >=320px second
+   column with no media query, so it never actually stacks on narrow
+   viewports and overflows. This is the highest-specificity occurrence
+   of the selector in the file, so it must win the cascade here. */
+@media (max-width: 760px) {
+  body.homeowner-dashboard-page .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.homeowner-dashboard-page .col-left,
+  body.homeowner-dashboard-page .col-right {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
 body.homeowner-dashboard-page .premium-property-card {
   grid-template-columns: 74px minmax(0, 1fr) auto !important;
 }
