@@ -47,19 +47,7 @@
         </div>
       </div>
 
-      <nav class="dashboard-nav">
-        <a class="dashboard-nav-item active" href="#overview">Dashboard</a>
-        <a class="dashboard-nav-item" href="#requests">Requests</a>
-        <a class="dashboard-nav-item" href="#jobs">My jobs</a>
-        <a class="dashboard-nav-item" href="calendar.html">Calendar</a>
-        <a class="dashboard-nav-item" href="availability.html">Availability</a>
-        <a class="dashboard-nav-item" href="#earnings">Earnings</a>
-        <a class="dashboard-nav-item" href="messages.html">Messages</a>
-        <a class="dashboard-nav-item" href="#performance">Performance</a>
-        <a class="dashboard-nav-item" href="#services">Services</a>
-        <a class="dashboard-nav-item" data-page="reviews" href="reviews.html">Reviews</a>
-        <a class="dashboard-nav-item" href="settings.html">Profile &amp; Settings</a>
-      </nav>
+      <nav class="dashboard-nav"></nav>
 
       <div class="partner-help-card">
         <strong>Need help?</strong>
@@ -73,7 +61,7 @@
       <div class="topbar-left">
         <div class="eyebrow-label">Nauxica partner workspace</div>
         <h1 class="dashboard-title">Good morning,<br /><span id="partnerGreetingName">Partner</span>.</h1>
-        <div class="topbar-sub">Here’s what’s happening across your partner workspace today.</div>
+        <div class="topbar-sub" id="partnerTopbarSub">Here’s what’s happening across your partner workspace today.</div>
       </div>
 
       <div class="topbar-right">
@@ -88,10 +76,10 @@
    <section class="dashboard-kpis partner-kpis" id="overview">
   <div class="kpi-card dashboard-card">
     <div class="kpi-top">
-      <span class="kpi-icon">🧹</span>
+      <span class="kpi-icon" id="partnerPrimaryKpiIcon">🧹</span>
       <span class="kpi-trend positive">+25%</span>
     </div>
-    <div class="kpi-label">Today’s jobs</div>
+    <div class="kpi-label" id="partnerPrimaryKpiLabel">Today’s jobs</div>
     <div class="kpi-value">5</div>
     <div class="kpi-sub">vs yesterday</div>
   </div>
@@ -388,6 +376,7 @@
       </div>
     </footer>
 
+    <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
     <script src="nauxica-timeline.js"></script>
     <script type="module">
@@ -398,6 +387,15 @@
         transfers:    'Transfer services',
         experiences:  'Experience services',
       };
+
+      const SERVICE_KPI = {
+        cleaning:    { icon: '🧹', label: "Today’s cleanings",       subtitle: 'Cleaning operations for your partner workspace today.' },
+        maintenance: { icon: '🔧', label: "Today’s maintenance jobs", subtitle: 'Maintenance operations for your partner workspace today.' },
+        laundry:     { icon: '🧺', label: "Today’s laundry jobs",     subtitle: 'Laundry operations for your partner workspace today.' },
+        transfers:   { icon: '🚐', label: "Today’s transfers",        subtitle: 'Transfer operations for your partner workspace today.' },
+        experiences: { icon: '🗺️', label: "Today’s experiences",      subtitle: 'Experience operations for your partner workspace today.' },
+      };
+      const SERVICE_KPI_FALLBACK = { icon: '✨', label: "Today’s jobs", subtitle: 'Here’s what’s happening across your partner workspace today.' };
 
       (async () => {
         const { data } = await window.NauxicaSupabase.auth.getSession();
@@ -423,11 +421,22 @@
         document.getElementById('partnerCardService').textContent = serviceLabel;
         document.getElementById('partnerCardVerified').textContent = verifiedLabel;
         document.getElementById('partnerGreetingName').textContent = firstName;
+
+        const kpiCopy = SERVICE_KPI[serviceKey] || SERVICE_KPI_FALLBACK;
+        const kpiIconEl  = document.getElementById('partnerPrimaryKpiIcon');
+        const kpiLabelEl = document.getElementById('partnerPrimaryKpiLabel');
+        const subtitleEl = document.getElementById('partnerTopbarSub');
+        if (kpiIconEl)  kpiIconEl.textContent  = kpiCopy.icon;
+        if (kpiLabelEl) kpiLabelEl.textContent = kpiCopy.label;
+        if (subtitleEl) subtitleEl.textContent = kpiCopy.subtitle;
       })();
     </script>
 
     <script>
 localStorage.setItem('accountType', 'partner');
+NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'partner');
+NauxicaShared.setActivePage('dashboard');
+NauxicaShared.updateTopbar('partner');
 
 document.addEventListener("DOMContentLoaded", function () {
   if ("scrollRestoration" in history) {
