@@ -3000,10 +3000,6 @@ footer small {
 .kpi-label { color:var(--stone); font-weight:700; font-size:0.85rem }
 .kpi-value { font-size:1.4rem; font-weight:900; color:var(--charcoal); margin-top:8px }
 
-.dashboard-grid { display: grid; grid-template-columns: 1fr 420px; gap:20px; align-items:start; }
-.col-left { display: grid; gap:18px }
-.col-right { display: grid; gap:18px }
-
 .dashboard-card { background:white; border-radius:14px; padding:16px; border:1px solid rgba(29,35,39,0.06); box-shadow:0 12px 30px rgba(29,35,39,0.04); }
 .dashboard-section-title { margin:0 0 10px 0; font-size:1.05rem; color:var(--charcoal) }
 
@@ -3023,7 +3019,6 @@ footer small {
 
 @media (max-width: 1000px) {
   .dashboard-shell { padding:18px }
-  .dashboard-grid { grid-template-columns: 1fr 360px }
   .dashboard-kpis { grid-template-columns: repeat(2,1fr); }
 }
 
@@ -3033,7 +3028,6 @@ footer small {
   .dashboard-sidebar-inner { flex-direction:row; overflow:auto; padding:8px }
   .dashboard-nav { flex-direction:row; gap:8px }
   .dashboard-main { width:100% }
-  .dashboard-grid { grid-template-columns:1fr }
   .dashboard-kpis { grid-template-columns:1fr }
   .property-grid { grid-template-columns:1fr }
 }
@@ -3111,14 +3105,6 @@ footer small {
 .homeowner-dashboard .kpi-label { color:var(--stone); font-weight:700; }
 .homeowner-dashboard .kpi-value { font-size:1.4rem; font-weight:900; color:var(--charcoal); }
 
-.homeowner-dashboard .dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 420px;
-  gap: 20px;
-}
-
-.homeowner-dashboard .col-left, .homeowner-dashboard .col-right { display: grid; gap: 18px }
-
 .homeowner-dashboard .arrival-item,
 .homeowner-dashboard .message-item,
 .homeowner-dashboard .task-item,
@@ -3133,7 +3119,6 @@ footer small {
 @media (max-width: 1000px) {
   .homeowner-dashboard.dashboard-shell { grid-template-columns: 220px 1fr }
   .homeowner-dashboard .dashboard-kpis { grid-template-columns: repeat(2,1fr) }
-  .homeowner-dashboard .dashboard-grid { grid-template-columns: 1fr 360px }
 }
 
 @media (max-width: 900px) {
@@ -3144,7 +3129,6 @@ footer small {
   .homeowner-dashboard .dashboard-main { grid-column:1 / -1 }
   .homeowner-dashboard .dashboard-kpis { grid-template-columns:1fr }
   .homeowner-dashboard .property-grid { grid-template-columns:1fr }
-  .homeowner-dashboard .dashboard-grid { grid-template-columns:1fr }
 }
 
 /* Final scoped homeowner overrides to ensure layout precedence */
@@ -3182,12 +3166,6 @@ footer small {
   gap: 16px !important;
 }
 
-.homeowner-dashboard .dashboard-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr) !important;
-  gap: 20px !important;
-  align-items: start !important;
-}
 
 .homeowner-dashboard .dashboard-card,
 .homeowner-dashboard .kpi-card {
@@ -3291,7 +3269,6 @@ footer small {
   }
 
   .homeowner-dashboard .dashboard-kpis,
-  .homeowner-dashboard .dashboard-grid,
   .homeowner-dashboard .property-grid {
     grid-template-columns: 1fr !important;
   }
@@ -3378,12 +3355,6 @@ footer small {
   gap: 16px !important;
 }
 
-.homeowner-dashboard .dashboard-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr) !important;
-  gap: 20px !important;
-  align-items: start !important;
-}
 
 .homeowner-dashboard .dashboard-card,
 .homeowner-dashboard .kpi-card {
@@ -3502,7 +3473,6 @@ footer small {
   }
 
   .homeowner-dashboard .dashboard-kpis,
-  .homeowner-dashboard .dashboard-grid,
   .homeowner-dashboard .property-grid {
     grid-template-columns: 1fr !important;
   }
@@ -3610,7 +3580,6 @@ footer small {
   }
 
   .homeowner-dashboard .dashboard-kpis,
-  .homeowner-dashboard .dashboard-grid,
   .homeowner-dashboard .property-grid {
     display: grid !important;
     grid-template-columns: 1fr !important;
@@ -3734,7 +3703,6 @@ footer small {
   }
 
   .homeowner-dashboard .dashboard-kpis,
-  .homeowner-dashboard .dashboard-grid,
   .homeowner-dashboard .property-grid {
     display: grid !important;
     grid-template-columns: 1fr !important;
@@ -4030,12 +3998,6 @@ body.homeowner-dashboard-page .dashboard-kpis {
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 20px !important;
-}
-
-body.homeowner-dashboard-page .dashboard-grid {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1fr) !important;
-  gap: 24px !important;
 }
 
 body.homeowner-dashboard-page .col-left,
@@ -6767,10 +6729,6 @@ body.partner-dashboard-page .notification-content small {
 
 .homeowner-dashboard .dashboard-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 
-.homeowner-dashboard .dashboard-grid {
-  display:grid; grid-template-columns: minmax(0,1.45fr) minmax(320px,0.85fr); gap:20px;
-}
-
 .homeowner-dashboard .dashboard-card,
 .homeowner-dashboard .kpi-card {
   background:#fffaf2; border:1px solid rgba(29,35,39,0.08);
@@ -6788,7 +6746,7 @@ body.partner-dashboard-page .notification-content small {
   .homeowner-dashboard .dashboard-sidebar { position:relative; top:auto; min-height:auto; padding:14px; border-radius:22px; width:100%; overflow:hidden; }
   .homeowner-dashboard .dashboard-nav { display:flex; flex-direction:row; gap:8px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; }
   .homeowner-dashboard .dashboard-nav-item { display:inline-flex; height:38px; padding:0 14px; border-radius:999px; }
-  .homeowner-dashboard .dashboard-kpis, .homeowner-dashboard .dashboard-grid, .homeowner-dashboard .property-grid { grid-template-columns:1fr; gap:14px; }
+  .homeowner-dashboard .dashboard-kpis, .homeowner-dashboard .property-grid { grid-template-columns:1fr; gap:14px; }
   .homeowner-dashboard .dashboard-card, .homeowner-dashboard .kpi-card { padding:18px; border-radius:22px; }
 }
 
