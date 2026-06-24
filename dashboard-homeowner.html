@@ -1916,6 +1916,25 @@ if (actionPanelOverlay) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
 
+      function getAiRecommendation(eventType) {
+        switch (eventType) {
+          case 'occupancy_gap_detected':
+            return { title: 'Consider a last-minute promotion', description: 'Reduce pricing by 10–15% or promote these available dates to improve occupancy.' };
+          case 'revenue_value_dip_detected':
+            return { title: 'Review pricing strategy', description: 'This booking value appears below historical ADR performance. Consider reviewing the nightly rate.' };
+          case 'knowledge_gap_detected':
+            return { title: 'Fill missing knowledge', description: 'Add this information to the property knowledge base to improve future AI responses.' };
+          case 'human_handoff_required':
+            return { title: 'Manual review required', description: 'Review the guest conversation and respond directly where needed.' };
+          case 'low_confidence_response':
+            return { title: 'Improve AI confidence', description: 'Expand property information so the concierge can answer similar questions more confidently.' };
+          case 'unauthorized_guest_message':
+            return { title: 'Verify guest identity', description: 'Review the conversation before sharing stay-specific information.' };
+          default:
+            return null;
+        }
+      }
+
       var html = aiEvents.map(function(ev) {
         var cfg      = AI_CFG[ev.event_type] || { cls: 'neutral', icon: '🤖', title: ev.event_type };
         var propName = (ev.property_id && propNames[ev.property_id]) || '';
@@ -1934,12 +1953,20 @@ if (actionPanelOverlay) {
         var fillGapHref = (ev.event_type === 'knowledge_gap_detected' && topic && ev.property_id)
           ? 'property-detail.html?id=' + ev.property_id + '&kb_open=' + encodeURIComponent(topic)
           : '';
+        var recommendation = getAiRecommendation(ev.event_type);
         return '<div class="ai-insight-item ' + escAi(cfg.cls) + '">' +
           '<div class="ai-icon">' + cfg.icon + '</div>' +
           '<div class="ai-content">' +
             '<strong>' + escAi(cfg.title) + '</strong>' +
             '<p>' + escAi(desc || ev.event_title) + '</p>' +
             (fillGapHref ? '<a class="ai-fillgap" href="' + escAi(fillGapHref) + '">Fill this gap →</a>' : '') +
+            (recommendation ?
+              '<div class="ai-recommendation">' +
+                '<span class="ai-recommendation-label">Recommendation</span>' +
+                '<strong>' + escAi(recommendation.title) + '</strong>' +
+                '<p>' + escAi(recommendation.description) + '</p>' +
+              '</div>'
+              : '') +
           '</div>' +
         '</div>';
       }).join('');
