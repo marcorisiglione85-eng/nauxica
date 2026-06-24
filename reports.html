@@ -6,6 +6,47 @@
     <title>Reports — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* Reports MVP — scoped, page-local only. Not duplicated into style.css. */
+      .rep-rank-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(15,23,42,0.06);
+      }
+      .rep-rank-row:last-child { border-bottom: none; }
+      .rep-rank-num {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(197,104,61,0.12);
+        color: var(--terracotta);
+        font-size: 0.74rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .rep-rank-name  { flex: 1; font-size: 0.86rem; font-weight: 600; color: var(--charcoal); }
+      .rep-rank-value { font-size: 0.86rem; font-weight: 800; color: var(--charcoal); }
+
+      .rep-mix-row   { padding: 7px 0; }
+      .rep-mix-top   { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+      .rep-mix-label { font-weight: 600; color: var(--charcoal); }
+      .rep-mix-meta  { color: var(--stone); }
+      .rep-mix-track { height: 6px; border-radius: 999px; background: rgba(15,23,42,0.06); overflow: hidden; }
+      .rep-mix-fill  { height: 100%; border-radius: 999px; background: var(--terracotta); }
+
+      .rep-ai-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 7px 0; border-bottom: 1px solid rgba(15,23,42,0.06); font-size: 0.84rem;
+      }
+      .rep-ai-row:last-child { border-bottom: none; }
+      .rep-ai-label { color: var(--charcoal); font-weight: 600; }
+      .rep-ai-count { font-weight: 800; color: var(--charcoal); }
+    </style>
   </head>
   <body class="homeowner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -109,6 +150,11 @@
               <div class="monthly-chart" aria-label="Monthly revenue chart" id="reportsMonthlyChart">
                 <p id="reportsChartFallback" style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
+
+              <h3 class="dashboard-section-title" style="margin-top:20px">Top properties this month</h3>
+              <div id="reportsTopProperties">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
+              </div>
             </div>
           </div>
           <div class="col-right">
@@ -116,6 +162,22 @@
               <h3 class="dashboard-section-title">This month</h3>
               <p class="dashboard-card-text">Summary of this month's performance</p>
               <div id="reportsSummaryArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Booking source mix</h3>
+              <p class="dashboard-card-text">Where this month's bookings come from</p>
+              <div id="reportsBookingMix">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">AI performance summary</h3>
+              <p class="dashboard-card-text">Business insight events this month</p>
+              <div id="reportsAiSummary">
                 <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
             </div>
@@ -182,6 +244,11 @@
           if (el) el.textContent = text;
         }
 
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
         /* ── Date windows ──────────────────────────────────────── */
         var todayStr      = new Date().toISOString().slice(0, 10);
         var monthStartStr = todayStr.slice(0, 7) + '-01';
@@ -204,9 +271,18 @@
         var nowIso       = new Date().toISOString();
 
         /* ── Queries ───────────────────────────────────────────── */
+        var AI_EVENT_TYPES = [
+          'occupancy_gap_detected',
+          'revenue_value_dip_detected',
+          'knowledge_gap_detected',
+          'human_handoff_required',
+          'low_confidence_response',
+          'unauthorized_guest_message'
+        ];
+
         var results = await Promise.all([
           sb.from('reservations')
-            .select('checkin_date, reservation_value_amount, reservation_value_currency')
+            .select('checkin_date, reservation_value_amount, reservation_value_currency, property_id, booking_source, properties(display_name)')
             .neq('reservation_status', 'cancelled')
             .neq('reservation_status', 'no_show')
             .gte('checkin_date', windowStart)
@@ -232,11 +308,17 @@
             .select('*', { count: 'exact', head: true })
             .eq('status', 'completed')
             .gte('completed_at', monthStartStr)
-            .lte('completed_at', nowIso)
+            .lte('completed_at', nowIso),
+          sb.from('timeline_events')
+            .select('event_type, created_at')
+            .gte('created_at', monthStartStr)
+            .lte('created_at', nowIso)
+            .in('event_type', AI_EVENT_TYPES)
         ]);
 
         var revRes = results[0], occRes = results[1], propsRes = results[2],
-            arrivalsRes = results[3], openTasksRes = results[4], completedTasksRes = results[5];
+            arrivalsRes = results[3], openTasksRes = results[4], completedTasksRes = results[5],
+            aiEventsRes = results[6];
 
         /* ── Revenue this month + trailing 12-month chart ─────── */
         var chartEl = document.getElementById('reportsMonthlyChart');
@@ -266,6 +348,113 @@
                 '" style="height:' + height + '%"><span>' + m.label + '</span></div>';
             }).join('');
           }
+        }
+
+        /* ── Top properties this month + Booking source mix ────── */
+        var topPropsEl   = document.getElementById('reportsTopProperties');
+        var bookingMixEl = document.getElementById('reportsBookingMix');
+
+        if (revRes.error) {
+          if (topPropsEl)   topPropsEl.innerHTML   = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Unable to load property data.</p>';
+          if (bookingMixEl) bookingMixEl.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Unable to load booking source data.</p>';
+        } else {
+          var currentMonthRows = (revRes.data || []).filter(function (r) {
+            return (r.checkin_date || '').slice(0, 7) === currentYM;
+          });
+
+          /* Top properties (EUR only, gross revenue) */
+          var propTotals = new Map();
+          currentMonthRows.forEach(function (r) {
+            var currency = r.reservation_value_currency || 'EUR';
+            if (currency !== 'EUR') return;
+            if (r.reservation_value_amount == null) return;
+            if (!r.property_id) return;
+            var name  = (r.properties && r.properties.display_name) || 'Property';
+            var entry = propTotals.get(r.property_id) || { name: name, total: 0 };
+            entry.total += parseFloat(r.reservation_value_amount);
+            propTotals.set(r.property_id, entry);
+          });
+
+          var topProps = Array.from(propTotals.values())
+            .sort(function (a, b) { return b.total - a.total; })
+            .slice(0, 5);
+
+          if (topPropsEl) {
+            if (!topProps.length) {
+              topPropsEl.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No revenue recorded yet this month.</p>';
+            } else {
+              topPropsEl.innerHTML = topProps.map(function (p, idx) {
+                return '<div class="rep-rank-row">' +
+                  '<span class="rep-rank-num">' + (idx + 1) + '</span>' +
+                  '<span class="rep-rank-name">' + esc(p.name) + '</span>' +
+                  '<span class="rep-rank-value">' + fmtEur(p.total) + '</span>' +
+                '</div>';
+              }).join('');
+            }
+          }
+
+          /* Booking source mix (all current-month, non-cancelled/no_show rows) */
+          var SOURCE_LABELS = {
+            direct: 'Direct', airbnb: 'Airbnb', booking_com: 'Booking.com',
+            vrbo: 'Vrbo', other: 'Other'
+          };
+          var sourceCounts = {};
+          var sourceTotal  = 0;
+          currentMonthRows.forEach(function (r) {
+            var key = r.booking_source || 'unknown';
+            sourceCounts[key] = (sourceCounts[key] || 0) + 1;
+            sourceTotal++;
+          });
+
+          if (bookingMixEl) {
+            if (!sourceTotal) {
+              bookingMixEl.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">No bookings recorded yet this month.</p>';
+            } else {
+              var sourceKeys = Object.keys(sourceCounts).sort(function (a, b) { return sourceCounts[b] - sourceCounts[a]; });
+              bookingMixEl.innerHTML = sourceKeys.map(function (key) {
+                var label = SOURCE_LABELS[key] || 'Unknown';
+                var count = sourceCounts[key];
+                var pct   = Math.round((count / sourceTotal) * 100);
+                return '<div class="rep-mix-row">' +
+                  '<div class="rep-mix-top">' +
+                    '<span class="rep-mix-label">' + esc(label) + '</span>' +
+                    '<span class="rep-mix-meta">' + count + ' · ' + pct + '%</span>' +
+                  '</div>' +
+                  '<div class="rep-mix-track"><div class="rep-mix-fill" style="width:' + pct + '%"></div></div>' +
+                '</div>';
+              }).join('');
+            }
+          }
+        }
+
+        /* ── AI performance summary this month ──────────────────── */
+        var aiSummaryEl = document.getElementById('reportsAiSummary');
+        var AI_EVENT_LABELS = {
+          occupancy_gap_detected:     'Occupancy gaps',
+          revenue_value_dip_detected: 'Revenue alerts',
+          knowledge_gap_detected:     'Knowledge gaps',
+          human_handoff_required:     'Human handoffs',
+          low_confidence_response:    'Low-confidence answers',
+          unauthorized_guest_message: 'Guest verification events'
+        };
+
+        var aiCounts = {};
+        AI_EVENT_TYPES.forEach(function (t) { aiCounts[t] = 0; });
+
+        if (aiEventsRes.error) {
+          console.warn('[reports] AI events query failed:', aiEventsRes.error.message);
+        }
+        (aiEventsRes.data || []).forEach(function (ev) {
+          if (aiCounts[ev.event_type] !== undefined) aiCounts[ev.event_type]++;
+        });
+
+        if (aiSummaryEl) {
+          aiSummaryEl.innerHTML = AI_EVENT_TYPES.map(function (t) {
+            return '<div class="rep-ai-row">' +
+              '<span class="rep-ai-label">' + esc(AI_EVENT_LABELS[t]) + '</span>' +
+              '<span class="rep-ai-count">' + aiCounts[t] + '</span>' +
+            '</div>';
+          }).join('');
         }
 
         /* ── Occupancy (month-to-date) ─────────────────────────── */
