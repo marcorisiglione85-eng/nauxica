@@ -66,21 +66,57 @@
               <div class="card-heading-row">
                 <div>
                   <h2 class="dashboard-section-title">Performance reports</h2>
-                  <p class="dashboard-card-text">Detailed analytics and reporting for your properties</p>
+                  <p class="dashboard-card-text">Cross-functional summary across your properties</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Reports coming soon</h3>
-                <p>Occupancy rates, revenue trends, guest satisfaction scores and operational efficiency reports will be available here.</p>
+
+              <div class="dashboard-kpis" id="reportsKpis">
+                <div class="kpi-card">
+                  <div class="kpi-top">
+                    <span class="kpi-icon">💶</span>
+                  </div>
+                  <div class="kpi-label">Revenue this month</div>
+                  <div class="kpi-value" id="repKpiRevenue">—</div>
+                  <div class="kpi-sub">booking revenue (EUR)</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-top">
+                    <span class="kpi-icon">🏡</span>
+                  </div>
+                  <div class="kpi-label">Occupancy (MTD)</div>
+                  <div class="kpi-value" id="repKpiOccupancy">—</div>
+                  <div class="kpi-sub">booked nights this month</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-top">
+                    <span class="kpi-icon">🛬</span>
+                  </div>
+                  <div class="kpi-label">Upcoming arrivals</div>
+                  <div class="kpi-value" id="repKpiArrivals">—</div>
+                  <div class="kpi-sub">next 7 days</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-top">
+                    <span class="kpi-icon">⚠️</span>
+                  </div>
+                  <div class="kpi-label">Open tasks</div>
+                  <div class="kpi-value" id="repKpiOpenTasks">—</div>
+                  <div class="kpi-sub">require attention</div>
+                </div>
+              </div>
+
+              <h3 class="dashboard-section-title" style="margin-top:20px">Revenue — trailing 12 months</h3>
+              <div class="monthly-chart" aria-label="Monthly revenue chart" id="reportsMonthlyChart">
+                <p id="reportsChartFallback" style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
             </div>
           </div>
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">Key metrics</h3>
+              <h3 class="dashboard-section-title">This month</h3>
               <p class="dashboard-card-text">Summary of this month's performance</p>
-              <div class="empty-state-card">
-                <p>Metrics coming soon.</p>
+              <div id="reportsSummaryArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
             </div>
           </div>
@@ -103,6 +139,200 @@
 
         document.getElementById('logout-button')
           ?.addEventListener('click', NauxicaShared.handleLogout);
+      })();
+    </script>
+
+    <script type="module">
+      /* Reports MVP — cross-functional executive summary.
+         Revenue deep-dive remains on revenue.html; this page stays high-level. */
+      (async () => {
+        const sb = window.NauxicaSupabase;
+        const { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) return;
+
+        var MON_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        function isoDateLocal(d) {
+          return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+        }
+
+        function daysBetween(a, b) {
+          var ms = 86400000;
+          var da = new Date(a + 'T00:00:00Z').getTime();
+          var db = new Date(b + 'T00:00:00Z').getTime();
+          return Math.round((db - da) / ms);
+        }
+
+        function addDays(dateStr, days) {
+          var d = new Date(dateStr + 'T00:00:00Z');
+          d.setUTCDate(d.getUTCDate() + days);
+          return d.toISOString().slice(0, 10);
+        }
+
+        function fmtEur(v) {
+          var n = parseFloat(v);
+          if (!n || isNaN(n)) n = 0;
+          return '€' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function setText(id, text) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = text;
+        }
+
+        /* ── Date windows ──────────────────────────────────────── */
+        var todayStr      = new Date().toISOString().slice(0, 10);
+        var monthStartStr = todayStr.slice(0, 7) + '-01';
+        var dayOfMonth    = parseInt(todayStr.slice(8, 10), 10);
+        var tomorrowStr   = addDays(todayStr, 1);
+        var weekEndStr    = addDays(todayStr, 7);
+
+        var now      = new Date();
+        var curYear  = now.getFullYear();
+        var curMonth = now.getMonth();
+        var months   = [];
+        for (var i = 0; i < 12; i++) {
+          var d  = new Date(curYear, curMonth - (11 - i), 1);
+          var ym = d.getFullYear() + '-' + pad2(d.getMonth() + 1);
+          months.push({ ym: ym, label: MON_LABELS[d.getMonth()], isCurrent: i === 11 });
+        }
+        var windowStart = isoDateLocal(new Date(curYear, curMonth - 11, 1));
+        var windowEnd   = isoDateLocal(new Date(curYear, curMonth + 1, 0));
+        var currentYM   = months[11].ym;
+        var nowIso       = new Date().toISOString();
+
+        /* ── Queries ───────────────────────────────────────────── */
+        var results = await Promise.all([
+          sb.from('reservations')
+            .select('checkin_date, reservation_value_amount, reservation_value_currency')
+            .neq('reservation_status', 'cancelled')
+            .neq('reservation_status', 'no_show')
+            .gte('checkin_date', windowStart)
+            .lte('checkin_date', windowEnd),
+          sb.from('reservations')
+            .select('checkin_date, checkout_date, property_id')
+            .neq('reservation_status', 'cancelled')
+            .neq('reservation_status', 'no_show')
+            .lte('checkin_date', todayStr)
+            .gt('checkout_date', monthStartStr),
+          sb.from('properties')
+            .select('*', { count: 'exact', head: true }),
+          sb.from('reservations')
+            .select('id', { count: 'exact', head: true })
+            .gte('checkin_date', todayStr)
+            .lte('checkin_date', weekEndStr)
+            .in('reservation_status', ['confirmed', 'pre_arrival', 'checked_in']),
+          sb.from('tasks')
+            .select('*', { count: 'exact', head: true })
+            .neq('status', 'completed')
+            .neq('status', 'cancelled'),
+          sb.from('tasks')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'completed')
+            .gte('completed_at', monthStartStr)
+            .lte('completed_at', nowIso)
+        ]);
+
+        var revRes = results[0], occRes = results[1], propsRes = results[2],
+            arrivalsRes = results[3], openTasksRes = results[4], completedTasksRes = results[5];
+
+        /* ── Revenue this month + trailing 12-month chart ─────── */
+        var chartEl = document.getElementById('reportsMonthlyChart');
+        if (revRes.error) {
+          console.warn('[reports] revenue query failed:', revRes.error.message);
+          setText('repKpiRevenue', '—');
+          if (chartEl) chartEl.innerHTML = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Unable to load revenue chart.</p>';
+        } else {
+          var buckets = {};
+          months.forEach(function (m) { buckets[m.ym] = 0; });
+          (revRes.data || []).forEach(function (r) {
+            var currency = r.reservation_value_currency || 'EUR';
+            if (currency !== 'EUR') return;
+            if (r.reservation_value_amount == null) return;
+            var ym = (r.checkin_date || '').slice(0, 7);
+            if (buckets[ym] !== undefined) buckets[ym] += parseFloat(r.reservation_value_amount);
+          });
+          var curMonthVal = buckets[currentYM] || 0;
+          var maxVal      = months.reduce(function (mx, m) { return Math.max(mx, buckets[m.ym]); }, 0);
+
+          setText('repKpiRevenue', fmtEur(curMonthVal));
+
+          if (chartEl) {
+            chartEl.innerHTML = months.map(function (m) {
+              var height = maxVal > 0 ? Math.max(12, Math.round((buckets[m.ym] / maxVal) * 100)) : 12;
+              return '<div class="month-bar' + (m.isCurrent ? ' current' : '') +
+                '" style="height:' + height + '%"><span>' + m.label + '</span></div>';
+            }).join('');
+          }
+        }
+
+        /* ── Occupancy (month-to-date) ─────────────────────────── */
+        var propertyCount = 0;
+        if (propsRes.error) console.warn('[reports] properties query failed:', propsRes.error.message);
+        else propertyCount = propsRes.count || 0;
+
+        if (occRes.error || propsRes.error) {
+          if (occRes.error) console.warn('[reports] occupancy query failed:', occRes.error.message);
+          setText('repKpiOccupancy', '—');
+        } else if (propertyCount === 0) {
+          setText('repKpiOccupancy', '0%');
+        } else {
+          var totalNights = 0;
+          (occRes.data || []).forEach(function (r) {
+            var start = r.checkin_date  > monthStartStr ? r.checkin_date  : monthStartStr;
+            var end   = r.checkout_date < tomorrowStr   ? r.checkout_date : tomorrowStr;
+            var n = daysBetween(start, end);
+            if (n > 0) totalNights += n;
+          });
+          var occPct = dayOfMonth > 0
+            ? Math.round((totalNights / (propertyCount * dayOfMonth)) * 100)
+            : 0;
+          occPct = Math.max(0, Math.min(100, occPct));
+          setText('repKpiOccupancy', occPct + '%');
+        }
+
+        /* ── Upcoming arrivals ─────────────────────────────────── */
+        if (arrivalsRes.error) {
+          console.warn('[reports] arrivals query failed:', arrivalsRes.error.message);
+          setText('repKpiArrivals', '—');
+        } else {
+          setText('repKpiArrivals', arrivalsRes.count || 0);
+        }
+
+        /* ── Open tasks ──────────────────────────────────────────── */
+        if (openTasksRes.error) {
+          console.warn('[reports] open tasks query failed:', openTasksRes.error.message);
+          setText('repKpiOpenTasks', '—');
+        } else {
+          setText('repKpiOpenTasks', openTasksRes.count || 0);
+        }
+
+        /* ── This month summary (right column) ──────────────────── */
+        var summaryEl = document.getElementById('reportsSummaryArea');
+        if (!summaryEl) return;
+
+        var completedTasksText = '—';
+        if (completedTasksRes.error) {
+          console.warn('[reports] completed tasks query failed:', completedTasksRes.error.message);
+        } else {
+          completedTasksText = String(completedTasksRes.count || 0);
+        }
+
+        var propertyCountText = propsRes.error ? '—' : String(propertyCount);
+
+        summaryEl.innerHTML =
+          '<div class="kpi-card" style="margin-bottom:10px">' +
+            '<div class="kpi-label">Completed tasks</div>' +
+            '<div class="kpi-value">' + completedTasksText + '</div>' +
+            '<div class="kpi-sub">this month</div>' +
+          '</div>' +
+          '<div class="kpi-card" style="margin-bottom:14px">' +
+            '<div class="kpi-label">Properties</div>' +
+            '<div class="kpi-value">' + propertyCountText + '</div>' +
+          '</div>' +
+          '<a href="revenue.html" style="font-size:0.85rem;color:#2563eb;text-decoration:none;font-weight:700">View full revenue breakdown →</a>';
       })();
     </script>
   </body>
