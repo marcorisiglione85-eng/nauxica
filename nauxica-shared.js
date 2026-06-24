@@ -16,7 +16,6 @@ window.NauxicaShared = (function () {
 
   var HOMEOWNER_NAV = [
     '<a class="dashboard-nav-item" id="dashboard-link" data-page="dashboard" href="dashboard-homeowner.html">Dashboard</a>',
-    '<a class="dashboard-nav-item" href="dashboard-homeowner.html#overview">Overview</a>',
     '<a class="dashboard-nav-item" data-page="calendar" href="calendar.html">Calendar</a>',
     '<a class="dashboard-nav-item" data-page="availability" href="availability.html">Availability</a>',
     '<a class="dashboard-nav-item" data-page="reservations" href="reservations.html">Reservations</a>',
@@ -90,18 +89,83 @@ window.NauxicaShared = (function () {
     if (activeItem) activeItem.classList.add('active');
   }
 
-  function updateTopbar(accountType) {
-    if (accountType !== 'partner') return;
-    var updates = {
-      'workspace-label': 'Nauxica partner workspace',
-      'profile-avatar': 'SP',
-      'profile-name': 'Partner',
-      'profile-role': 'Service Partner'
-    };
-    Object.keys(updates).forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = updates[id];
+  function waitForSupabaseClient() {
+    return new Promise(function (resolve) {
+      if (window.NauxicaSupabase) { resolve(); return; }
+      // If DOMContentLoaded already fired, deferred module scripts (which
+      // includes supabase-client.js) have already run — nothing more to
+      // wait for, even if the client somehow still isn't there.
+      if (document.readyState !== 'loading') { resolve(); return; }
+      document.addEventListener('DOMContentLoaded', function () { resolve(); }, { once: true });
     });
+  }
+
+  function initialsFrom(s) {
+    if (!s) return '';
+    var parts = String(s).trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  // Resolves and renders the signed-in user's real name/initials into
+  // #profile-name / #profile-avatar wherever present on the page, for
+  // both homeowner and partner accounts. Fallback order: display_name →
+  // full_name → session email. Runs async; safe to call without awaiting
+  // — it waits internally for window.NauxicaSupabase to exist before
+  // touching it, since this is invoked from a non-module bootstrap
+  // script that can run before the deferred supabase-client.js module.
+  async function updateTopbar(accountType) {
+    if (accountType === 'partner') {
+      var updates = {
+        'workspace-label': 'Nauxica partner workspace',
+        'profile-role': 'Service Partner'
+      };
+      Object.keys(updates).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = updates[id];
+      });
+    }
+
+    await waitForSupabaseClient();
+    if (!window.NauxicaSupabase) return;
+
+    try {
+      var sessRes = await window.NauxicaSupabase.auth.getSession();
+      var session = sessRes && sessRes.data && sessRes.data.session;
+      if (!session) return;
+
+      var userRes = await window.NauxicaSupabase
+        .from('users')
+        .select('full_name, display_name')
+        .eq('id', session.user.id)
+        .single();
+
+      var row = userRes && userRes.data;
+      var resolvedName =
+        (row && row.display_name && row.display_name.trim()) ||
+        (row && row.full_name && row.full_name.trim()) ||
+        session.user.email ||
+        '';
+
+      if (!resolvedName) return;
+
+      var nameEl = document.getElementById('profile-name');
+      if (nameEl) nameEl.textContent = resolvedName;
+
+      // Dashboard hero greeting ("Good morning, {name}.") — same resolved
+      // name as the topbar, no extra query, only present on some pages.
+      var heroNameEl = document.getElementById('hero-name');
+      if (heroNameEl) heroNameEl.textContent = resolvedName;
+
+      var avatarEl = document.getElementById('profile-avatar');
+      if (avatarEl) {
+        var ini = initialsFrom(resolvedName) || initialsFrom(session.user.email);
+        if (ini) avatarEl.textContent = ini;
+      }
+    } catch (err) {
+      console.warn('[nauxica-shared] updateTopbar identity fetch failed:', err);
+    }
   }
 
   return {

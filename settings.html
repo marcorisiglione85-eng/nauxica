@@ -6,6 +6,70 @@
     <title>Settings — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      /* Settings MVP — scoped, page-local only. Not duplicated into style.css. */
+      .set-field { display: grid; gap: 6px; margin-bottom: 14px; }
+      .set-field label { font-weight: 700; font-size: 0.84rem; color: var(--charcoal); }
+      .set-field input, .set-field select, .set-field textarea {
+        padding: 11px 13px;
+        border-radius: 12px;
+        border: 1px solid rgba(15,23,42,0.12);
+        font: inherit;
+        color: var(--charcoal);
+        background: #fff;
+      }
+      .set-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; margin-bottom: 14px; }
+      .set-msg { font-size: 0.82rem; font-weight: 600; }
+      .set-msg.success { color: #1a8c4e; }
+      .set-msg.error   { color: #c0392b; }
+
+      .set-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(15,23,42,0.06);
+        font-size: 0.86rem;
+      }
+      .set-row:last-child { border-bottom: none; }
+      .set-row-label { color: var(--stone); font-weight: 600; flex-shrink: 0; }
+      .set-row-value { color: var(--charcoal); font-weight: 700; text-align: right; }
+
+      .set-notif-row {
+        display: flex; align-items: center; gap: 10px;
+        padding: 7px 0; font-size: 0.86rem; color: var(--charcoal);
+      }
+      .set-notif-row input[type="checkbox"] { width: 16px; height: 16px; }
+      .set-helper { font-size: 0.78rem; color: var(--stone); margin-top: 10px; line-height: 1.5; }
+
+      .set-modal-overlay {
+        position: fixed; inset: 0; z-index: 1000;
+        background: rgba(15,23,42,0.48);
+        display: none;
+        align-items: center; justify-content: center;
+        padding: 24px;
+      }
+      .set-modal-overlay.is-open { display: flex; }
+      .set-modal {
+        background: #fff; border-radius: 18px; width: 100%; max-width: 480px;
+        max-height: calc(100vh - 48px); overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(15,23,42,0.18);
+      }
+      .set-modal-hd {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 22px; border-bottom: 1px solid rgba(15,23,42,0.08);
+      }
+      .set-modal-hd h3 { margin: 0; font-size: 1.05rem; color: var(--charcoal); }
+      .set-modal-close {
+        background: none; border: none; font-size: 1.4rem; line-height: 1;
+        color: var(--stone); cursor: pointer; padding: 2px 8px; border-radius: 6px;
+      }
+      .set-modal-close:hover { background: rgba(15,23,42,0.06); }
+      .set-modal-body { padding: 18px 22px; }
+      .set-modal-ft {
+        padding: 14px 22px; border-top: 1px solid rgba(15,23,42,0.08);
+        display: flex; flex-direction: column; gap: 10px;
+      }
+      .set-modal-note { font-size: 0.8rem; color: var(--stone); line-height: 1.5; margin: 0; }
+      .set-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    </style>
   </head>
   <body class="homeowner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -65,36 +129,65 @@
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Profile</h2>
+                  <h2 class="dashboard-section-title">Account profile</h2>
                   <p class="dashboard-card-text">Your account details and preferences</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <h3>Settings coming soon</h3>
-                <p>Profile editing, notification preferences, language settings, billing and account management will be available here.</p>
+              <div id="settingsProfileArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
             </div>
 
             <div class="dashboard-card">
               <div class="card-heading-row">
                 <div>
-                  <h2 class="dashboard-section-title">Notifications</h2>
+                  <h2 class="dashboard-section-title">Notification preferences</h2>
                   <p class="dashboard-card-text">Configure how and when you receive alerts</p>
                 </div>
               </div>
-              <div class="empty-state-card">
-                <p>Notification preferences coming soon.</p>
-              </div>
+              <div class="set-notif-row"><input type="checkbox" disabled><span>AI handoff alerts</span></div>
+              <div class="set-notif-row"><input type="checkbox" disabled><span>Revenue opportunity alerts</span></div>
+              <div class="set-notif-row"><input type="checkbox" disabled><span>Occupancy gap alerts</span></div>
+              <div class="set-notif-row"><input type="checkbox" disabled><span>Task updates</span></div>
+              <p class="set-helper">Notification preferences will be configurable once email and WhatsApp alerts are connected.</p>
             </div>
           </div>
           <div class="col-right">
             <div class="dashboard-card">
-              <h3 class="dashboard-section-title">Account</h3>
-              <p class="dashboard-card-text">Your current plan and account status</p>
-              <div class="empty-state-card">
-                <p>Account management coming soon.</p>
+              <h3 class="dashboard-section-title">Business preferences</h3>
+              <p class="dashboard-card-text">Business type and tax details</p>
+              <div id="settingsBusinessArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
               </div>
             </div>
+
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Operational preferences</h3>
+              <p class="dashboard-card-text">Workspace defaults for this account</p>
+              <div id="settingsOperationalArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Billing &amp; Subscription</h3>
+              <p class="dashboard-card-text">Your current plan and account status</p>
+              <div id="settingsBillingArea">
+                <p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Loading…</p>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <h3 class="dashboard-section-title">Monthly invoices</h3>
+              <p class="dashboard-card-text">Your billing history</p>
+              <div class="empty-state-card">
+                <p>No invoices yet. Invoice history will appear here once billing is activated.</p>
+              </div>
+              <div class="set-actions" style="margin-top:12px;margin-bottom:0">
+                <button type="button" class="btn-ghost" disabled>Download coming soon</button>
+              </div>
+            </div>
+
             <div class="dashboard-card">
               <h3 class="dashboard-section-title">Danger zone</h3>
               <p class="dashboard-card-text">Irreversible account actions</p>
@@ -106,6 +199,40 @@
         </section>
       </section>
     </main>
+
+    <div class="set-modal-overlay" id="setTaxModalOverlay">
+      <div class="set-modal" role="dialog" aria-modal="true" aria-labelledby="setTaxModalTitle">
+        <div class="set-modal-hd">
+          <h3 id="setTaxModalTitle">Request a change</h3>
+          <button type="button" class="set-modal-close" id="setTaxModalClose" aria-label="Close">&times;</button>
+        </div>
+        <div class="set-modal-body">
+          <div class="set-field">
+            <label for="setTaxNewName">New legal name / company name</label>
+            <input type="text" id="setTaxNewName" maxlength="200">
+          </div>
+          <div class="set-field">
+            <label for="setTaxNewId">New tax code / VAT number</label>
+            <input type="text" id="setTaxNewId" maxlength="50">
+          </div>
+          <div class="set-field">
+            <label for="setTaxReason">Reason for change</label>
+            <textarea id="setTaxReason" rows="3" style="resize:vertical"></textarea>
+          </div>
+          <div class="set-field">
+            <label for="setTaxDoc">Supporting document</label>
+            <input type="file" id="setTaxDoc">
+          </div>
+          <p class="set-modal-note">Change requests will be submitted for manual review once document upload is connected.</p>
+        </div>
+        <div class="set-modal-ft">
+          <div class="set-modal-actions">
+            <button type="button" class="btn-light" id="setTaxModalCancel">Cancel</button>
+            <button type="button" class="btn" id="setTaxModalSubmit" disabled>Submit request</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="nauxica-demo-data.js"></script>
     <script src="nauxica-shared.js"></script>
@@ -124,6 +251,282 @@
           ?.addEventListener('click', NauxicaShared.handleLogout);
         document.getElementById('logout-button-2')
           ?.addEventListener('click', NauxicaShared.handleLogout);
+      })();
+    </script>
+
+    <script type="module">
+      /* Settings MVP — account profile (editable), business preferences
+         (business_type editable, tax ID read-only by product/security
+         decision), billing & subscription (read-only), invoices (static
+         empty state, no fake data). */
+      (async () => {
+        const sb = window.NauxicaSupabase;
+        const { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) return;
+
+        var userId = sessData.session.user.id;
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function fmtDate(d) {
+          if (!d) return '';
+          var dt = new Date(d);
+          if (isNaN(dt.getTime())) return '';
+          return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        /* Codice fiscale / P.IVA change-request modal — UI only, nothing is
+           saved or uploaded. Wired up-front since the modal markup itself
+           is static and present regardless of whether the profile query
+           below succeeds; only its "Request change" trigger button is
+           rendered dynamically inside the business preferences card. */
+        var taxModalOverlay = document.getElementById('setTaxModalOverlay');
+        if (taxModalOverlay) {
+          var closeTaxModal = function () { taxModalOverlay.classList.remove('is-open'); };
+          document.getElementById('setTaxModalClose')?.addEventListener('click', closeTaxModal);
+          document.getElementById('setTaxModalCancel')?.addEventListener('click', closeTaxModal);
+          taxModalOverlay.addEventListener('click', function (e) {
+            if (e.target === taxModalOverlay) closeTaxModal();
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && taxModalOverlay.classList.contains('is-open')) closeTaxModal();
+          });
+        }
+
+        var LANG_OPTS = [['en','English'], ['it','Italian'], ['es','Spanish'], ['fr','French'], ['de','German']];
+        var BIZ_OPTS  = [['individual','Individual'], ['sole_trader','Sole trader'], ['company','Company']];
+        var PLAN_LABELS   = { starter: 'Starter', professional: 'Professional', premium: 'Premium' };
+        var STATUS_LABELS = { pending: 'Pending', active: 'Active', suspended: 'Suspended', closed: 'Closed' };
+
+        var CURRENCY_OPTS    = ['EUR', 'GBP', 'USD'];
+        var TIMEZONE_OPTS    = ['Europe/Rome', 'Europe/London'];
+        var MARKET_OPTS      = ['Sicily', 'Italy', 'United Kingdom'];
+        var DATE_FORMAT_OPTS = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
+        var OP_DEFAULTS = {
+          default_currency: 'EUR',
+          timezone:         'Europe/Rome',
+          market:           'Sicily',
+          date_format:      'DD/MM/YYYY'
+        };
+
+        var profileEl     = document.getElementById('settingsProfileArea');
+        var businessEl    = document.getElementById('settingsBusinessArea');
+        var operationalEl = document.getElementById('settingsOperationalArea');
+        var billingEl      = document.getElementById('settingsBillingArea');
+
+        var { data: user, error } = await sb
+          .from('users')
+          .select('full_name, display_name, phone_number, preferred_language, business_type, codice_fiscale_or_piva, nauxica_plan_tier, account_status, plan_started_at, plan_renews_at, operational_preferences')
+          .eq('id', userId)
+          .single();
+
+        if (error || !user) {
+          console.warn('[settings] profile query failed:', error && error.message);
+          var fallback = '<p style="color:var(--stone);font-size:0.84rem;margin:8px 0">Unable to load this right now.</p>';
+          if (profileEl)     profileEl.innerHTML     = fallback;
+          if (businessEl)    businessEl.innerHTML    = fallback;
+          if (operationalEl) operationalEl.innerHTML = fallback;
+          if (billingEl)     billingEl.innerHTML     = fallback;
+          return;
+        }
+
+        /* ── Account profile (editable) ─────────────────────────── */
+        if (profileEl) {
+          var langOptionsHtml = LANG_OPTS.map(function (o) {
+            return '<option value="' + o[0] + '"' + (user.preferred_language === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+          }).join('');
+
+          profileEl.innerHTML =
+            '<div class="set-field"><label for="setFullName">Full name</label>' +
+              '<input type="text" id="setFullName" maxlength="120" value="' + esc(user.full_name || '') + '"></div>' +
+            '<div class="set-field"><label for="setDisplayName">Display name</label>' +
+              '<input type="text" id="setDisplayName" maxlength="120" value="' + esc(user.display_name || '') + '"></div>' +
+            '<div class="set-field"><label for="setPhoneNumber">Phone number</label>' +
+              '<input type="tel" id="setPhoneNumber" placeholder="+393331112222" value="' + esc(user.phone_number || '') + '"></div>' +
+            '<div class="set-field"><label for="setPreferredLanguage">Preferred language</label>' +
+              '<select id="setPreferredLanguage">' + langOptionsHtml + '</select></div>' +
+            '<div class="set-actions">' +
+              '<button type="button" class="btn" id="setProfileSaveBtn">Save changes</button>' +
+              '<span class="set-msg" id="setProfileMsg"></span>' +
+            '</div>';
+
+          var profileSaveBtn = document.getElementById('setProfileSaveBtn');
+          var profileMsg     = document.getElementById('setProfileMsg');
+          profileSaveBtn.addEventListener('click', async function () {
+            var payload = {
+              full_name:          document.getElementById('setFullName').value.trim(),
+              display_name:       document.getElementById('setDisplayName').value.trim() || null,
+              phone_number:       document.getElementById('setPhoneNumber').value.trim(),
+              preferred_language: document.getElementById('setPreferredLanguage').value
+            };
+
+            profileSaveBtn.disabled    = true;
+            profileSaveBtn.textContent = 'Saving…';
+            profileMsg.textContent     = '';
+            profileMsg.className       = 'set-msg';
+
+            var { error: saveErr } = await sb.from('users').update(payload).eq('id', userId);
+
+            profileSaveBtn.disabled    = false;
+            profileSaveBtn.textContent = 'Save changes';
+
+            if (saveErr) {
+              console.warn('[settings] profile save failed:', saveErr.message);
+              profileMsg.textContent = 'Save failed. Please try again.';
+              profileMsg.className   = 'set-msg error';
+            } else {
+              profileMsg.textContent = 'Saved.';
+              profileMsg.className   = 'set-msg success';
+            }
+          });
+        }
+
+        /* ── Business preferences (business_type editable, tax ID read-only) ── */
+        if (businessEl) {
+          var bizOptionsHtml = BIZ_OPTS.map(function (o) {
+            return '<option value="' + o[0] + '"' + (user.business_type === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+          }).join('');
+
+          var taxIdHtml = user.codice_fiscale_or_piva
+            ? esc(user.codice_fiscale_or_piva)
+            : 'Not provided yet';
+
+          businessEl.innerHTML =
+            '<div class="set-field"><label for="setBusinessType">Business type</label>' +
+              '<select id="setBusinessType">' + bizOptionsHtml + '</select></div>' +
+            '<div class="set-actions">' +
+              '<button type="button" class="btn" id="setBusinessSaveBtn">Save changes</button>' +
+              '<span class="set-msg" id="setBusinessMsg"></span>' +
+            '</div>' +
+            '<div class="set-row"><span class="set-row-label">Codice fiscale / P.IVA</span><span class="set-row-value">' + taxIdHtml + '</span></div>' +
+            '<div class="set-actions" style="margin-top:10px;margin-bottom:0">' +
+              '<button type="button" class="btn-light" id="setTaxRequestBtn">Request change</button>' +
+            '</div>' +
+            '<p class="set-helper">Tax details will be managed through the billing module.</p>';
+
+          var taxRequestBtn = document.getElementById('setTaxRequestBtn');
+          if (taxRequestBtn) {
+            taxRequestBtn.addEventListener('click', function () {
+              var overlay = document.getElementById('setTaxModalOverlay');
+              if (overlay) overlay.classList.add('is-open');
+            });
+          }
+
+          var businessSaveBtn = document.getElementById('setBusinessSaveBtn');
+          var businessMsg     = document.getElementById('setBusinessMsg');
+          businessSaveBtn.addEventListener('click', async function () {
+            var payload = { business_type: document.getElementById('setBusinessType').value };
+
+            businessSaveBtn.disabled    = true;
+            businessSaveBtn.textContent = 'Saving…';
+            businessMsg.textContent     = '';
+            businessMsg.className       = 'set-msg';
+
+            var { error: saveErr } = await sb.from('users').update(payload).eq('id', userId);
+
+            businessSaveBtn.disabled    = false;
+            businessSaveBtn.textContent = 'Save changes';
+
+            if (saveErr) {
+              console.warn('[settings] business preferences save failed:', saveErr.message);
+              businessMsg.textContent = 'Save failed. Please try again.';
+              businessMsg.className   = 'set-msg error';
+            } else {
+              businessMsg.textContent = 'Saved.';
+              businessMsg.className   = 'set-msg success';
+            }
+          });
+        }
+
+        /* ── Operational preferences (editable, backend-backed) ──── */
+        if (operationalEl) {
+          var opPrefs = (user.operational_preferences && typeof user.operational_preferences === 'object')
+            ? user.operational_preferences
+            : {};
+
+          var opCurrency   = opPrefs.default_currency || OP_DEFAULTS.default_currency;
+          var opTimezone   = opPrefs.timezone          || OP_DEFAULTS.timezone;
+          var opMarket     = opPrefs.market            || OP_DEFAULTS.market;
+          var opDateFormat = opPrefs.date_format       || OP_DEFAULTS.date_format;
+
+          function opOptionsHtml(opts, current) {
+            return opts.map(function (v) {
+              return '<option value="' + esc(v) + '"' + (v === current ? ' selected' : '') + '>' + esc(v) + '</option>';
+            }).join('');
+          }
+
+          operationalEl.innerHTML =
+            '<div class="set-field"><label for="setOpCurrency">Default currency</label>' +
+              '<select id="setOpCurrency">' + opOptionsHtml(CURRENCY_OPTS, opCurrency) + '</select></div>' +
+            '<div class="set-field"><label for="setOpTimezone">Time zone</label>' +
+              '<select id="setOpTimezone">' + opOptionsHtml(TIMEZONE_OPTS, opTimezone) + '</select></div>' +
+            '<div class="set-field"><label for="setOpMarket">Market</label>' +
+              '<select id="setOpMarket">' + opOptionsHtml(MARKET_OPTS, opMarket) + '</select></div>' +
+            '<div class="set-field"><label for="setOpDateFormat">Date format</label>' +
+              '<select id="setOpDateFormat">' + opOptionsHtml(DATE_FORMAT_OPTS, opDateFormat) + '</select></div>' +
+            '<div class="set-actions">' +
+              '<button type="button" class="btn" id="setOpSaveBtn">Save changes</button>' +
+              '<span class="set-msg" id="setOpMsg"></span>' +
+            '</div>';
+
+          var opSaveBtn = document.getElementById('setOpSaveBtn');
+          var opMsg     = document.getElementById('setOpMsg');
+          opSaveBtn.addEventListener('click', async function () {
+            var payload = {
+              operational_preferences: {
+                default_currency: document.getElementById('setOpCurrency').value,
+                timezone:         document.getElementById('setOpTimezone').value,
+                market:           document.getElementById('setOpMarket').value,
+                date_format:      document.getElementById('setOpDateFormat').value
+              }
+            };
+
+            opSaveBtn.disabled    = true;
+            opSaveBtn.textContent = 'Saving…';
+            opMsg.textContent     = '';
+            opMsg.className       = 'set-msg';
+
+            var { error: saveErr } = await sb.from('users').update(payload).eq('id', userId);
+
+            opSaveBtn.disabled    = false;
+            opSaveBtn.textContent = 'Save changes';
+
+            if (saveErr) {
+              console.warn('[settings] operational preferences save failed:', saveErr.message);
+              opMsg.textContent = 'Save failed. Please try again.';
+              opMsg.className   = 'set-msg error';
+            } else {
+              opMsg.textContent = 'Saved.';
+              opMsg.className   = 'set-msg success';
+            }
+          });
+        }
+
+        /* ── Billing & Subscription (read-only) ─────────────────── */
+        if (billingEl) {
+          var planLabel   = PLAN_LABELS[user.nauxica_plan_tier] || user.nauxica_plan_tier || '—';
+          var statusLabel = STATUS_LABELS[user.account_status] || user.account_status || '—';
+
+          var datesHtml = '';
+          if (!user.plan_started_at && !user.plan_renews_at) {
+            datesHtml = '<p style="color:var(--stone);font-size:0.84rem;margin:10px 0 0">Billing is not yet active for this account.</p>';
+          } else {
+            if (user.plan_started_at) {
+              datesHtml += '<div class="set-row"><span class="set-row-label">Plan started</span><span class="set-row-value">' + esc(fmtDate(user.plan_started_at)) + '</span></div>';
+            }
+            if (user.plan_renews_at) {
+              datesHtml += '<div class="set-row"><span class="set-row-label">Renews</span><span class="set-row-value">' + esc(fmtDate(user.plan_renews_at)) + '</span></div>';
+            }
+          }
+
+          billingEl.innerHTML =
+            '<div class="set-row"><span class="set-row-label">Current plan</span><span class="set-row-value">' + esc(planLabel) + '</span></div>' +
+            '<div class="set-row"><span class="set-row-label">Account status</span><span class="set-row-value">' + esc(statusLabel) + '</span></div>' +
+            datesHtml;
+        }
       })();
     </script>
   </body>

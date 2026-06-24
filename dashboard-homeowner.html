@@ -384,7 +384,7 @@
 
     <h1 class="dashboard-title">
       Good morning,<br />
-      Marco.
+      <span id="hero-name">Marco</span>.
     </h1>
 
     <div class="topbar-sub">
@@ -414,10 +414,10 @@
       </div>
 
       <div class="profile-chip">
-        <div class="avatar">MR</div>
+        <div class="avatar" id="profile-avatar">MR</div>
 
         <div class="profile-meta">
-          <strong>Marco</strong>
+          <strong id="profile-name">Marco</strong>
           <span>Homeowner</span>
         </div>
       </div>
@@ -995,6 +995,7 @@
     localStorage.setItem('accountType', 'homeowner');
     NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'homeowner');
     NauxicaShared.setActivePage('dashboard');
+    NauxicaShared.updateTopbar('homeowner');
   </script>
   <script type="module">
     (async () => {
