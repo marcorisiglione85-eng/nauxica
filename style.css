@@ -4391,6 +4391,16 @@ body.homeowner-dashboard-page .dashboard-grid {
   }
 }
 
+/* Mobile fix: at narrow widths the 4-column .dashboard-kpis grid leaves
+   each .kpi-card too narrow for its icon+trend-pill row, which has no
+   min-width:0 to shrink into and instead visually escapes the card
+   (overflow:visible is the default), adding to document scrollWidth. */
+@media (max-width: 760px) {
+  body.homeowner-dashboard-page .kpi-card {
+    overflow: hidden !important;
+  }
+}
+
 body.homeowner-dashboard-page .premium-property-card {
   grid-template-columns: 74px minmax(0, 1fr) auto !important;
 }
