@@ -68,7 +68,7 @@
         <div class="topbar-controls">
           <button class="icon-btn" type="button">🔔</button>
           <button class="btn btn-ghost" type="button">Get support</button>
-          <div class="date-chip">● Online</div>
+          <div class="date-chip" id="partnerAvailabilityChip">● Accepting jobs</div>
         </div>
       </div>
     </div>
@@ -173,34 +173,11 @@
         <div class="dashboard-card partner-ai-insights-card" id="partner-ai-insights">
           <div class="card-heading-row">
             <div>
-              <h3 class="dashboard-section-title">AI insights</h3>
-              <p class="dashboard-card-text">Suggestions to improve partner operations</p>
-            </div>
-            <span class="ai-live-badge">Live AI</span>
-          </div>
-          <div class="ai-insights-grid">
-            <div class="ai-insight-item positive">
-              <div class="ai-icon">📈</div>
-              <div class="ai-content">
-                <strong>High demand window detected</strong>
-                <p>Cleaning requests are increasing between 10:00 and 15:00.</p>
-              </div>
-            </div>
-            <div class="ai-insight-item warning">
-              <div class="ai-icon">⏱️</div>
-              <div class="ai-content">
-                <strong>Schedule optimisation recommended</strong>
-                <p>Move City Center Apartments before Sunset Villa to reduce travel time.</p>
-              </div>
-            </div>
-            <div class="ai-insight-item neutral">
-              <div class="ai-icon">💬</div>
-              <div class="ai-content">
-                <strong>Owner response pending</strong>
-                <p>Oceanview Villa asked for an earlier arrival confirmation.</p>
-              </div>
+              <h3 class="dashboard-section-title">Operational suggestions</h3>
+              <p class="dashboard-card-text">Based on your current requests and schedule</p>
             </div>
           </div>
+          <div class="ai-insights-grid" id="partnerOperationalSuggestions"></div>
         </div>
 
         <div class="dashboard-card" id="earnings">
@@ -239,12 +216,7 @@
 
         <div class="dashboard-card" id="calendar">
           <h3 class="dashboard-section-title">Today’s schedule</h3>
-          <div class="partner-schedule">
-            <div><strong>11:00</strong><span>Oceanview Villa · Checkout cleaning</span></div>
-            <div><strong>15:00</strong><span>City Center Apartments · Turnover cleaning</span></div>
-            <div><strong>18:00</strong><span>Sunset Villa · Deep cleaning</span></div>
-            <div><strong>20:30</strong><span>Riverside House · Upcoming</span></div>
-          </div>
+          <div class="partner-schedule" id="partnerTodaySchedule"></div>
         </div>
 
         <div class="dashboard-card partner-inbox-card" id="messages">
@@ -253,55 +225,24 @@
               <h3 class="dashboard-section-title">Messages</h3>
               <p class="dashboard-card-text">Owner requests and Nauxica updates</p>
             </div>
-            <span class="unread-badge">2 unread</span>
           </div>
           <div class="inbox-list" id="partnerMessagesList">
-            <div class="inbox-item ai-active">
-              <div class="inbox-avatar">NX</div>
-              <div class="inbox-content">
-                <div class="inbox-top">
-                  <strong>Nauxica Support</strong>
-                  <span>09:30</span>
-                </div>
-                <p>Payment for job completed has been confirmed.</p>
-                <div class="inbox-tags">
-                  <span class="tag ai">System update</span>
-                </div>
-              </div>
-            </div>
-            <div class="inbox-item">
-              <div class="inbox-avatar">CC</div>
-              <div class="inbox-content">
-                <div class="inbox-top">
-                  <strong>City Center Apartments</strong>
-                  <span>Yesterday</span>
-                </div>
-                <p>Thank you, great job.</p>
-                <div class="inbox-tags">
-                  <span class="tag positive">Resolved</span>
-                </div>
-              </div>
-            </div>
+            <div class="empty-state">Partner messaging will appear here once partner conversations are connected.</div>
           </div>
         </div>
 
         <div class="dashboard-card" id="performance">
           <h3 class="dashboard-section-title">Performance</h3>
           <div class="performance-grid">
-            <div><strong>24</strong><span>Jobs completed</span></div>
-            <div><strong>96%</strong><span>On-time rate</span></div>
-            <div><strong>18m</strong><span>Response time</span></div>
+            <div><strong id="partnerPerfCompleted">0</strong><span>Jobs completed</span></div>
+            <div><strong id="partnerPerfOnTime">Not enough data</strong><span>On-time rate</span></div>
+            <div><strong id="partnerPerfResponse">Not enough data</strong><span>Response time</span></div>
           </div>
         </div>
 
         <div class="dashboard-card" id="services">
           <h3 class="dashboard-section-title">Service area</h3>
-          <div class="partner-service-area">
-            <span class="pill">Catania</span>
-            <span class="pill">Taormina</span>
-            <span class="pill">Giardini Naxos</span>
-            <span class="pill">Acireale</span>
-          </div>
+          <div class="partner-service-area" id="partnerServiceAreas"></div>
         </div>
       </div>
     </section>
@@ -399,7 +340,7 @@
 
         const { data: profile } = await window.NauxicaSupabase
           .from('users')
-          .select('account_type, full_name, display_name, partner_service_types, is_identity_verified')
+          .select('account_type, full_name, display_name, partner_service_types, is_identity_verified, operating_areas, is_accepting_jobs')
           .eq('id', data.session.user.id)
           .single();
 
@@ -427,6 +368,27 @@
         if (kpiIconEl)  kpiIconEl.textContent  = kpiCopy.icon;
         if (kpiLabelEl) kpiLabelEl.textContent = kpiCopy.label;
         if (subtitleEl) subtitleEl.textContent = kpiCopy.subtitle;
+
+        const areasEl = document.getElementById('partnerServiceAreas');
+        if (areasEl) {
+          const areas = Array.isArray(profile.operating_areas) ? profile.operating_areas.filter(Boolean) : [];
+          areasEl.textContent = '';
+          if (areas.length) {
+            areas.forEach((area) => {
+              const pill = document.createElement('span');
+              pill.className = 'pill';
+              pill.textContent = area;
+              areasEl.appendChild(pill);
+            });
+          } else {
+            areasEl.textContent = 'No service areas set yet.';
+          }
+        }
+
+        const availabilityEl = document.getElementById('partnerAvailabilityChip');
+        if (availabilityEl) {
+          availabilityEl.textContent = profile.is_accepting_jobs ? '● Accepting jobs' : '● Not accepting jobs';
+        }
       })();
     </script>
 
@@ -526,6 +488,34 @@ logoutButton?.addEventListener("click", async function (e) {
           return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
+        async function loadNotifications() {
+          var notifEl = document.getElementById('partnerNotificationsList');
+          if (!notifEl) return;
+          try {
+            var { data: events, error } = await sb
+              .from('timeline_events')
+              .select('id, event_title, event_description, created_at')
+              .order('created_at', { ascending: false })
+              .limit(8);
+
+            if (error || !events || !events.length) {
+              notifEl.innerHTML = '<div class="empty-state">No notifications yet.</div>';
+              return;
+            }
+
+            notifEl.innerHTML = events.map(function(e) {
+              var when = e.created_at ? new Date(e.created_at).toLocaleString() : '';
+              return '<div class="inbox-item"><div class="inbox-content">' +
+                '<div class="inbox-top"><strong>' + esc(e.event_title) + '</strong><span>' + esc(when) + '</span></div>' +
+                (e.event_description ? '<p>' + esc(e.event_description) + '</p>' : '') +
+                '</div></div>';
+            }).join('');
+          } catch (e) {
+            console.error('Notifications load error:', e);
+            notifEl.innerHTML = '<div class="empty-state">No notifications yet.</div>';
+          }
+        }
+
         async function loadAndRender() {
           var { data: tasks, error } = await sb
             .from('tasks')
@@ -566,6 +556,58 @@ logoutButton?.addEventListener("click", async function (e) {
           });
           var kpi3ValueEl = document.getElementById('partnerKpi3Value');
           if (kpi3ValueEl) kpi3ValueEl.textContent = currencySymbol(monthCurrency) + monthEarnings.toFixed(2);
+
+          function pad2(n) { return String(n).padStart(2, '0'); }
+          var todayISO = now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate());
+          var tasksToday = tasks.filter(function(t) { return t.due_date === todayISO; });
+
+          var scheduleEl = document.getElementById('partnerTodaySchedule');
+          if (scheduleEl) {
+            scheduleEl.innerHTML = tasksToday.length
+              ? tasksToday.map(function(t) {
+                  var propName  = (t.properties && t.properties.display_name) || 'Property';
+                  return '<div><strong>' + esc(propName) + '</strong><span>' + esc(t.title) +
+                    ' \xb7 ' + esc(t.priority) + ' \xb7 ' + esc(t.status) +
+                    ' \xb7 Due ' + esc(t.due_date) + '</span></div>';
+                }).join('')
+              : '<div class="empty-state">No jobs scheduled for today.</div>';
+          }
+
+          var completedTasks   = tasks.filter(function(t) { return t.status === 'completed'; });
+          var completedWithDue = completedTasks.filter(function(t) { return t.due_date; });
+          var onTimeCount = completedWithDue.filter(function(t) {
+            return t.completed_at && new Date(t.completed_at) <= new Date(t.due_date + 'T23:59:59');
+          }).length;
+
+          var perfCompletedEl = document.getElementById('partnerPerfCompleted');
+          if (perfCompletedEl) perfCompletedEl.textContent = completedTasks.length;
+
+          var perfOnTimeEl = document.getElementById('partnerPerfOnTime');
+          if (perfOnTimeEl) {
+            perfOnTimeEl.textContent = completedWithDue.length
+              ? Math.round((onTimeCount / completedWithDue.length) * 100) + '%'
+              : 'Not enough data';
+          }
+          // Response time (assignment -> acceptance) has no backing data today
+          // (no accepted_at column, no task_assigned event) — left as the
+          // honest "Not enough data" default already in the markup.
+
+          var suggestionsEl = document.getElementById('partnerOperationalSuggestions');
+          if (suggestionsEl) {
+            var suggestions = [];
+            if (newRequests.length > 0) {
+              suggestions.push('You have ' + newRequests.length + ' new request' + (newRequests.length === 1 ? '' : 's') + ' waiting for response.');
+            }
+            if (tasksToday.length > 0) {
+              suggestions.push('You have ' + tasksToday.length + ' job' + (tasksToday.length === 1 ? '' : 's') + ' scheduled for today.');
+            }
+            if (!suggestions.length) {
+              suggestions.push('Operational suggestions will appear as activity grows.');
+            }
+            suggestionsEl.innerHTML = suggestions.map(function(s) {
+              return '<div class="ai-insight-item neutral"><div class="ai-content"><p>' + esc(s) + '</p></div></div>';
+            }).join('');
+          }
 
           function taskCard(t, buttons) {
             var propName  = (t.properties && t.properties.display_name) || 'Property';
@@ -670,6 +712,7 @@ logoutButton?.addEventListener("click", async function (e) {
         });
 
         await loadAndRender();
+        loadNotifications().catch(function(e) { console.error('Notifications load error:', e); });
       })();
     </script>
   </body>
