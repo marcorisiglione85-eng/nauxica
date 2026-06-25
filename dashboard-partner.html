@@ -151,32 +151,6 @@
           </div>
         </div>
 
-        <div class="dashboard-card" id="jobs">
-          <div class="card-heading-row">
-            <div>
-              <h3 class="dashboard-section-title">My jobs</h3>
-              <p class="dashboard-card-text">Accepted and active operational jobs</p>
-            </div>
-            <span class="dashboard-pill">Active</span>
-          </div>
-          <div id="partnerMyJobsList" class="partner-request-list">
-            <!-- Dynamic jobs -->
-          </div>
-        </div>
-
-        <div class="dashboard-card" id="partnerHistoryCard">
-          <div class="card-heading-row">
-            <div>
-              <h3 class="dashboard-section-title">Request history</h3>
-              <p class="dashboard-card-text">Accepted, completed and declined requests history</p>
-            </div>
-            <span class="dashboard-pill">Archive</span>
-          </div>
-          <div id="partnerHistoryList" class="partner-request-list">
-            <!-- Dynamic history -->
-          </div>
-        </div>
-
         <div class="dashboard-card partner-ai-insights-card" id="partner-ai-insights">
           <div class="card-heading-row">
             <div>
@@ -646,9 +620,7 @@ logoutButton?.addEventListener("click", async function (e) {
             '</div>';
           }
 
-          var newEl  = document.getElementById('partnerNewRequestsList');
-          var jobsEl = document.getElementById('partnerMyJobsList');
-          var histEl = document.getElementById('partnerHistoryList');
+          var newEl = document.getElementById('partnerNewRequestsList');
 
           if (newEl) {
             newEl.innerHTML = newRequests.length
@@ -660,25 +632,6 @@ logoutButton?.addEventListener("click", async function (e) {
                     '</div>');
                 }).join('')
               : '<div class="empty-state">All caught up. No pending requests.</div>';
-          }
-
-          if (jobsEl) {
-            jobsEl.innerHTML = myJobs.length
-              ? myJobs.map(function(t) {
-                  var btn = t.status === 'accepted'
-                    ? '<button class="accept-btn" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">Start job</button>'
-                    : '<button class="accept-btn" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">Complete</button>';
-                  return taskCard(t, btn);
-                }).join('')
-              : '<div class="empty-state">No accepted jobs yet.</div>';
-          }
-
-          if (histEl) {
-            histEl.innerHTML = history.length
-              ? history.map(function(t) {
-                  return taskCard(t, '');
-                }).join('')
-              : '<div class="empty-state">No history to display.</div>';
           }
         }
 
