@@ -6,16 +6,19 @@
     <title>My Jobs — Nauxica Partner</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
       .partner-request-card:target {
         outline: 2px solid rgba(212, 141, 68, 0.55);
         box-shadow: 0 0 0 4px rgba(212, 141, 68, 0.12);
         scroll-margin-top: 24px;
       }
+
+      /* ---------- Filters ---------- */
       .partner-jobs-filters-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px 14px;
+        gap: 14px 16px;
       }
       .partner-jobs-filter-group {
         margin: 0;
@@ -24,135 +27,227 @@
         grid-column: 1 / -1;
       }
       .partner-jobs-filter-label {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
         color: var(--stone);
-        margin: 0 0 4px;
+        margin: 0 0 6px;
       }
-      body.partner-dashboard-page .partner-request-card.partner-job-card-v2 {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        justify-content: flex-start !important;
-        gap: 10px !important;
-        padding: 22px !important;
-        margin-top: 14px !important;
-        border-radius: 22px !important;
-      }
-      .job-card-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      .job-card-header-left {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        min-width: 0;
-      }
-      .job-card-header strong {
-        font-size: 1.25rem;
-      }
-      .job-card-subtitle {
-        font-size: 0.94rem;
-        color: var(--stone);
-      }
-      .job-info-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px 14px;
-      }
-      .job-info-item {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-      }
-      .job-info-label {
-        font-size: 0.625rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--stone);
-      }
-      .job-info-value {
-        font-size: 0.875rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .job-earning-amount {
-        font-size: 1.375rem;
-        font-weight: 700;
-      }
-      .job-card-actions-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-      .job-card-actions-row button {
-        height: 38px;
-        padding: 0 18px;
-        border-radius: 8px;
-        font-size: 0.82rem;
-        order: 2;
-      }
-      .job-action-primary {
-        font-weight: 600;
-        order: 1;
-      }
-      .contact-host-btn,
-      .job-action-secondary {
-        background: transparent;
-        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
-        color: inherit;
-      }
-      .job-badge {
-        display: inline-flex;
-        align-items: center;
-        height: 28px;
-        padding: 0 11px;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .job-badge-priority {
-        height: 26px;
-      }
-      .job-badge-status-assigned     { background: rgba(217,119,6,0.12); color: #D97706; }
-      .job-badge-status-accepted     { background: rgba(0,110,182,0.12); color: #006EB6; }
-      .job-badge-status-in_progress  { background: rgba(232,93,4,0.12);  color: #E85D04; }
-      .job-badge-status-completed    { background: rgba(26,140,78,0.14); color: #1A8C4E; }
-      .job-badge-status-cancelled    { background: rgba(192,57,43,0.12); color: #C0392B; }
-      .job-badge-status-unknown      { background: rgba(29,35,39,0.08);  color: var(--stone); }
-      .job-badge-priority-high   { background: rgba(192,57,43,0.12); color: #C0392B; }
-      .job-badge-priority-normal { background: rgba(29,35,39,0.08);  color: var(--stone); }
-      .job-badge-priority-low    { background: rgba(26,140,78,0.12); color: #1A8C4E; }
       .partner-jobs-filter-select {
         width: 100%;
-        padding: 8px 10px;
-        border-radius: 8px;
-        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        height: 42px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.12));
         background: var(--color-background-primary, #fff);
         color: inherit;
         font-size: 0.85rem;
       }
+
+      /* ---------- Premium job card ---------- */
+      body.partner-dashboard-page .partner-request-card.pj-card {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        gap: 18px !important;
+        padding: 24px !important;
+        margin-top: 16px !important;
+        border-radius: 24px !important;
+        background: var(--color-background-primary, #fff) !important;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06)) !important;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.03), 0 6px 20px rgba(15,23,42,0.04) !important;
+        transition: transform 200ms ease, box-shadow 200ms ease;
+      }
+      body.partner-dashboard-page .partner-request-card.pj-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(15,23,42,0.04), 0 12px 28px rgba(15,23,42,0.07) !important;
+      }
+
+      .pj-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .pj-card-header-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+      }
+      .pj-card-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(232,93,4,0.08);
+        color: var(--etna-orange, #E85D04);
+        font-size: 1rem;
+      }
+      .pj-card-titles {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .pj-card-property {
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .pj-card-subtitle {
+        font-size: 1rem;
+        font-weight: 400;
+        color: var(--stone);
+      }
+
+      /* ---------- Info grid ---------- */
+      .pj-info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .pj-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .pj-info-icon-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--stone);
+      }
+      .pj-info-icon-label i {
+        font-size: 0.7rem;
+        color: var(--etna-orange, #E85D04);
+        width: 14px;
+        text-align: center;
+      }
+      .pj-info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ---------- Earning focal block ---------- */
+      .pj-earning-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 16px 0;
+        border-top: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+      }
+      .pj-earning-amount {
+        font-size: 1.875rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .pj-earning-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--stone);
+      }
+
+      /* ---------- Actions ---------- */
+      .pj-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .pj-actions button {
+        height: 42px;
+        padding: 0 20px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        order: 2;
+        transition: opacity 150ms ease, transform 150ms ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .pj-actions button:hover {
+        opacity: 0.88;
+      }
+      .pj-actions button:active {
+        transform: scale(0.98);
+      }
+      .pj-action-primary {
+        order: 1;
+        border: none;
+      }
+      .pj-action-secondary {
+        background: transparent;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        color: inherit;
+      }
+
+      /* ---------- Badges ---------- */
+      .pj-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 200ms ease, color 200ms ease;
+      }
+      .pj-badge-priority {
+        height: 24px;
+        padding: 0 10px;
+      }
+      .pj-badge-status-assigned     { background: rgba(120,113,108,0.12); color: #78716C; }
+      .pj-badge-status-accepted     { background: rgba(0,110,182,0.12);   color: #006EB6; }
+      .pj-badge-status-in_progress  { background: rgba(217,119,6,0.14);   color: #D97706; }
+      .pj-badge-status-completed    { background: rgba(26,140,78,0.14);   color: #1A8C4E; }
+      .pj-badge-status-cancelled    { background: rgba(192,57,43,0.12);   color: #C0392B; }
+      .pj-badge-status-unknown      { background: rgba(29,35,39,0.08);    color: var(--stone); }
+      .pj-badge-priority-high   { background: rgba(192,57,43,0.12); color: #C0392B; }
+      .pj-badge-priority-normal { background: rgba(29,35,39,0.08);  color: var(--stone); }
+      .pj-badge-priority-low    { background: rgba(26,140,78,0.12); color: #1A8C4E; }
+
+      /* ---------- Live Jobs (compact, distinct from main card) ---------- */
       .partner-live-job-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 10px;
-        padding: 10px 0;
-        border-bottom: 0.5px solid var(--color-border-tertiary, rgba(29,35,39,0.1));
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.07));
+      }
+      .partner-live-job-row:last-child {
+        border-bottom: none;
       }
       .partner-live-job-info {
         min-width: 0;
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
       .partner-live-job-top {
         display: flex;
@@ -160,37 +255,57 @@
         justify-content: space-between;
         gap: 8px;
       }
+      .partner-live-job-property {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
       .partner-live-job-title {
-        margin: 2px 0;
-        font-size: 0.82rem;
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--stone);
+      }
+      .partner-live-job-due {
+        font-size: 0.75rem;
         color: var(--stone);
       }
       .partner-live-job-action button {
-        height: 32px;
-        padding: 0 12px;
-        border-radius: 8px;
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 10px;
         font-size: 0.78rem;
+        font-weight: 600;
         white-space: nowrap;
+        border: none;
+        transition: opacity 150ms ease;
       }
-      @media (max-width: 760px) {
+      .partner-live-job-action button:hover {
+        opacity: 0.88;
+      }
+
+      /* ---------- Responsive ---------- */
+      @media (max-width: 768px) {
         .partner-jobs-filters-grid {
           grid-template-columns: 1fr;
         }
-        .job-info-grid {
+        .pj-info-grid {
           grid-template-columns: repeat(2, 1fr);
         }
-        .job-card-actions-row {
-          justify-content: flex-start;
+        body.partner-dashboard-page .partner-request-card.pj-card {
+          padding: 18px !important;
         }
-        body.partner-dashboard-page .partner-request-card.partner-job-card-v2 {
-          padding: 16px !important;
+        .pj-card-header {
+          flex-direction: column;
         }
-        .job-card-header strong {
-          font-size: 1.125rem;
+        .pj-card-property {
+          font-size: 1.2rem;
         }
-      }
-      .partner-live-job-row:last-child {
-        border-bottom: none;
+        .pj-actions {
+          justify-content: stretch;
+        }
+        .pj-actions button {
+          flex: 1 1 100%;
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -450,8 +565,8 @@
         }
 
         var TASK_TYPE_ICON = {
-          cleaning: '🧹', maintenance: '🔧', laundry: '🧺',
-          guest_request: '💬', transfers: '🚐', experiences: '🗺️'
+          cleaning: 'fa-broom', maintenance: 'fa-screwdriver-wrench', laundry: 'fa-shirt',
+          guest_request: 'fa-comments', transfers: 'fa-van-shuttle', experiences: 'fa-map'
         };
 
         var filters = { status: 'all', type: 'all', property: 'all', from: '', to: '' };
@@ -468,57 +583,65 @@
         function statusBadge(status) {
           var label = STATUS_BADGE_LABEL[status] || 'Unknown';
           var cls   = STATUS_BADGE_LABEL[status] ? status : 'unknown';
-          return '<span class="job-badge job-badge-status job-badge-status-' + esc(cls) + '">' + esc(label) + '</span>';
+          return '<span class="pj-badge pj-badge-status pj-badge-status-' + esc(cls) + '">' + esc(label) + '</span>';
         }
 
         function priorityBadge(priority) {
           var label = PRIORITY_BADGE_LABEL[priority] || 'Normal';
           var cls   = PRIORITY_BADGE_LABEL[priority] ? priority : 'normal';
-          return '<span class="job-badge job-badge-priority job-badge-priority-' + esc(cls) + '">' + esc(label) + '</span>';
+          return '<span class="pj-badge pj-badge-priority pj-badge-priority-' + esc(cls) + '">' + esc(label) + '</span>';
         }
 
-        function infoItem(label, value) {
-          return '<div class="job-info-item"><span class="job-info-label">' + esc(label) + '</span>' +
-            '<span class="job-info-value">' + value + '</span></div>';
+        function infoItem(icon, label, value) {
+          return '<div class="pj-info-item"><span class="pj-info-icon-label"><i class="fa-solid ' + icon + '" aria-hidden="true"></i>' + esc(label) + '</span>' +
+            '<span class="pj-info-value">' + value + '</span></div>';
         }
 
         function taskCard(t) {
           var propName  = getPropertyName(t);
           var typeLabel = TASK_TYPE_LABELS[t.task_type] || t.task_type;
-          var typeIcon  = TASK_TYPE_ICON[t.task_type] || '🧹';
+          var typeIcon  = TASK_TYPE_ICON[t.task_type] || 'fa-broom';
 
           var infoItems = [];
-          infoItems.push(infoItem(typeIcon + ' Service', esc(typeLabel)));
-          infoItems.push(infoItem('⚑ Priority', priorityBadge(t.priority)));
-          infoItems.push(infoItem('📅 Due', t.due_date ? esc(t.due_date) : '—'));
-          if (t.completed_at) infoItems.push(infoItem('✅ Completed', esc(t.completed_at.split('T')[0])));
-          if (t.reservations && t.reservations.guest_name) infoItems.push(infoItem('👤 Guest', esc(t.reservations.guest_name)));
+          infoItems.push(infoItem(typeIcon, 'Service', esc(typeLabel)));
+          infoItems.push(infoItem('fa-flag', 'Priority', priorityBadge(t.priority)));
+          infoItems.push(infoItem('fa-calendar-days', 'Due', t.due_date ? esc(t.due_date) : '—'));
+          if (t.completed_at) infoItems.push(infoItem('fa-circle-check', 'Completed', esc(t.completed_at.split('T')[0])));
+          if (t.reservations && t.reservations.guest_name) infoItems.push(infoItem('fa-user', 'Guest', esc(t.reservations.guest_name)));
 
+          var earningBlock = '';
           if (t.task_value_amount != null) {
             var earnSym = currencySymbol(t.task_value_currency);
             var earnAmt = esc(earnSym + (parseFloat(t.task_value_amount) * (1 - commissionRate)).toFixed(2));
-            infoItems.push(infoItem('💰 Earning', '<span class="job-earning-amount">' + earnAmt + '</span>'));
+            earningBlock = '<div class="pj-earning-block">' +
+              '<div class="pj-earning-amount">' + earnAmt + '</div>' +
+              '<div class="pj-earning-label"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i> Your earning</div>' +
+            '</div>';
           }
 
           var buttons = '';
           if (t.status === 'accepted') {
-            buttons += '<button class="accept-btn job-action-primary job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">▶ Start Job</button>';
+            buttons += '<button class="accept-btn pj-action-primary job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '"><i class="fa-solid fa-play" aria-hidden="true"></i> Start Job</button>';
           } else if (t.status === 'in_progress') {
-            buttons += '<button class="accept-btn job-action-primary job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">✓ Complete Job</button>';
+            buttons += '<button class="accept-btn pj-action-primary job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Complete Job</button>';
           }
-          buttons += '<button class="contact-host-btn job-action-secondary" type="button" data-action="contact-host" data-task-id="' + esc(t.id) + '">💬 Contact Host</button>';
+          buttons += '<button class="contact-host-btn pj-action-secondary" type="button" data-action="contact-host" data-task-id="' + esc(t.id) + '"><i class="fa-solid fa-comments" aria-hidden="true"></i> Contact Host</button>';
 
           var statusClass = String(t.status || '').replace(/_/g, '-');
-          return '<div class="partner-request-card request-' + esc(statusClass) + ' partner-job-card-v2" id="job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
-            '<div class="job-card-header">' +
-              '<div class="job-card-header-left">' +
-                '<strong>🏠 ' + esc(propName) + '</strong>' +
-                '<div class="job-card-subtitle">' + esc(t.title) + '</div>' +
+          return '<div class="partner-request-card request-' + esc(statusClass) + ' pj-card" id="job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
+            '<div class="pj-card-header">' +
+              '<div class="pj-card-header-left">' +
+                '<div class="pj-card-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></div>' +
+                '<div class="pj-card-titles">' +
+                  '<div class="pj-card-property">' + esc(propName) + '</div>' +
+                  '<div class="pj-card-subtitle">' + esc(t.title) + '</div>' +
+                '</div>' +
               '</div>' +
               statusBadge(t.status) +
             '</div>' +
-            '<div class="job-info-grid">' + infoItems.join('') + '</div>' +
-            '<div class="job-card-actions-row">' + buttons + '</div>' +
+            '<div class="pj-info-grid">' + infoItems.join('') + '</div>' +
+            earningBlock +
+            '<div class="pj-actions">' + buttons + '</div>' +
           '</div>';
         }
 
@@ -593,23 +716,23 @@
 
         function liveJobRow(t) {
           var propName = getPropertyName(t);
-          var due      = t.due_date ? '📅 Due ' + esc(t.due_date) : '📅 No due date';
+          var due      = t.due_date ? 'Due ' + esc(t.due_date) : 'No due date';
 
           var button = '';
           if (t.status === 'accepted') {
-            button = '<button class="accept-btn job-action-primary job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">▶ Start Job</button>';
+            button = '<button class="accept-btn job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '"><i class="fa-solid fa-play" aria-hidden="true"></i> Start Job</button>';
           } else if (t.status === 'in_progress') {
-            button = '<button class="accept-btn job-action-primary job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">✓ Complete Job</button>';
+            button = '<button class="accept-btn job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Complete Job</button>';
           }
 
           return '<div class="partner-live-job-row" id="live-job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
             '<div class="partner-live-job-info">' +
               '<div class="partner-live-job-top">' +
-                '<strong>🏠 ' + esc(propName) + '</strong>' +
+                '<span class="partner-live-job-property"><i class="fa-solid fa-house" aria-hidden="true"></i> ' + esc(propName) + '</span>' +
                 statusBadge(t.status) +
               '</div>' +
               '<p class="partner-live-job-title">' + esc(t.title) + '</p>' +
-              '<small>' + due + '</small>' +
+              '<small class="partner-live-job-due"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> ' + due + '</small>' +
             '</div>' +
             '<div class="partner-live-job-action">' + button + '</div>' +
           '</div>';
