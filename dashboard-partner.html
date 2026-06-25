@@ -6,6 +6,13 @@
     <title>Partner Dashboard — Nauxica</title>
     <link rel="icon" href="assets/logo/favicon.ico" />
     <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      .partner-request-card:target {
+        outline: 2px solid rgba(212, 141, 68, 0.55);
+        box-shadow: 0 0 0 4px rgba(212, 141, 68, 0.12);
+        scroll-margin-top: 24px;
+      }
+    </style>
   </head>
   <body class="partner-dashboard-page">
     <header class="nx-header app-top-header">
@@ -494,7 +501,7 @@ logoutButton?.addEventListener("click", async function (e) {
           try {
             var { data: events, error } = await sb
               .from('timeline_events')
-              .select('id, event_title, event_description, created_at')
+              .select('id, task_id, event_title, event_description, created_at')
               .order('created_at', { ascending: false })
               .limit(8);
 
@@ -505,10 +512,13 @@ logoutButton?.addEventListener("click", async function (e) {
 
             notifEl.innerHTML = events.map(function(e) {
               var when = e.created_at ? new Date(e.created_at).toLocaleString() : '';
-              return '<div class="inbox-item"><div class="inbox-content">' +
+              var tag = e.task_id ? 'a' : 'div';
+              var hrefAttr = e.task_id ? ' href="#job-' + esc(e.task_id) + '"' : '';
+              var cls = 'inbox-item' + (e.task_id ? ' partner-notification-link' : '');
+              return '<' + tag + ' class="' + cls + '"' + hrefAttr + '><div class="inbox-content">' +
                 '<div class="inbox-top"><strong>' + esc(e.event_title) + '</strong><span>' + esc(when) + '</span></div>' +
                 (e.event_description ? '<p>' + esc(e.event_description) + '</p>' : '') +
-                '</div></div>';
+                '</div></' + tag + '>';
             }).join('');
           } catch (e) {
             console.error('Notifications load error:', e);
@@ -621,7 +631,7 @@ logoutButton?.addEventListener("click", async function (e) {
             var guestLine = (t.reservations && t.reservations.guest_name)
               ? '<small style="color:var(--stone)">Guest: ' + esc(t.reservations.guest_name) + '</small>'
               : '';
-            return '<div class="partner-request-card request-' + esc(t.status) + '" data-task-id="' + esc(t.id) + '">' +
+            return '<div class="partner-request-card request-' + esc(t.status) + '" id="job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
               '<div>' +
                 '<strong>' + esc(propName) + '</strong>' +
                 '<p>' + esc(t.title) + ' \xb7 ' + esc(typeLabel) + '</p>' +
