@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>My Jobs — Nauxica Partner</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <style>
+      .partner-request-card:target {
+        outline: 2px solid rgba(212, 141, 68, 0.55);
+        box-shadow: 0 0 0 4px rgba(212, 141, 68, 0.12);
+        scroll-margin-top: 24px;
+      }
+      .partner-jobs-filters-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px 14px;
+      }
+      .partner-jobs-filter-group {
+        margin: 0;
+      }
+      .partner-jobs-filter-group.full-width {
+        grid-column: 1 / -1;
+      }
+      .partner-jobs-filter-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--stone);
+        margin: 0 0 4px;
+      }
+      body.partner-dashboard-page .partner-request-card.partner-job-card-v2 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        padding: 22px !important;
+        margin-top: 14px !important;
+        border-radius: 22px !important;
+      }
+      .job-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .job-card-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+      .job-card-header strong {
+        font-size: 1.25rem;
+      }
+      .job-card-subtitle {
+        font-size: 0.94rem;
+        color: var(--stone);
+      }
+      .job-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px 14px;
+      }
+      .job-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .job-info-label {
+        font-size: 0.625rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--stone);
+      }
+      .job-info-value {
+        font-size: 0.875rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .job-earning-amount {
+        font-size: 1.375rem;
+        font-weight: 700;
+      }
+      .job-card-actions-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .job-card-actions-row button {
+        height: 38px;
+        padding: 0 18px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        order: 2;
+      }
+      .job-action-primary {
+        font-weight: 600;
+        order: 1;
+      }
+      .contact-host-btn,
+      .job-action-secondary {
+        background: transparent;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        color: inherit;
+      }
+      .job-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 11px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .job-badge-priority {
+        height: 26px;
+      }
+      .job-badge-status-assigned     { background: rgba(217,119,6,0.12); color: #D97706; }
+      .job-badge-status-accepted     { background: rgba(0,110,182,0.12); color: #006EB6; }
+      .job-badge-status-in_progress  { background: rgba(232,93,4,0.12);  color: #E85D04; }
+      .job-badge-status-completed    { background: rgba(26,140,78,0.14); color: #1A8C4E; }
+      .job-badge-status-cancelled    { background: rgba(192,57,43,0.12); color: #C0392B; }
+      .job-badge-status-unknown      { background: rgba(29,35,39,0.08);  color: var(--stone); }
+      .job-badge-priority-high   { background: rgba(192,57,43,0.12); color: #C0392B; }
+      .job-badge-priority-normal { background: rgba(29,35,39,0.08);  color: var(--stone); }
+      .job-badge-priority-low    { background: rgba(26,140,78,0.12); color: #1A8C4E; }
+      .partner-jobs-filter-select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        background: var(--color-background-primary, #fff);
+        color: inherit;
+        font-size: 0.85rem;
+      }
+      .partner-live-job-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 0.5px solid var(--color-border-tertiary, rgba(29,35,39,0.1));
+      }
+      .partner-live-job-info {
+        min-width: 0;
+        flex: 1;
+      }
+      .partner-live-job-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .partner-live-job-title {
+        margin: 2px 0;
+        font-size: 0.82rem;
+        color: var(--stone);
+      }
+      .partner-live-job-action button {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+      @media (max-width: 760px) {
+        .partner-jobs-filters-grid {
+          grid-template-columns: 1fr;
+        }
+        .job-info-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .job-card-actions-row {
+          justify-content: flex-start;
+        }
+        body.partner-dashboard-page .partner-request-card.partner-job-card-v2 {
+          padding: 16px !important;
+        }
+        .job-card-header strong {
+          font-size: 1.125rem;
+        }
+      }
+      .partner-live-job-row:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body class="partner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
+        </a>
+
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">
+              Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell partner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Partner navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="partner-brand">
+            <div class="sidebar-brand">Nauxica</div>
+            <span>Partner Network</span>
+          </div>
+
+          <div class="partner-profile-card">
+            <div class="partner-profile-icon">🧹</div>
+            <div>
+              <strong id="partnerCardName">Sparkle Clean</strong>
+              <span id="partnerCardService">Cleaning services</span>
+              <small id="partnerCardVerified">✓ Verified partner</small>
+            </div>
+          </div>
+
+          <nav class="dashboard-nav"></nav>
+
+          <div class="partner-help-card">
+            <strong>Need help?</strong>
+            <span>Contact Nauxica support</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar partner-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label">Nauxica partner workspace</div>
+            <h1 class="dashboard-title">My Jobs</h1>
+            <div class="topbar-sub">Manage active, upcoming and completed partner jobs.</div>
+          </div>
+        </div>
+
+        <section class="dashboard-grid">
+          <div class="col-left">
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="dashboard-section-title">Filters</h3>
+                </div>
+              </div>
+
+              <div class="partner-jobs-filters-grid">
+                <div class="partner-jobs-filter-group">
+                  <p class="partner-jobs-filter-label">Status</p>
+                  <select id="jobsStatusFilter" class="partner-jobs-filter-select">
+                    <option value="all" selected>All</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                <div class="partner-jobs-filter-group">
+                  <p class="partner-jobs-filter-label">Task type</p>
+                  <select id="jobsTypeFilter" class="partner-jobs-filter-select">
+                    <option value="all" selected>All types</option>
+                    <option value="cleaning">Cleaning</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="laundry">Laundry</option>
+                    <option value="guest_request">Guest request</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div class="partner-jobs-filter-group full-width">
+                  <p class="partner-jobs-filter-label">Property</p>
+                  <select id="jobsPropertyFilter" class="partner-jobs-filter-select">
+                    <option value="all" selected>All properties</option>
+                  </select>
+                </div>
+
+                <div class="partner-jobs-filter-group">
+                  <p class="partner-jobs-filter-label">Date from</p>
+                  <input type="date" id="jobsDateFrom" class="partner-jobs-filter-select">
+                </div>
+
+                <div class="partner-jobs-filter-group">
+                  <p class="partner-jobs-filter-label">Date to</p>
+                  <input type="date" id="jobsDateTo" class="partner-jobs-filter-select">
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="dashboard-section-title">Jobs</h3>
+                  <p class="dashboard-card-text" id="jobsListSummary">Loading…</p>
+                </div>
+              </div>
+              <div id="partnerJobsList" class="partner-request-list">
+                <!-- Dynamic jobs -->
+              </div>
+            </div>
+          </div>
+
+          <div class="col-right">
+            <div class="dashboard-card">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="dashboard-section-title">Live Jobs</h3>
+                  <p class="dashboard-card-text">Accepted and in-progress jobs</p>
+                </div>
+              </div>
+              <div id="partnerLiveJobsList" class="partner-request-list">
+                <!-- Dynamic live jobs -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
+
+    <script type="module">
+      const SERVICE_LABELS = {
+        cleaning:     'Cleaning services',
+        maintenance:  'Maintenance services',
+        laundry:      'Laundry services',
+        transfers:    'Transfer services',
+        experiences:  'Experience services',
+      };
+
+      (async () => {
+        const { data } = await window.NauxicaSupabase.auth.getSession();
+        if (!data.session) { window.location.replace('login.html'); return; }
+
+        const { data: profile } = await window.NauxicaSupabase
+          .from('users')
+          .select('account_type, full_name, display_name, partner_service_types, is_identity_verified')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (!profile || profile.account_type !== 'partner') { window.location.replace('login.html'); return; }
+
+        const serviceKey    = Array.isArray(profile.partner_service_types) && profile.partner_service_types.length
+          ? profile.partner_service_types[0]
+          : null;
+        const serviceLabel  = SERVICE_LABELS[serviceKey] || 'Partner services';
+        const verifiedLabel = profile.is_identity_verified ? '✓ Verified partner' : '⏳ Verification pending';
+
+        document.getElementById('partnerCardName').textContent     = profile.display_name || profile.full_name || 'Partner';
+        document.getElementById('partnerCardService').textContent  = serviceLabel;
+        document.getElementById('partnerCardVerified').textContent = verifiedLabel;
+      })();
+    </script>
+
+    <script>
+      localStorage.setItem('accountType', 'partner');
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'partner');
+      NauxicaShared.setActivePage('jobs');
+      NauxicaShared.updateTopbar('partner');
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+        const header           = document.querySelector(".nx-header");
+        const mobileMenuLinks  = document.querySelectorAll(".nx-links a");
+
+        if (mobileMenuButton && header) {
+          mobileMenuButton.addEventListener("click", function () {
+            const isOpen = header.classList.toggle("nav-open");
+            mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          });
+        }
+
+        mobileMenuLinks.forEach(function (link) {
+          link.addEventListener("click", function () {
+            header.classList.remove("nav-open");
+            if (mobileMenuButton) mobileMenuButton.setAttribute("aria-expanded", "false");
+          });
+        });
+      });
+
+      const logoutButton = document.querySelector("#logout-button");
+      logoutButton?.addEventListener("click", async function (e) {
+        e.preventDefault();
+        const { error } = await window.NauxicaSupabase.auth.signOut();
+        if (error) console.error('signOut error:', error);
+        localStorage.removeItem("nauxicaAccountType");
+        localStorage.removeItem("accountType");
+        window.location.replace("login.html");
+      });
+    </script>
+
+    <script type="module">
+      (async () => {
+        var sb = window.NauxicaSupabase;
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+        var uid = sessData.session.user.id;
+        var allTasks = [];
+        var commissionRate = 0.15;
+
+        var { data: ruleData } = await sb
+          .from('commission_rules')
+          .select('rate')
+          .eq('scope_type', 'global')
+          .is('scope_id', null)
+          .maybeSingle();
+        if (ruleData && ruleData.rate != null) commissionRate = parseFloat(ruleData.rate);
+
+        var TASK_TYPE_LABELS = {
+          cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+          laundry: 'Laundry', guest_request: 'Guest request', other: 'Other'
+        };
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function currencySymbol(cur) {
+          return cur === 'EUR' ? '€' : cur === 'USD' ? '$' : cur === 'GBP' ? '£' : (cur || 'EUR') + ' ';
+        }
+
+        function getPropertyName(t) {
+          if (t.properties && t.properties.display_name) return t.properties.display_name;
+          if (t.property_display_name) return t.property_display_name;
+          if (t.property_name) return t.property_name;
+          if (t.property && t.property.display_name) return t.property.display_name;
+          return 'Property not available';
+        }
+
+        var TASK_TYPE_ICON = {
+          cleaning: '🧹', maintenance: '🔧', laundry: '🧺',
+          guest_request: '💬', transfers: '🚐', experiences: '🗺️'
+        };
+
+        var filters = { status: 'all', type: 'all', property: 'all', from: '', to: '' };
+
+        var STATUS_BADGE_LABEL = {
+          assigned: 'Assigned', accepted: 'Accepted', in_progress: 'In progress',
+          completed: 'Completed', cancelled: 'Cancelled'
+        };
+
+        var PRIORITY_BADGE_LABEL = {
+          high: 'High', normal: 'Normal', low: 'Low'
+        };
+
+        function statusBadge(status) {
+          var label = STATUS_BADGE_LABEL[status] || 'Unknown';
+          var cls   = STATUS_BADGE_LABEL[status] ? status : 'unknown';
+          return '<span class="job-badge job-badge-status job-badge-status-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+
+        function priorityBadge(priority) {
+          var label = PRIORITY_BADGE_LABEL[priority] || 'Normal';
+          var cls   = PRIORITY_BADGE_LABEL[priority] ? priority : 'normal';
+          return '<span class="job-badge job-badge-priority job-badge-priority-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+
+        function infoItem(label, value) {
+          return '<div class="job-info-item"><span class="job-info-label">' + esc(label) + '</span>' +
+            '<span class="job-info-value">' + value + '</span></div>';
+        }
+
+        function taskCard(t) {
+          var propName  = getPropertyName(t);
+          var typeLabel = TASK_TYPE_LABELS[t.task_type] || t.task_type;
+          var typeIcon  = TASK_TYPE_ICON[t.task_type] || '🧹';
+
+          var infoItems = [];
+          infoItems.push(infoItem(typeIcon + ' Service', esc(typeLabel)));
+          infoItems.push(infoItem('⚑ Priority', priorityBadge(t.priority)));
+          infoItems.push(infoItem('📅 Due', t.due_date ? esc(t.due_date) : '—'));
+          if (t.completed_at) infoItems.push(infoItem('✅ Completed', esc(t.completed_at.split('T')[0])));
+          if (t.reservations && t.reservations.guest_name) infoItems.push(infoItem('👤 Guest', esc(t.reservations.guest_name)));
+
+          if (t.task_value_amount != null) {
+            var earnSym = currencySymbol(t.task_value_currency);
+            var earnAmt = esc(earnSym + (parseFloat(t.task_value_amount) * (1 - commissionRate)).toFixed(2));
+            infoItems.push(infoItem('💰 Earning', '<span class="job-earning-amount">' + earnAmt + '</span>'));
+          }
+
+          var buttons = '';
+          if (t.status === 'accepted') {
+            buttons += '<button class="accept-btn job-action-primary job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">▶ Start Job</button>';
+          } else if (t.status === 'in_progress') {
+            buttons += '<button class="accept-btn job-action-primary job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">✓ Complete Job</button>';
+          }
+          buttons += '<button class="contact-host-btn job-action-secondary" type="button" data-action="contact-host" data-task-id="' + esc(t.id) + '">💬 Contact Host</button>';
+
+          var statusClass = String(t.status || '').replace(/_/g, '-');
+          return '<div class="partner-request-card request-' + esc(statusClass) + ' partner-job-card-v2" id="job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
+            '<div class="job-card-header">' +
+              '<div class="job-card-header-left">' +
+                '<strong>🏠 ' + esc(propName) + '</strong>' +
+                '<div class="job-card-subtitle">' + esc(t.title) + '</div>' +
+              '</div>' +
+              statusBadge(t.status) +
+            '</div>' +
+            '<div class="job-info-grid">' + infoItems.join('') + '</div>' +
+            '<div class="job-card-actions-row">' + buttons + '</div>' +
+          '</div>';
+        }
+
+        var STATUS_SORT_RANK = {
+          in_progress: 1, accepted: 2, assigned: 3, completed: 5, cancelled: 6
+        };
+
+        function jobSortRank(t) {
+          if (t.status === 'assigned') {
+            var today = new Date();
+            var todayISO = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            return t.due_date === todayISO ? 3 : 4;
+          }
+          return STATUS_SORT_RANK[t.status] || 7;
+        }
+
+        function compareJobs(a, b) {
+          var rankDiff = jobSortRank(a) - jobSortRank(b);
+          if (rankDiff !== 0) return rankDiff;
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0;
+        }
+
+        function applyFilters(tasks) {
+          return tasks.filter(function(t) {
+            if (filters.status !== 'all' && t.status !== filters.status) return false;
+            if (filters.type !== 'all' && t.task_type !== filters.type) return false;
+            if (filters.property !== 'all') {
+              if (getPropertyName(t) !== filters.property) return false;
+            }
+            if (filters.from && (!t.due_date || t.due_date < filters.from)) return false;
+            if (filters.to && (!t.due_date || t.due_date > filters.to)) return false;
+            return true;
+          });
+        }
+
+        function renderList() {
+          var listEl    = document.getElementById('partnerJobsList');
+          var summaryEl = document.getElementById('jobsListSummary');
+          var filtered  = applyFilters(allTasks);
+
+          if (!allTasks.length) {
+            summaryEl.textContent = 'No jobs found.';
+            listEl.innerHTML = '<div class="empty-state">No jobs found.</div>';
+            return;
+          }
+
+          if (!filtered.length) {
+            summaryEl.textContent = '0 of ' + allTasks.length + ' jobs match these filters.';
+            listEl.innerHTML = '<div class="empty-state">No jobs match these filters.</div>';
+            return;
+          }
+
+          summaryEl.textContent = filtered.length + ' of ' + allTasks.length + ' job' + (allTasks.length === 1 ? '' : 's');
+          var sorted = filtered.slice().sort(compareJobs);
+          listEl.innerHTML = sorted.map(taskCard).join('');
+        }
+
+        function renderPropertyFilterOptions() {
+          var selectEl = document.getElementById('jobsPropertyFilter');
+          var names = Array.from(new Set(allTasks.map(getPropertyName))).sort();
+
+          var html = '<option value="all">All properties</option>';
+          html += names.map(function(name) {
+            return '<option value="' + esc(name) + '">' + esc(name) + '</option>';
+          }).join('');
+          selectEl.innerHTML = html;
+          selectEl.value = filters.property === 'all' || names.indexOf(filters.property) !== -1 ? filters.property : 'all';
+        }
+
+        function liveJobRow(t) {
+          var propName = getPropertyName(t);
+          var due      = t.due_date ? '📅 Due ' + esc(t.due_date) : '📅 No due date';
+
+          var button = '';
+          if (t.status === 'accepted') {
+            button = '<button class="accept-btn job-action-primary job-action-start" type="button" data-action="start-task" data-task-id="' + esc(t.id) + '">▶ Start Job</button>';
+          } else if (t.status === 'in_progress') {
+            button = '<button class="accept-btn job-action-primary job-action-complete" type="button" data-action="complete-task" data-task-id="' + esc(t.id) + '">✓ Complete Job</button>';
+          }
+
+          return '<div class="partner-live-job-row" id="live-job-' + esc(t.id) + '" data-task-id="' + esc(t.id) + '">' +
+            '<div class="partner-live-job-info">' +
+              '<div class="partner-live-job-top">' +
+                '<strong>🏠 ' + esc(propName) + '</strong>' +
+                statusBadge(t.status) +
+              '</div>' +
+              '<p class="partner-live-job-title">' + esc(t.title) + '</p>' +
+              '<small>' + due + '</small>' +
+            '</div>' +
+            '<div class="partner-live-job-action">' + button + '</div>' +
+          '</div>';
+        }
+
+        function renderLiveJobs() {
+          var liveEl = document.getElementById('partnerLiveJobsList');
+          if (!liveEl) return;
+          var live = allTasks.filter(function(t) { return t.status === 'accepted' || t.status === 'in_progress'; }).sort(compareJobs);
+          liveEl.innerHTML = live.length
+            ? live.map(liveJobRow).join('')
+            : '<div class="empty-state">No live jobs.</div>';
+        }
+
+        async function loadAndRender() {
+          var { data: tasks, error } = await sb
+            .from('tasks')
+            .select('id, property_id, title, task_type, priority, status, due_date, completed_at, task_value_amount, task_value_currency, properties(display_name), reservation_id, reservations(guest_name, checkin_date, checkout_date)')
+            .eq('assigned_partner_id', uid)
+            .order('due_date', { ascending: true, nullsFirst: false });
+
+          if (error) { console.error('Tasks load error:', error); return; }
+          allTasks = tasks || [];
+
+          renderPropertyFilterOptions();
+          renderList();
+          renderLiveJobs();
+        }
+
+        document.getElementById('jobsStatusFilter').addEventListener('change', function(e) {
+          filters.status = e.target.value;
+          renderList();
+        });
+
+        document.getElementById('jobsTypeFilter').addEventListener('change', function(e) {
+          filters.type = e.target.value;
+          renderList();
+        });
+
+        document.getElementById('jobsPropertyFilter').addEventListener('change', function(e) {
+          filters.property = e.target.value;
+          renderList();
+        });
+
+        document.getElementById('jobsDateFrom').addEventListener('change', function(e) {
+          filters.from = e.target.value;
+          renderList();
+        });
+
+        document.getElementById('jobsDateTo').addEventListener('change', function(e) {
+          filters.to = e.target.value;
+          renderList();
+        });
+
+        document.body.addEventListener('click', async function(e) {
+          var btn = e.target.closest('[data-action]');
+          if (!btn) return;
+          var action = btn.dataset.action;
+          var taskId = btn.dataset.taskId;
+
+          if (action === 'contact-host') {
+            alert('Partner messaging will be available soon.');
+            return;
+          }
+
+          if (!taskId) return;
+
+          var updates = null;
+          if (action === 'start-task')    updates = { status: 'in_progress' };
+          if (action === 'complete-task') updates = { status: 'completed' };
+          if (!updates) return;
+
+          var { error } = await sb.from('tasks').update(updates).eq('id', taskId);
+          if (error) { console.error('Task update error:', error); return; }
+
+          var ptask = allTasks.find(function(t) { return t.id === taskId; });
+          var evtMap = {
+            'start-task':    { type: 'task_started',   title: 'Task started' },
+            'complete-task': { type: 'task_completed', title: 'Task completed' }
+          };
+          var evtDef = evtMap[action];
+          if (evtDef) {
+            window.NauxicaTimeline.log({
+              property_id: ptask ? ptask.property_id : null,
+              task_id:     taskId,
+              actor_type:  'partner',
+              event_type:  evtDef.type,
+              event_title: evtDef.title + (ptask ? ': ' + ptask.title : ''),
+              metadata:    { task_value_amount: ptask ? ptask.task_value_amount : null, task_value_currency: ptask ? ptask.task_value_currency : 'EUR' }
+            });
+          }
+
+          await loadAndRender();
+        });
+
+        await loadAndRender();
+      })();
+    </script>
+  </body>
+</html>

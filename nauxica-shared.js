@@ -2,7 +2,7 @@ window.NauxicaShared = (function () {
   var PARTNER_NAV = [
     '<a class="dashboard-nav-item" id="dashboard-link" href="dashboard-partner.html">Dashboard</a>',
     '<a class="dashboard-nav-item" href="dashboard-partner.html#requests">Requests</a>',
-    '<a class="dashboard-nav-item" href="dashboard-partner.html#jobs">My Jobs</a>',
+    '<a class="dashboard-nav-item" data-page="jobs" href="partner-jobs.html">My Jobs</a>',
     '<a class="dashboard-nav-item" data-page="calendar" href="calendar.html">Calendar</a>',
     '<a class="dashboard-nav-item" data-page="availability" href="availability.html">Availability</a>',
     '<a class="dashboard-nav-item" href="dashboard-partner.html#earnings">Earnings</a>',

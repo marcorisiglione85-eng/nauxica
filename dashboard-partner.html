@@ -487,7 +487,7 @@ logoutButton?.addEventListener("click", async function (e) {
             notifEl.innerHTML = events.map(function(e) {
               var when = e.created_at ? new Date(e.created_at).toLocaleString() : '';
               var tag = e.task_id ? 'a' : 'div';
-              var hrefAttr = e.task_id ? ' href="#job-' + esc(e.task_id) + '"' : '';
+              var hrefAttr = e.task_id ? ' href="partner-jobs.html#job-' + esc(e.task_id) + '"' : '';
               var cls = 'inbox-item' + (e.task_id ? ' partner-notification-link' : '');
               return '<' + tag + ' class="' + cls + '"' + hrefAttr + '><div class="inbox-content">' +
                 '<div class="inbox-top"><strong>' + esc(e.event_title) + '</strong><span>' + esc(when) + '</span></div>' +
