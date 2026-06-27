@@ -111,11 +111,21 @@
       .jd-contact-row:last-child { border-bottom: none; }
       .jd-contact-phone { font-weight: 700; color: var(--etna-orange, #E85D04); }
 
-      .jd-check-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.85rem; }
-      .jd-check-icon { width: 18px; text-align: center; flex-shrink: 0; }
-      .jd-check-icon.is-checked { color: #1A8C4E; }
-      .jd-check-icon.is-unchecked { color: var(--stone); opacity: 0.5; }
-      .jd-check-note { color: var(--stone); font-size: 0.78rem; margin-left: 28px; }
+      .jd-evidence-intro { font-size: 0.78rem; color: var(--stone); margin: 0 0 10px; }
+      .jd-evidence-row { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06)); }
+      .jd-evidence-row:last-child { border-bottom: none; }
+      .jd-evidence-checkbox-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; }
+      .jd-evidence-checkbox { width: 16px; height: 16px; accent-color: var(--etna-orange, #E85D04); cursor: pointer; flex-shrink: 0; }
+      .jd-evidence-note-input {
+        display: block; width: calc(100% - 26px); margin: 6px 0 0 26px;
+        height: 32px; padding: 0 10px; border-radius: 8px; font-size: 0.78rem;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.12));
+        background: var(--color-background-primary, #fff); color: inherit;
+      }
+      .jd-evidence-error {
+        margin-top: 10px; padding: 8px 10px; border-radius: 8px; font-size: 0.78rem;
+        background: rgba(192,57,43,0.08); color: #7f1d1d; border: 1px solid rgba(192,57,43,0.2);
+      }
 
       .jd-photo-group { margin-bottom: 14px; }
       .jd-photo-group-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stone); margin-bottom: 6px; }
@@ -530,18 +540,162 @@
           '</div>';
         }
 
-        // ── Job Report (evidence — read-only) ───────────────────────────
+        // ── Job Report — Evidence checks ────────────────────────────────
+        // Checklist is evidence, not procedure: a fixed set of confirmation
+        // points per task_type, always shown (even with no DB rows yet),
+        // editable by the assigned partner. Not a workflow/SOP — no
+        // numbering, no required-to-complete gating (Sprint 029D.4).
+        var EVIDENCE_CHECK_KEYS = {
+          cleaning:      ['property_accessed', 'work_completed', 'no_damage_or_issues', 'photos_uploaded'],
+          maintenance:   ['issue_inspected', 'repair_attempted_or_completed', 'photos_uploaded', 'follow_up_needed'],
+          laundry:       ['items_collected_or_delivered', 'issue_reported_if_any'],
+          transfers:     ['guest_picked_up_or_dropped_off', 'delay_reported_if_any'],
+          experiences:   ['guest_attended', 'issue_reported_if_any'],
+          guest_request: ['request_fulfilled', 'issue_reported_if_any'],
+          other:         ['work_completed', 'issue_reported_if_any']
+        };
+        var EVIDENCE_CHECK_LABEL = {
+          property_accessed: 'Property accessed',
+          work_completed: 'Work completed',
+          no_damage_or_issues: 'No damage or issues',
+          photos_uploaded: 'Photos uploaded',
+          issue_inspected: 'Issue inspected',
+          repair_attempted_or_completed: 'Repair attempted or completed',
+          follow_up_needed: 'Follow-up needed',
+          items_collected_or_delivered: 'Items collected or delivered',
+          issue_reported_if_any: 'Issue reported (if any)',
+          guest_picked_up_or_dropped_off: 'Guest picked up or dropped off',
+          delay_reported_if_any: 'Delay reported (if any)',
+          guest_attended: 'Guest attended',
+          request_fulfilled: 'Request fulfilled'
+        };
+
+        var evidenceNoteTimers = {};
+        var evidenceSaveError  = '';
+
+        function getCheckRow(checkKey) {
+          return checks.find(function(c) { return c.check_key === checkKey; }) || null;
+        }
+
+        async function handleEvidenceCheckToggle(checkKey, isChecked) {
+          evidenceSaveError = '';
+          var nowIso = new Date().toISOString();
+          var payload = {
+            task_id: taskId,
+            check_key: checkKey,
+            is_checked: isChecked,
+            completed_at: isChecked ? nowIso : null,
+            completed_by: isChecked ? uid : null
+          };
+
+          var { error } = await sb.from('task_evidence_checks').upsert(payload, { onConflict: 'task_id,check_key' });
+          if (error) {
+            console.error('Evidence check save error:', error);
+            evidenceSaveError = 'Could not save this check. Please try again.';
+            renderJobReportSection();
+            return;
+          }
+
+          var existing = getCheckRow(checkKey);
+          if (existing) {
+            existing.is_checked   = isChecked;
+            existing.completed_at = payload.completed_at;
+            existing.completed_by = payload.completed_by;
+          } else {
+            checks.push({
+              id: null, task_id: taskId, check_key: checkKey, is_checked: isChecked, note: null,
+              photo_id: null, completed_at: payload.completed_at, completed_by: payload.completed_by
+            });
+          }
+
+          renderJobReportSection();
+
+          var label = EVIDENCE_CHECK_LABEL[checkKey] || checkKey.replace(/_/g, ' ');
+          window.NauxicaTimeline.log({
+            property_id: task ? task.property_id : null,
+            task_id:     taskId,
+            actor_type:  'partner',
+            event_type:  'evidence_check_updated',
+            event_title: 'Evidence check updated',
+            event_description: label + (isChecked ? ' marked complete' : ' marked incomplete'),
+            metadata:    { check_key: checkKey, is_checked: isChecked }
+          });
+        }
+
+        function scheduleEvidenceNoteSave(checkKey, noteValue) {
+          if (evidenceNoteTimers[checkKey]) clearTimeout(evidenceNoteTimers[checkKey]);
+          evidenceNoteTimers[checkKey] = setTimeout(function() {
+            saveEvidenceNote(checkKey, noteValue);
+          }, 600);
+        }
+
+        async function saveEvidenceNote(checkKey, noteValue) {
+          evidenceSaveError = '';
+          var payload = { task_id: taskId, check_key: checkKey, note: noteValue || null };
+
+          var { error } = await sb.from('task_evidence_checks').upsert(payload, { onConflict: 'task_id,check_key' });
+          if (error) {
+            console.error('Evidence note save error:', error);
+            evidenceSaveError = 'Could not save this note. Please try again.';
+            renderJobReportSection();
+            return;
+          }
+
+          var existing = getCheckRow(checkKey);
+          if (existing) {
+            existing.note = noteValue || null;
+          } else {
+            checks.push({
+              id: null, task_id: taskId, check_key: checkKey, is_checked: false, note: noteValue || null,
+              photo_id: null, completed_at: null, completed_by: null
+            });
+          }
+          // No re-render on a successful note save: the input already shows
+          // what the partner typed, and replacing the DOM node here would
+          // drop focus/cursor position mid-edit. Re-render only on error
+          // (below), to surface the inline message.
+        }
+
+        function wireJobReportEvents() {
+          var card = document.getElementById('jdJobReportCard');
+          if (!card) return;
+
+          card.querySelectorAll('.jd-evidence-checkbox').forEach(function(input) {
+            input.addEventListener('change', function() {
+              handleEvidenceCheckToggle(input.dataset.checkKey, input.checked);
+            });
+          });
+
+          card.querySelectorAll('.jd-evidence-note-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+              scheduleEvidenceNoteSave(input.dataset.checkKey, input.value);
+            });
+          });
+        }
+
+        function renderJobReportSection() {
+          var el = document.getElementById('jdJobReportCard');
+          if (!el) return;
+          el.outerHTML = renderJobReport();
+          wireJobReportEvents();
+        }
+
         function renderJobReport() {
-          var checksHtml = checks.length
-            ? checks.map(function(c) {
-                var icon = c.is_checked
-                  ? '<i class="fa-solid fa-circle-check jd-check-icon is-checked" aria-hidden="true"></i>'
-                  : '<i class="fa-regular fa-circle jd-check-icon is-unchecked" aria-hidden="true"></i>';
-                var label = c.check_key.replace(/_/g, ' ');
-                return '<div class="jd-check-row">' + icon + '<span>' + esc(label) + '</span></div>' +
-                  (c.note ? '<div class="jd-check-note">' + esc(c.note) + '</div>' : '');
-              }).join('')
-            : '';
+          var checkKeys = EVIDENCE_CHECK_KEYS[task.task_type] || EVIDENCE_CHECK_KEYS.other;
+
+          var checksHtml = checkKeys.map(function(key) {
+            var row       = getCheckRow(key);
+            var isChecked = row ? !!row.is_checked : false;
+            var note      = row && row.note ? row.note : '';
+            var label     = EVIDENCE_CHECK_LABEL[key] || key.replace(/_/g, ' ');
+            return '<div class="jd-evidence-row" data-check-key="' + esc(key) + '">' +
+              '<label class="jd-evidence-checkbox-row">' +
+                '<input type="checkbox" class="jd-evidence-checkbox" data-check-key="' + esc(key) + '"' + (isChecked ? ' checked' : '') + ' />' +
+                '<span>' + esc(label) + '</span>' +
+              '</label>' +
+              '<input type="text" class="jd-evidence-note-input" data-check-key="' + esc(key) + '" placeholder="Add a note (optional)" value="' + esc(note) + '" />' +
+            '</div>';
+          }).join('');
 
           var photosByType = {};
           photos.forEach(function(p) {
@@ -556,16 +710,12 @@
               '<div class="jd-photo-strip">' + chips + '</div></div>';
           }).join('');
 
-          if (!checks.length && !photos.length) {
-            return '<div class="dashboard-card jd-card">' +
-              '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Job report</h3>' +
-              '<p class="jd-empty">Evidence will appear here once added.</p>' +
-            '</div>';
-          }
-
-          return '<div class="dashboard-card jd-card">' +
-            '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Job report</h3>' +
-            checksHtml + (photosHtml ? '<div style="margin-top:12px">' + photosHtml + '</div>' : '') +
+          return '<div class="dashboard-card jd-card" id="jdJobReportCard">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Evidence checks</h3>' +
+            '<p class="jd-evidence-intro">Confirm what was completed or noticed.</p>' +
+            checksHtml +
+            (evidenceSaveError ? '<div class="jd-evidence-error">' + esc(evidenceSaveError) + '</div>' : '') +
+            (photosHtml ? '<div style="margin-top:14px">' + photosHtml + '</div>' : '') +
           '</div>';
         }
 
@@ -768,6 +918,8 @@
             var isOpen = list.classList.toggle('is-open');
             if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
           });
+
+          wireJobReportEvents();
         }
 
         await loadAndRender();
