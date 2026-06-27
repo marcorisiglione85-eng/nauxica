@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Job Detail — Nauxica Partner</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+      .jd-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--etna-orange, #E85D04);
+        text-decoration: none;
+        margin-bottom: 8px;
+      }
+
+      .jd-state-card {
+        max-width: 480px;
+        margin: 60px auto;
+        text-align: center;
+        padding: 32px 24px;
+      }
+      .jd-state-card h2 { margin: 0 0 8px; font-size: 1.2rem; }
+      .jd-state-card p { color: var(--stone); margin: 0 0 16px; }
+
+      .jd-header-card {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 22px 24px;
+        margin-bottom: 16px;
+      }
+      .jd-header-left { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+      .jd-header-icon {
+        flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(232,93,4,0.08); color: var(--etna-orange, #E85D04); font-size: 1.05rem;
+      }
+      .jd-header-titles { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+      .jd-property-name { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+      .jd-task-title { font-size: 1rem; color: var(--stone); }
+      .jd-header-badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+      .jd-badge {
+        display: inline-flex; align-items: center; height: 28px; padding: 0 12px;
+        border-radius: 999px; font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+      }
+      .jd-badge-status-assigned     { background: rgba(120,113,108,0.12); color: #78716C; }
+      .jd-badge-status-accepted     { background: rgba(0,110,182,0.12);   color: #006EB6; }
+      .jd-badge-status-in_progress  { background: rgba(217,119,6,0.14);   color: #D97706; }
+      .jd-badge-status-completed    { background: rgba(26,140,78,0.14);   color: #1A8C4E; }
+      .jd-badge-status-cancelled    { background: rgba(192,57,43,0.12);   color: #C0392B; }
+      .jd-badge-status-unknown      { background: rgba(29,35,39,0.08);    color: var(--stone); }
+      .jd-badge-priority-high   { background: rgba(192,57,43,0.12); color: #C0392B; }
+      .jd-badge-priority-normal { background: rgba(29,35,39,0.08);  color: var(--stone); }
+      .jd-badge-priority-low    { background: rgba(26,140,78,0.12); color: #1A8C4E; }
+      .jd-badge-health-healthy   { background: rgba(26,140,78,0.14);  color: #1A8C4E; }
+      .jd-badge-health-attention { background: rgba(217,119,6,0.14);  color: #D97706; }
+      .jd-badge-health-blocked   { background: rgba(192,57,43,0.14); color: #C0392B; }
+      .jd-badge-health-completed { background: rgba(29,35,39,0.08);  color: var(--stone); }
+
+      .jd-banner {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;
+        font-size: 0.85rem; font-weight: 600;
+        background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2); color: #92400e;
+      }
+      .jd-banner.jd-banner-blocked {
+        background: rgba(192,57,43,0.08); border-color: rgba(192,57,43,0.2); color: #7f1d1d;
+      }
+
+      .jd-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: start; }
+
+      .jd-card { padding: 20px 22px; margin-bottom: 16px; }
+      .jd-card-title { font-size: 0.95rem; font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+      .jd-card-title i { color: var(--etna-orange, #E85D04); font-size: 0.9rem; }
+      .jd-empty { font-size: 0.84rem; color: var(--stone); margin: 0; }
+
+      .jd-quick-actions { display: flex; flex-direction: column; gap: 8px; }
+      .jd-quick-actions button {
+        height: 42px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        background: transparent; color: inherit; display: flex; align-items: center; gap: 8px; padding: 0 14px;
+        cursor: pointer;
+      }
+      .jd-quick-actions button:hover { opacity: 0.85; }
+
+      .jd-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; margin-bottom: 12px; }
+      .jd-info-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .jd-info-label { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stone); }
+      .jd-info-value { font-size: 0.88rem; overflow-wrap: anywhere; }
+
+      .jd-kb-block { padding: 10px 0; border-top: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.07)); }
+      .jd-kb-block:first-child { border-top: none; padding-top: 0; }
+      .jd-kb-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+      .jd-kb-row { font-size: 0.8rem; color: var(--stone); display: flex; gap: 6px; }
+      .jd-kb-row strong { color: inherit; font-weight: 600; }
+
+      .jd-contact-row {
+        display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+        font-size: 0.84rem;
+      }
+      .jd-contact-row:last-child { border-bottom: none; }
+      .jd-contact-phone { font-weight: 700; color: var(--etna-orange, #E85D04); }
+
+      .jd-check-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.85rem; }
+      .jd-check-icon { width: 18px; text-align: center; flex-shrink: 0; }
+      .jd-check-icon.is-checked { color: #1A8C4E; }
+      .jd-check-icon.is-unchecked { color: var(--stone); opacity: 0.5; }
+      .jd-check-note { color: var(--stone); font-size: 0.78rem; margin-left: 28px; }
+
+      .jd-photo-group { margin-bottom: 14px; }
+      .jd-photo-group-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stone); margin-bottom: 6px; }
+      .jd-photo-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+      .jd-photo-chip {
+        display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px;
+        background: rgba(29,35,39,0.04); font-size: 0.78rem;
+      }
+
+      .jd-message-row { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06)); }
+      .jd-message-row:last-child { border-bottom: none; }
+      .jd-message-sender { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--stone); }
+      .jd-message-text { font-size: 0.85rem; margin: 2px 0; }
+      .jd-message-time { font-size: 0.72rem; color: var(--stone); }
+
+      .jd-timeline-toggle {
+        display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+        user-select: none;
+      }
+      .jd-timeline-list { margin-top: 12px; display: none; }
+      .jd-timeline-list.is-open { display: block; }
+      .jd-timeline-row { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06)); }
+      .jd-timeline-row:last-child { border-bottom: none; }
+      .jd-timeline-title { font-size: 0.84rem; font-weight: 600; }
+      .jd-timeline-desc { font-size: 0.8rem; color: var(--stone); }
+      .jd-timeline-time { font-size: 0.72rem; color: var(--stone); }
+
+      .jd-related-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+        font-size: 0.84rem;
+      }
+      .jd-related-row:last-child { border-bottom: none; }
+
+      .jd-action-bar {
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 16px;
+        margin-top: 8px;
+        background: var(--color-background-primary, #fff);
+        border-top: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.08));
+        box-shadow: 0 -4px 16px rgba(15,23,42,0.05);
+      }
+      .jd-action-bar button, .jd-action-bar .jd-action-label {
+        height: 42px; padding: 0 22px; border-radius: 12px; font-size: 0.85rem; font-weight: 700;
+        border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      }
+      .jd-action-bar .jd-action-label {
+        background: rgba(29,35,39,0.06); color: var(--stone); cursor: default;
+      }
+      .jd-action-primary { background: var(--etna-orange, #E85D04); color: #fff; }
+      .jd-action-primary:hover { opacity: 0.9; }
+
+      @media (max-width: 860px) {
+        .jd-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 600px) {
+        .jd-info-grid { grid-template-columns: 1fr; }
+        .jd-action-bar { justify-content: stretch; }
+        .jd-action-bar button, .jd-action-bar .jd-action-label { flex: 1; justify-content: center; }
+      }
+    </style>
+  </head>
+  <body class="partner-dashboard-page">
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica, Hospitality connected" />
+        </a>
+
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">
+              Logout
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell partner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Partner navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="partner-brand">
+            <div class="sidebar-brand">Nauxica</div>
+            <span>Partner Network</span>
+          </div>
+
+          <div class="partner-profile-card">
+            <div class="partner-profile-icon">🧹</div>
+            <div>
+              <strong id="partnerCardName">Partner</strong>
+              <span id="partnerCardService">Partner services</span>
+              <small id="partnerCardVerified"></small>
+            </div>
+          </div>
+
+          <nav class="dashboard-nav"></nav>
+
+          <div class="partner-help-card">
+            <strong>Need help?</strong>
+            <span>Contact Nauxica support</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar partner-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label">Nauxica partner workspace</div>
+            <a class="jd-back-link" href="partner-jobs.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to My Jobs</a>
+            <h1 class="dashboard-title">Job Detail</h1>
+          </div>
+        </div>
+
+        <div id="jdRoot">
+          <div class="dashboard-card jd-state-card">
+            <h2>Loading…</h2>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
+
+    <script>
+      localStorage.setItem('accountType', 'partner');
+      NauxicaShared.updateTopbar('partner');
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuButton = document.querySelector(".mobile-menu-toggle");
+        const header           = document.querySelector(".nx-header");
+        const mobileMenuLinks  = document.querySelectorAll(".nx-links a");
+
+        if (mobileMenuButton && header) {
+          mobileMenuButton.addEventListener("click", function () {
+            const isOpen = header.classList.toggle("nav-open");
+            mobileMenuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          });
+        }
+
+        mobileMenuLinks.forEach(function (link) {
+          link.addEventListener("click", function () {
+            header.classList.remove("nav-open");
+            if (mobileMenuButton) mobileMenuButton.setAttribute("aria-expanded", "false");
+          });
+        });
+      });
+
+      const logoutButton = document.querySelector("#logout-button");
+      logoutButton?.addEventListener("click", async function (e) {
+        e.preventDefault();
+        const { error } = await window.NauxicaSupabase.auth.signOut();
+        if (error) console.error('signOut error:', error);
+        localStorage.removeItem("nauxicaAccountType");
+        localStorage.removeItem("accountType");
+        window.location.replace("login.html");
+      });
+    </script>
+
+    <script type="module">
+      (async () => {
+        var sb   = window.NauxicaSupabase;
+        var root = document.getElementById('jdRoot');
+
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+        var uid = sessData.session.user.id;
+
+        // Identity sidebar (mirrors partner-jobs.html's pattern)
+        var SERVICE_LABELS = {
+          cleaning: 'Cleaning services', maintenance: 'Maintenance services', laundry: 'Laundry services',
+          transfers: 'Transfer services', experiences: 'Experience services'
+        };
+        sb.from('users').select('account_type, full_name, display_name, partner_service_types, is_identity_verified')
+          .eq('id', uid).single().then(function(res) {
+            var profile = res.data;
+            if (!profile) return;
+            var serviceKey = Array.isArray(profile.partner_service_types) && profile.partner_service_types.length
+              ? profile.partner_service_types[0] : null;
+            document.getElementById('partnerCardName').textContent = profile.display_name || profile.full_name || 'Partner';
+            document.getElementById('partnerCardService').textContent = SERVICE_LABELS[serviceKey] || 'Partner services';
+            document.getElementById('partnerCardVerified').textContent = profile.is_identity_verified ? '✓ Verified partner' : '⏳ Verification pending';
+          });
+        NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'partner');
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function currencySymbol(cur) {
+          return cur === 'EUR' ? '€' : cur === 'USD' ? '$' : cur === 'GBP' ? '£' : (cur || 'EUR') + ' ';
+        }
+        function renderState(title, sub, showBackLink) {
+          root.innerHTML = '<div class="dashboard-card jd-state-card"><h2>' + esc(title) + '</h2>' +
+            (sub ? '<p>' + esc(sub) + '</p>' : '') +
+            (showBackLink ? '<a class="jd-back-link" href="partner-jobs.html" style="justify-content:center"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Return to My Jobs</a>' : '') +
+            '</div>';
+        }
+
+        // ── Step 1: read task_id from the URL ──────────────────────────
+        var taskId = new URLSearchParams(window.location.search).get('task_id');
+        if (!taskId) {
+          renderState('No job selected', 'No job was specified in the link.', true);
+          throw 0;
+        }
+
+        // ── Step 2: load the task (and embedded property/reservation) ──
+        var { data: task, error: taskErr } = await sb
+          .from('tasks')
+          .select(
+            'id, property_id, reservation_id, title, description, task_type, priority, status, ' +
+            'due_date, completed_at, task_value_amount, task_value_currency, ' +
+            'properties(display_name, address_city, address_province, checkin_time, checkout_time, access_method, house_rules, amenities), ' +
+            'reservations(guest_name, guest_phone, guest_count, checkin_date, checkout_date, special_requests, reservation_status)'
+          )
+          .eq('id', taskId)
+          .maybeSingle();
+
+        if (taskErr) { console.error('Task load error:', taskErr); }
+        if (!task) {
+          renderState('Job not found or not accessible', 'This job does not exist, or you do not have access to it.', true);
+          throw 0;
+        }
+
+        var propertyId = task.property_id;
+
+        // ── Step 3: load everything else in parallel ───────────────────
+        var [
+          photosRes, checksRes, convRes, timelineRes, kbRes, emergDataRes, emergContactsRes, relatedRes
+        ] = await Promise.all([
+          sb.from('task_photos').select('*').eq('task_id', taskId).order('created_at', { ascending: true }),
+          sb.from('task_evidence_checks').select('*').eq('task_id', taskId).order('check_key', { ascending: true }),
+          sb.from('operations_conversations').select('*').eq('task_id', taskId).maybeSingle(),
+          sb.from('timeline_events').select('*').eq('task_id', taskId).order('created_at', { ascending: false }),
+          sb.from('property_knowledge_blocks')
+            .select('id, property_id, block_type, visibility_scope, title, content_jsonb, created_at, updated_at')
+            .eq('property_id', propertyId).in('visibility_scope', ['PTR', 'GST']).eq('is_active', true)
+            .order('block_type', { ascending: true }),
+          sb.from('emergency_data').select('*').eq('property_id', propertyId).maybeSingle(),
+          sb.from('emergency_contacts').select('*').eq('property_id', propertyId).eq('is_active', true)
+            .order('escalation_priority', { ascending: true }),
+          sb.from('tasks').select('id, title, task_type, priority, status, due_date, completed_at')
+            .eq('property_id', propertyId).neq('id', taskId)
+            .order('due_date', { ascending: true, nullsFirst: false }).limit(5)
+        ]);
+
+        var photos    = photosRes.data    || [];
+        var checks    = checksRes.data    || [];
+        var conv      = convRes.data      || null;
+        var timeline  = timelineRes.data  || [];
+        var kbBlocks  = kbRes.data        || [];
+        var emergData = emergDataRes.data || null;
+        var contacts  = emergContactsRes.data || [];
+        var related   = relatedRes.data   || [];
+
+        var messages = [];
+        if (conv) {
+          var { data: msgData } = await sb.from('operations_messages')
+            .select('*').eq('operations_conversation_id', conv.id).order('created_at', { ascending: true });
+          messages = msgData || [];
+        }
+
+        [photosRes, checksRes, timelineRes, kbRes, emergContactsRes, relatedRes].forEach(function(r) {
+          if (r.error) console.error('Job detail load error:', r.error);
+        });
+
+        // ── Derived display helpers (read-only; nothing is written) ────
+
+        var TASK_TYPE_LABELS = {
+          cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection', laundry: 'Laundry',
+          guest_request: 'Guest request', other: 'Other', transfers: 'Transfers', experiences: 'Experiences'
+        };
+        var STATUS_BADGE_LABEL = {
+          assigned: 'Assigned', accepted: 'Accepted', in_progress: 'In progress', completed: 'Completed', cancelled: 'Cancelled'
+        };
+        var PRIORITY_BADGE_LABEL = { high: 'High', normal: 'Normal', low: 'Low' };
+
+        function statusBadge(status) {
+          var label = STATUS_BADGE_LABEL[status] || 'Unknown';
+          var cls   = STATUS_BADGE_LABEL[status] ? status : 'unknown';
+          return '<span class="jd-badge jd-badge-status-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+        function priorityBadge(priority) {
+          var label = PRIORITY_BADGE_LABEL[priority] || 'Normal';
+          var cls   = PRIORITY_BADGE_LABEL[priority] ? priority : 'normal';
+          return '<span class="jd-badge jd-badge-priority-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+
+        // Job Health: read-only derived placeholder. Never written anywhere —
+        // purely a display computation over data already loaded above.
+        function deriveJobHealth() {
+          if (task.status === 'completed') return 'completed';
+
+          var haystack = timeline.map(function(e) {
+            return [e.event_type, e.event_title, e.event_description].filter(Boolean).join(' ');
+          }).concat(messages.map(function(m) { return m.message_text || ''; })).join(' ').toLowerCase();
+
+          var blockedKeywords = ['cannot enter', 'cannot access', 'access problem', 'locked out', 'blocked', "can't get in"];
+          if (blockedKeywords.some(function(k) { return haystack.indexOf(k) !== -1; })) return 'blocked';
+
+          var hasIssueEvent = timeline.some(function(e) { return /issue/i.test(e.event_type || ''); });
+          if (hasIssueEvent || messages.length > 0) return 'attention';
+
+          return 'healthy';
+        }
+
+        var health = deriveJobHealth();
+        var HEALTH_LABEL = { healthy: 'Healthy', attention: 'Attention', blocked: 'Blocked', completed: 'Completed' };
+
+        function healthBadge(h) {
+          return '<span class="jd-badge jd-badge-health-' + esc(h) + '"><i class="fa-solid fa-circle" style="font-size:0.5rem" aria-hidden="true"></i>&nbsp;' + esc(HEALTH_LABEL[h]) + '</span>';
+        }
+
+        // ── Smart Banner (conditional; read-only) ───────────────────────
+        function renderBanner() {
+          var noEvidence = checks.length === 0 && photos.length === 0;
+
+          if (health === 'blocked') {
+            return '<div class="jd-banner jd-banner-blocked"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> This job may need attention — a possible access or blocking issue was detected.</div>';
+          }
+          if (task.status === 'completed' && noEvidence) {
+            return '<div class="jd-banner"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> This job is marked completed with no evidence recorded.</div>';
+          }
+          if (health === 'attention') {
+            return '<div class="jd-banner"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> This job has activity that may need a look.</div>';
+          }
+          if (messages.length > 0) {
+            return '<div class="jd-banner"><i class="fa-solid fa-comments" aria-hidden="true"></i> There are messages on this job.</div>';
+          }
+          return '';
+        }
+
+        // ── Header ───────────────────────────────────────────────────────
+        var propName  = (task.properties && task.properties.display_name) || 'Property not available';
+        var typeLabel = TASK_TYPE_LABELS[task.task_type] || task.task_type;
+
+        function renderHeader() {
+          return '<div class="dashboard-card jd-header-card">' +
+            '<div class="jd-header-left">' +
+              '<div class="jd-header-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></div>' +
+              '<div class="jd-header-titles">' +
+                '<div class="jd-property-name">' + esc(propName) + '</div>' +
+                '<div class="jd-task-title">' + esc(task.title) + ' &middot; ' + esc(typeLabel) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="jd-header-badges">' + statusBadge(task.status) + priorityBadge(task.priority) + healthBadge(health) + '</div>' +
+          '</div>';
+        }
+
+        // ── Quick Actions (visual only; not wired this sprint) ──────────
+        function comingSoon() { alert('Coming soon.'); }
+        window.__jdComingSoon = comingSoon;
+
+        function renderQuickActions() {
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Quick actions</h3>' +
+            '<div class="jd-quick-actions">' +
+              '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-camera" aria-hidden="true"></i> Add Evidence</button>' +
+              '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-flag" aria-hidden="true"></i> Report Issue</button>' +
+              '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</button>' +
+            '</div>' +
+          '</div>';
+        }
+
+        // ── Property Essentials ─────────────────────────────────────────
+        function renderKnowledgeBlock(b) {
+          var entries = Object.keys(b.content_jsonb || {}).map(function(k) {
+            var v = b.content_jsonb[k];
+            if (v == null || v === '') return '';
+            return '<div class="jd-kb-row"><strong>' + esc(k.replace(/_/g, ' ')) + ':</strong> ' + esc(String(v)) + '</div>';
+          }).join('');
+          return '<div class="jd-kb-block">' +
+            '<div class="jd-kb-title">' + esc(b.title || b.block_type.replace(/_/g, ' ')) + '</div>' +
+            (entries || '<div class="jd-kb-row">No details provided.</div>') +
+          '</div>';
+        }
+
+        function renderPropertyEssentials() {
+          var p = task.properties || {};
+          var infoItems = [
+            ['Access', p.access_method],
+            ['Check-in time', p.checkin_time],
+            ['Check-out time', p.checkout_time],
+            ['Location', [p.address_city, p.address_province].filter(Boolean).join(', ')],
+          ].map(function(pair) {
+            return '<div class="jd-info-item"><span class="jd-info-label">' + esc(pair[0]) + '</span>' +
+              '<span class="jd-info-value">' + (pair[1] ? esc(pair[1]) : '—') + '</span></div>';
+          }).join('');
+
+          var houseRules = p.house_rules
+            ? '<div class="jd-info-item" style="margin-bottom:12px"><span class="jd-info-label">House rules</span><span class="jd-info-value">' + esc(p.house_rules) + '</span></div>'
+            : '';
+
+          var kbHtml = kbBlocks.length ? kbBlocks.map(renderKnowledgeBlock).join('') : '<p class="jd-empty">No additional property notes available.</p>';
+
+          var emergencyHtml = '';
+          if (emergData) {
+            var rows = [
+              ['Nearest hospital', [emergData.nearest_hospital_name, emergData.nearest_hospital_address].filter(Boolean).join(' — ')],
+              ['Hospital phone', emergData.nearest_hospital_phone],
+              ['Owner emergency contact', emergData.owner_emergency_name + (emergData.owner_emergency_phone ? ' — ' + emergData.owner_emergency_phone : '')],
+              ['Nauxica 24/7 ops', emergData.nauxica_ops_phone],
+            ].filter(function(r) { return r[1]; });
+            emergencyHtml = rows.map(function(r) {
+              return '<div class="jd-kb-row"><strong>' + esc(r[0]) + ':</strong> ' + esc(r[1]) + '</div>';
+            }).join('');
+          }
+
+          var contactsHtml = contacts.length
+            ? contacts.map(function(c) {
+                return '<div class="jd-contact-row"><span>' + esc(c.contact_name) + ' <small style="color:var(--stone)">(' + esc(c.contact_type) + ')</small></span>' +
+                  '<span class="jd-contact-phone">' + esc(c.contact_phone) + '</span></div>';
+              }).join('')
+            : '<p class="jd-empty">No emergency contacts on file.</p>';
+
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-house" aria-hidden="true"></i> Property essentials</h3>' +
+            '<div class="jd-info-grid">' + infoItems + '</div>' +
+            houseRules +
+            kbHtml +
+            (emergencyHtml ? '<div class="jd-kb-block"><div class="jd-kb-title">Emergency information</div>' + emergencyHtml + '</div>' : '') +
+            '<div class="jd-kb-block"><div class="jd-kb-title">Emergency contacts</div>' + contactsHtml + '</div>' +
+          '</div>';
+        }
+
+        // ── Reservation Summary ──────────────────────────────────────────
+        function deriveStayStatus(r) {
+          if (!r) return 'no reservation context';
+          var todayISO = new Date().toISOString().slice(0, 10);
+          if (todayISO < r.checkin_date)  return 'upcoming';
+          if (todayISO === r.checkin_date) return 'arriving today';
+          if (todayISO < r.checkout_date)  return 'in stay';
+          return 'departed';
+        }
+
+        function renderReservationSummary() {
+          if (!task.reservations) return '';
+          var r = task.reservations;
+          var stayStatus = deriveStayStatus(r);
+          var items = [
+            ['Guest', r.guest_name],
+            ['Guests', r.guest_count],
+            ['Check-in', r.checkin_date],
+            ['Check-out', r.checkout_date],
+            ['Reservation status', r.reservation_status],
+            ['Stay status', stayStatus],
+          ].map(function(pair) {
+            return '<div class="jd-info-item"><span class="jd-info-label">' + esc(pair[0]) + '</span>' +
+              '<span class="jd-info-value">' + (pair[1] != null && pair[1] !== '' ? esc(String(pair[1])) : '—') + '</span></div>';
+          }).join('');
+          var special = r.special_requests
+            ? '<div class="jd-info-item" style="margin-top:4px"><span class="jd-info-label">Special requests</span><span class="jd-info-value">' + esc(r.special_requests) + '</span></div>'
+            : '';
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Reservation</h3>' +
+            '<div class="jd-info-grid">' + items + '</div>' + special +
+          '</div>';
+        }
+
+        // ── Job Report (evidence — read-only) ───────────────────────────
+        function renderJobReport() {
+          var checksHtml = checks.length
+            ? checks.map(function(c) {
+                var icon = c.is_checked
+                  ? '<i class="fa-solid fa-circle-check jd-check-icon is-checked" aria-hidden="true"></i>'
+                  : '<i class="fa-regular fa-circle jd-check-icon is-unchecked" aria-hidden="true"></i>';
+                var label = c.check_key.replace(/_/g, ' ');
+                return '<div class="jd-check-row">' + icon + '<span>' + esc(label) + '</span></div>' +
+                  (c.note ? '<div class="jd-check-note">' + esc(c.note) + '</div>' : '');
+              }).join('')
+            : '';
+
+          var photosByType = {};
+          photos.forEach(function(p) {
+            (photosByType[p.photo_type] = photosByType[p.photo_type] || []).push(p);
+          });
+          var photosHtml = Object.keys(photosByType).map(function(type) {
+            var chips = photosByType[type].map(function(p) {
+              return '<span class="jd-photo-chip"><i class="fa-solid fa-image" aria-hidden="true"></i> ' +
+                esc(p.caption || p.storage_path.split('/').pop()) + '</span>';
+            }).join('');
+            return '<div class="jd-photo-group"><div class="jd-photo-group-label">' + esc(type) + '</div>' +
+              '<div class="jd-photo-strip">' + chips + '</div></div>';
+          }).join('');
+
+          if (!checks.length && !photos.length) {
+            return '<div class="dashboard-card jd-card">' +
+              '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Job report</h3>' +
+              '<p class="jd-empty">Evidence will appear here once added.</p>' +
+            '</div>';
+          }
+
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Job report</h3>' +
+            checksHtml + (photosHtml ? '<div style="margin-top:12px">' + photosHtml + '</div>' : '') +
+          '</div>';
+        }
+
+        // ── Support (operations conversation — read-only) ──────────────
+        function renderSupport() {
+          var SENDER_LABEL = { partner: 'You', ai: 'AI', homeowner: 'Owner', system: 'System' };
+          var body;
+          if (!conv) {
+            body = '<p class="jd-empty">No support conversation yet.</p>';
+          } else if (!messages.length) {
+            body = '<p class="jd-empty">No messages yet.</p>';
+          } else {
+            body = messages.slice(-5).map(function(m) {
+              return '<div class="jd-message-row">' +
+                '<div class="jd-message-sender">' + esc(SENDER_LABEL[m.sender_type] || m.sender_type) + '</div>' +
+                '<div class="jd-message-text">' + esc(m.message_text) + '</div>' +
+                '<div class="jd-message-time">' + esc(new Date(m.created_at).toLocaleString()) + '</div>' +
+              '</div>';
+            }).join('');
+          }
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</h3>' +
+            body +
+          '</div>';
+        }
+
+        // ── Timeline (collapsed by default — read-only) ─────────────────
+        function renderTimeline() {
+          var body = timeline.length
+            ? timeline.map(function(e) {
+                return '<div class="jd-timeline-row">' +
+                  '<div class="jd-timeline-title">' + esc(e.event_title) + '</div>' +
+                  (e.event_description ? '<div class="jd-timeline-desc">' + esc(e.event_description) + '</div>' : '') +
+                  '<div class="jd-timeline-time">' + esc(new Date(e.created_at).toLocaleString()) + '</div>' +
+                '</div>';
+              }).join('')
+            : '<p class="jd-empty">No timeline events yet.</p>';
+
+          return '<div class="dashboard-card jd-card">' +
+            '<div class="jd-timeline-toggle" id="jdTimelineToggle">' +
+              '<h3 class="jd-card-title" style="margin:0"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Timeline (' + timeline.length + ')</h3>' +
+              '<i class="fa-solid fa-chevron-down" id="jdTimelineChevron" aria-hidden="true"></i>' +
+            '</div>' +
+            '<div class="jd-timeline-list" id="jdTimelineList">' + body + '</div>' +
+          '</div>';
+        }
+
+        // ── Related Jobs ─────────────────────────────────────────────────
+        function renderRelatedJobs() {
+          if (!related.length) return '';
+          var rows = related.map(function(t) {
+            return '<div class="jd-related-row">' +
+              '<a href="partner-job-detail.html?task_id=' + esc(t.id) + '" style="color:inherit;text-decoration:none;font-weight:600">' + esc(t.title) + '</a>' +
+              statusBadge(t.status) +
+            '</div>';
+          }).join('');
+          return '<div class="dashboard-card jd-card">' +
+            '<h3 class="jd-card-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Other jobs you have here</h3>' +
+            rows +
+          '</div>';
+        }
+
+        // ── Sticky Action Bar (visible per status; NOT wired this sprint) ─
+        function statusLifecycleNotice() {
+          alert('Status updates will be available in a future update. Please use My Jobs to start or complete this job for now.');
+        }
+        window.__jdStatusNotice = statusLifecycleNotice;
+
+        function renderActionBar() {
+          var actionHtml = '';
+          if (task.status === 'accepted') {
+            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdStatusNotice()"><i class="fa-solid fa-play" aria-hidden="true"></i> Start Job</button>';
+          } else if (task.status === 'in_progress') {
+            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdStatusNotice()"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Complete Job</button>';
+          } else if (task.status === 'completed') {
+            actionHtml = '<span class="jd-action-label"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Completed</span>';
+          } else if (task.status === 'cancelled') {
+            actionHtml = '<span class="jd-action-label"><i class="fa-solid fa-ban" aria-hidden="true"></i> Cancelled</span>';
+          } else {
+            actionHtml = '<span class="jd-action-label">Awaiting your acceptance — use My Jobs to accept or decline.</span>';
+          }
+          return '<div class="jd-action-bar">' + actionHtml + '</div>';
+        }
+
+        // ── Assemble page ────────────────────────────────────────────────
+        var bannerHtml = renderBanner();
+
+        root.innerHTML =
+          renderHeader() +
+          (bannerHtml || '') +
+          '<div class="jd-grid">' +
+            '<div class="jd-grid-main">' +
+              renderPropertyEssentials() +
+              renderReservationSummary() +
+              renderJobReport() +
+              renderTimeline() +
+            '</div>' +
+            '<div class="jd-grid-side">' +
+              renderQuickActions() +
+              renderSupport() +
+              renderRelatedJobs() +
+            '</div>' +
+          '</div>' +
+          renderActionBar();
+
+        document.getElementById('jdTimelineToggle')?.addEventListener('click', function() {
+          var list = document.getElementById('jdTimelineList');
+          var chevron = document.getElementById('jdTimelineChevron');
+          var isOpen = list.classList.toggle('is-open');
+          if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+        });
+      })();
+    </script>
+  </body>
+</html>
