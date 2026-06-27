@@ -335,65 +335,9 @@
           throw 0;
         }
 
-        // ── Step 2: load the task (and embedded property/reservation) ──
-        var { data: task, error: taskErr } = await sb
-          .from('tasks')
-          .select(
-            'id, property_id, reservation_id, title, description, task_type, priority, status, ' +
-            'due_date, completed_at, task_value_amount, task_value_currency, ' +
-            'properties(display_name, address_city, address_province, checkin_time, checkout_time, access_method, house_rules, amenities), ' +
-            'reservations(guest_name, guest_phone, guest_count, checkin_date, checkout_date, special_requests, reservation_status)'
-          )
-          .eq('id', taskId)
-          .maybeSingle();
-
-        if (taskErr) { console.error('Task load error:', taskErr); }
-        if (!task) {
-          renderState('Job not found or not accessible', 'This job does not exist, or you do not have access to it.', true);
-          throw 0;
-        }
-
-        var propertyId = task.property_id;
-
-        // ── Step 3: load everything else in parallel ───────────────────
-        var [
-          photosRes, checksRes, convRes, timelineRes, kbRes, emergDataRes, emergContactsRes, relatedRes
-        ] = await Promise.all([
-          sb.from('task_photos').select('*').eq('task_id', taskId).order('created_at', { ascending: true }),
-          sb.from('task_evidence_checks').select('*').eq('task_id', taskId).order('check_key', { ascending: true }),
-          sb.from('operations_conversations').select('*').eq('task_id', taskId).maybeSingle(),
-          sb.from('timeline_events').select('*').eq('task_id', taskId).order('created_at', { ascending: false }),
-          sb.from('property_knowledge_blocks')
-            .select('id, property_id, block_type, visibility_scope, title, content_jsonb, created_at, updated_at')
-            .eq('property_id', propertyId).in('visibility_scope', ['PTR', 'GST']).eq('is_active', true)
-            .order('block_type', { ascending: true }),
-          sb.from('emergency_data').select('*').eq('property_id', propertyId).maybeSingle(),
-          sb.from('emergency_contacts').select('*').eq('property_id', propertyId).eq('is_active', true)
-            .order('escalation_priority', { ascending: true }),
-          sb.from('tasks').select('id, title, task_type, priority, status, due_date, completed_at')
-            .eq('property_id', propertyId).neq('id', taskId)
-            .order('due_date', { ascending: true, nullsFirst: false }).limit(5)
-        ]);
-
-        var photos    = photosRes.data    || [];
-        var checks    = checksRes.data    || [];
-        var conv      = convRes.data      || null;
-        var timeline  = timelineRes.data  || [];
-        var kbBlocks  = kbRes.data        || [];
-        var emergData = emergDataRes.data || null;
-        var contacts  = emergContactsRes.data || [];
-        var related   = relatedRes.data   || [];
-
-        var messages = [];
-        if (conv) {
-          var { data: msgData } = await sb.from('operations_messages')
-            .select('*').eq('operations_conversation_id', conv.id).order('created_at', { ascending: true });
-          messages = msgData || [];
-        }
-
-        [photosRes, checksRes, timelineRes, kbRes, emergContactsRes, relatedRes].forEach(function(r) {
-          if (r.error) console.error('Job detail load error:', r.error);
-        });
+        // ── State reassigned by loadAndRender() on every load/refresh, and
+        // read by the render*() functions below via closure. ─────────────
+        var task, photos, checks, conv, timeline, kbBlocks, emergData, contacts, related, messages, health;
 
         // ── Derived display helpers (read-only; nothing is written) ────
 
@@ -435,7 +379,6 @@
           return 'healthy';
         }
 
-        var health = deriveJobHealth();
         var HEALTH_LABEL = { healthy: 'Healthy', attention: 'Attention', blocked: 'Blocked', completed: 'Completed' };
 
         function healthBadge(h) {
@@ -462,10 +405,9 @@
         }
 
         // ── Header ───────────────────────────────────────────────────────
-        var propName  = (task.properties && task.properties.display_name) || 'Property not available';
-        var typeLabel = TASK_TYPE_LABELS[task.task_type] || task.task_type;
-
         function renderHeader() {
+          var propName  = (task.properties && task.properties.display_name) || 'Property not available';
+          var typeLabel = TASK_TYPE_LABELS[task.task_type] || task.task_type;
           return '<div class="dashboard-card jd-header-card">' +
             '<div class="jd-header-left">' +
               '<div class="jd-header-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></div>' +
@@ -686,18 +628,47 @@
           '</div>';
         }
 
-        // ── Sticky Action Bar (visible per status; NOT wired this sprint) ─
-        function statusLifecycleNotice() {
-          alert('Status updates will be available in a future update. Please use My Jobs to start or complete this job for now.');
+        // ── Sticky Action Bar ────────────────────────────────────────────
+        // Start/Complete reuse the exact update + timeline logic already
+        // shipped in partner-jobs.html's delegated click handler (same
+        // status transitions, same evtMap event_type/event_title shape,
+        // same metadata fields). Evidence/checklist/photos/AI are out of
+        // scope for this sprint, per Sprint 029D.3.
+        async function handleLifecycleAction(action) {
+          var updates = null;
+          if (action === 'start-task')    updates = { status: 'in_progress' };
+          if (action === 'complete-task') updates = { status: 'completed' };
+          if (!updates) return;
+
+          var { error } = await sb.from('tasks').update(updates).eq('id', taskId);
+          if (error) { console.error('Task update error:', error); return; }
+
+          var evtMap = {
+            'start-task':    { type: 'task_started',   title: 'Task started' },
+            'complete-task': { type: 'task_completed', title: 'Task completed' }
+          };
+          var evtDef = evtMap[action];
+          if (evtDef) {
+            window.NauxicaTimeline.log({
+              property_id: task ? task.property_id : null,
+              task_id:     taskId,
+              actor_type:  'partner',
+              event_type:  evtDef.type,
+              event_title: evtDef.title + (task ? ': ' + task.title : ''),
+              metadata:    { task_value_amount: task ? task.task_value_amount : null, task_value_currency: task ? task.task_value_currency : 'EUR' }
+            });
+          }
+
+          await loadAndRender();
         }
-        window.__jdStatusNotice = statusLifecycleNotice;
+        window.__jdLifecycleAction = handleLifecycleAction;
 
         function renderActionBar() {
           var actionHtml = '';
           if (task.status === 'accepted') {
-            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdStatusNotice()"><i class="fa-solid fa-play" aria-hidden="true"></i> Start Job</button>';
+            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdLifecycleAction(\'start-task\')"><i class="fa-solid fa-play" aria-hidden="true"></i> Start Job</button>';
           } else if (task.status === 'in_progress') {
-            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdStatusNotice()"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Complete Job</button>';
+            actionHtml = '<button type="button" class="jd-action-primary" onclick="window.__jdLifecycleAction(\'complete-task\')"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Complete Job</button>';
           } else if (task.status === 'completed') {
             actionHtml = '<span class="jd-action-label"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Completed</span>';
           } else if (task.status === 'cancelled') {
@@ -708,33 +679,98 @@
           return '<div class="jd-action-bar">' + actionHtml + '</div>';
         }
 
-        // ── Assemble page ────────────────────────────────────────────────
-        var bannerHtml = renderBanner();
+        // ── Load + render (initial load, and re-run after every lifecycle
+        // action so the badge/banner/health/action bar/timeline all reflect
+        // the new status) ──────────────────────────────────────────────────
+        async function loadAndRender() {
+          var { data: taskData, error: taskErr } = await sb
+            .from('tasks')
+            .select(
+              'id, property_id, reservation_id, title, description, task_type, priority, status, ' +
+              'due_date, completed_at, task_value_amount, task_value_currency, ' +
+              'properties(display_name, address_city, address_province, checkin_time, checkout_time, access_method, house_rules, amenities), ' +
+              'reservations(guest_name, guest_phone, guest_count, checkin_date, checkout_date, special_requests, reservation_status)'
+            )
+            .eq('id', taskId)
+            .maybeSingle();
 
-        root.innerHTML =
-          renderHeader() +
-          (bannerHtml || '') +
-          '<div class="jd-grid">' +
-            '<div class="jd-grid-main">' +
-              renderPropertyEssentials() +
-              renderReservationSummary() +
-              renderJobReport() +
-              renderTimeline() +
-            '</div>' +
-            '<div class="jd-grid-side">' +
-              renderQuickActions() +
-              renderSupport() +
-              renderRelatedJobs() +
-            '</div>' +
-          '</div>' +
-          renderActionBar();
+          if (taskErr) { console.error('Task load error:', taskErr); }
+          if (!taskData) {
+            renderState('Job not found or not accessible', 'This job does not exist, or you do not have access to it.', true);
+            return;
+          }
+          task = taskData;
+          var propertyId = task.property_id;
 
-        document.getElementById('jdTimelineToggle')?.addEventListener('click', function() {
-          var list = document.getElementById('jdTimelineList');
-          var chevron = document.getElementById('jdTimelineChevron');
-          var isOpen = list.classList.toggle('is-open');
-          if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
-        });
+          var [
+            photosRes, checksRes, convRes, timelineRes, kbRes, emergDataRes, emergContactsRes, relatedRes
+          ] = await Promise.all([
+            sb.from('task_photos').select('*').eq('task_id', taskId).order('created_at', { ascending: true }),
+            sb.from('task_evidence_checks').select('*').eq('task_id', taskId).order('check_key', { ascending: true }),
+            sb.from('operations_conversations').select('*').eq('task_id', taskId).maybeSingle(),
+            sb.from('timeline_events').select('*').eq('task_id', taskId).order('created_at', { ascending: false }),
+            sb.from('property_knowledge_blocks')
+              .select('id, property_id, block_type, visibility_scope, title, content_jsonb, created_at, updated_at')
+              .eq('property_id', propertyId).in('visibility_scope', ['PTR', 'GST']).eq('is_active', true)
+              .order('block_type', { ascending: true }),
+            sb.from('emergency_data').select('*').eq('property_id', propertyId).maybeSingle(),
+            sb.from('emergency_contacts').select('*').eq('property_id', propertyId).eq('is_active', true)
+              .order('escalation_priority', { ascending: true }),
+            sb.from('tasks').select('id, title, task_type, priority, status, due_date, completed_at')
+              .eq('property_id', propertyId).neq('id', taskId)
+              .order('due_date', { ascending: true, nullsFirst: false }).limit(5)
+          ]);
+
+          photos    = photosRes.data    || [];
+          checks    = checksRes.data    || [];
+          conv      = convRes.data      || null;
+          timeline  = timelineRes.data  || [];
+          kbBlocks  = kbRes.data        || [];
+          emergData = emergDataRes.data || null;
+          contacts  = emergContactsRes.data || [];
+          related   = relatedRes.data   || [];
+
+          messages = [];
+          if (conv) {
+            var { data: msgData } = await sb.from('operations_messages')
+              .select('*').eq('operations_conversation_id', conv.id).order('created_at', { ascending: true });
+            messages = msgData || [];
+          }
+
+          [photosRes, checksRes, timelineRes, kbRes, emergContactsRes, relatedRes].forEach(function(r) {
+            if (r.error) console.error('Job detail load error:', r.error);
+          });
+
+          health = deriveJobHealth();
+          var bannerHtml = renderBanner();
+
+          root.innerHTML =
+            renderHeader() +
+            (bannerHtml || '') +
+            '<div class="jd-grid">' +
+              '<div class="jd-grid-main">' +
+                renderPropertyEssentials() +
+                renderReservationSummary() +
+                renderJobReport() +
+                renderTimeline() +
+              '</div>' +
+              '<div class="jd-grid-side">' +
+                renderQuickActions() +
+                renderSupport() +
+                renderRelatedJobs() +
+              '</div>' +
+            '</div>' +
+            renderActionBar();
+
+          document.getElementById('jdTimelineToggle')?.addEventListener('click', function() {
+            var list = document.getElementById('jdTimelineList');
+            var chevron = document.getElementById('jdTimelineChevron');
+            var isOpen = list.classList.toggle('is-open');
+            if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+          });
+        }
+
+        await loadAndRender();
       })();
     </script>
   </body>
