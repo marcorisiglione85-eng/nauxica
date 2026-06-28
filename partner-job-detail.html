@@ -584,7 +584,12 @@
           setIssueModalSaving(true);
           setIssueModalError('');
 
-          var logOpts = {
+          // Sprint 029D.6: goes through the shared logTimelineEvent()
+          // wrapper (defined in the Timeline section below), which logs
+          // via NauxicaTimeline.log() and then re-reads timeline_events
+          // from the database — no local/optimistic timeline array is
+          // trusted or fabricated here anymore.
+          var ok = await logTimelineEvent({
             property_id: task ? task.property_id : null,
             task_id:     taskId,
             actor_type:  'partner',
@@ -598,49 +603,29 @@
               is_blocking: isBlocking,
               source: 'partner_job_detail'
             }
-          };
-
-          try {
-            await window.NauxicaTimeline.log(logOpts);
-          } catch (err) {
-            // NauxicaTimeline.log() catches its own errors internally and
-            // normally never rejects (see nauxica-timeline.js) — this catch
-            // covers the realistic remaining failure mode here: the shared
-            // script failing to load (window.NauxicaTimeline undefined) or
-            // throwing before its own try/catch (e.g. a future change to
-            // that file). A true Supabase-insert failure inside log() is
-            // currently swallowed there and not observable from this file.
-            console.error('Issue report save error:', err);
-            setIssueModalError('Could not report this issue. Please try again.');
-            setIssueModalSaving(false);
-            return;
-          }
-
-          // Local-only: append the event to the in-memory timeline and
-          // re-derive Job Health from it, without a DB write or full
-          // page reload (per Sprint 029D.5 — health/severity is never
-          // persisted to a column, only derived from timeline_events).
-          timeline.unshift({
-            id: 'local-' + Date.now(),
-            property_id: logOpts.property_id,
-            task_id: taskId,
-            actor_type: 'partner',
-            event_type: logOpts.event_type,
-            event_title: logOpts.event_title,
-            event_description: logOpts.event_description,
-            metadata: logOpts.metadata,
-            created_at: new Date().toISOString()
           });
 
           setIssueModalSaving(false);
+
+          if (!ok) {
+            // Do not pretend success: keep the modal open so the partner
+            // can see the failure and retry, instead of acting as if the
+            // issue was recorded.
+            setIssueModalError('Could not report this issue. Please try again.');
+            return;
+          }
+
+          // Only close the modal once the refresh is confirmed.
           closeIssueModal();
-          refreshHealthBannerAndTimeline();
+          refreshTimelineUI();
 
           // ── Future hook points (not implemented this sprint) ──────────
-          // Photo evidence: would attach here, after a successful log(),
-          // uploading to Storage and inserting task_photos rows with
-          // photo_type: 'issue' (already a valid value in that table's
-          // CHECK constraint), linked by this same taskId.
+          // Photo evidence: would attach here, after a confirmed
+          // logTimelineEvent(), uploading to Storage and inserting
+          // task_photos rows with photo_type: 'issue' (already a valid
+          // value in that table's CHECK constraint), linked by this same
+          // taskId. The same logTimelineEvent() wrapper would be reused
+          // unmodified for any timeline entry that step also wants to write.
           // Operations Conversation: would attach here too — looking up
           // or creating the operations_conversations row for this taskId
           // (unique per task already) and inserting an operations_messages
@@ -648,22 +633,6 @@
           // event. Neither is created in this sprint.
         }
         window.__jdSubmitIssue = handleIssueSubmit;
-
-        function refreshHealthBannerAndTimeline() {
-          health = deriveJobHealth();
-
-          var headerSlot = document.getElementById('jdHeaderSlot');
-          if (headerSlot) headerSlot.innerHTML = renderHeader();
-
-          var bannerSlot = document.getElementById('jdBannerSlot');
-          if (bannerSlot) bannerSlot.innerHTML = renderBanner();
-
-          var timelineEl = document.getElementById('jdTimelineCard');
-          if (timelineEl) {
-            timelineEl.outerHTML = renderTimeline();
-            wireTimelineToggle();
-          }
-        }
 
         function ensureIssueModal() {
           if (document.getElementById('jdIssueModalOverlay')) return;
@@ -876,7 +845,10 @@
           renderJobReportSection();
 
           var label = EVIDENCE_CHECK_LABEL[checkKey] || checkKey.replace(/_/g, ' ');
-          window.NauxicaTimeline.log({
+          // Sprint 029D.6: goes through the shared logTimelineEvent()
+          // wrapper, then refreshes only Header/Banner/Timeline — the
+          // evidence save itself (above) is untouched by this sprint.
+          await logTimelineEvent({
             property_id: task ? task.property_id : null,
             task_id:     taskId,
             actor_type:  'partner',
@@ -885,6 +857,7 @@
             event_description: label + (isChecked ? ' marked complete' : ' marked incomplete'),
             metadata:    { check_key: checkKey, is_checked: isChecked }
           });
+          refreshTimelineUI();
         }
 
         function scheduleEvidenceNoteSave(checkKey, noteValue) {
@@ -1025,6 +998,7 @@
               '<i class="fa-solid fa-chevron-down" id="jdTimelineChevron" aria-hidden="true"></i>' +
             '</div>' +
             '<div class="jd-timeline-list" id="jdTimelineList">' + body + '</div>' +
+            (timelineRefreshWarning ? '<div class="jd-evidence-error">' + esc(timelineRefreshWarning) + '</div>' : '') +
           '</div>';
         }
 
@@ -1035,6 +1009,81 @@
             var isOpen = list.classList.toggle('is-open');
             if (chevron) chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
           });
+        }
+
+        // ── Timeline write reliability (Sprint 029D.6) ──────────────────
+        // window.NauxicaTimeline.log() (nauxica-timeline.js — not in this
+        // sprint's allowed files) catches and swallows every error inside
+        // its own try/catch and effectively never rejects, so a real
+        // Supabase insert failure there is invisible to any caller. This
+        // wrapper can't see that failure either, but it gives every write
+        // site in this file one consistent, never-throwing path that:
+        //   (a) verifies the shared helper actually exists,
+        //   (b) calls it,
+        //   (c) re-reads timeline_events from the database afterward
+        //       instead of trusting any locally-held array, and
+        //   (d) reports honestly whether that re-read succeeded.
+        // "Confirmed" here means "we could read timeline_events back from
+        // the database afterward" — the closest available signal given
+        // log()'s swallow-everything design; it is not literal proof that
+        // this exact event row was written. A future Photo Upload /
+        // Operations Conversation / AI integration can call
+        // logTimelineEvent() exactly as written below, unmodified.
+        var timelineRefreshWarning = '';
+
+        async function reloadTimeline() {
+          var { data, error } = await sb
+            .from('timeline_events')
+            .select('*')
+            .eq('task_id', taskId)
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            console.error('Timeline reload error:', error);
+            timelineRefreshWarning = 'Timeline could not be refreshed.';
+            return false;
+          }
+
+          timeline = data || [];
+          timelineRefreshWarning = '';
+          return true;
+        }
+
+        async function logTimelineEvent(event) {
+          try {
+            if (!window.NauxicaTimeline || typeof window.NauxicaTimeline.log !== 'function') {
+              console.error('Timeline log error: NauxicaTimeline is not available');
+              timelineRefreshWarning = 'Timeline could not be refreshed.';
+              return false;
+            }
+            await window.NauxicaTimeline.log(event);
+            return await reloadTimeline();
+          } catch (err) {
+            console.error('Timeline log error:', err);
+            timelineRefreshWarning = 'Timeline could not be refreshed.';
+            return false;
+          }
+        }
+
+        // Refreshes only Header (status/health badges), Smart Banner, and
+        // Timeline — never Property/Reservation/Evidence/Support, and
+        // never a full loadAndRender(). Health is re-derived locally from
+        // whatever is currently in `timeline` (the just-reloaded data on
+        // success, or the previous, unchanged data on a failed reload).
+        function refreshTimelineUI() {
+          health = deriveJobHealth();
+
+          var headerSlot = document.getElementById('jdHeaderSlot');
+          if (headerSlot) headerSlot.innerHTML = renderHeader();
+
+          var bannerSlot = document.getElementById('jdBannerSlot');
+          if (bannerSlot) bannerSlot.innerHTML = renderBanner();
+
+          var timelineEl = document.getElementById('jdTimelineCard');
+          if (timelineEl) {
+            timelineEl.outerHTML = renderTimeline();
+            wireTimelineToggle();
+          }
         }
 
         // ── Related Jobs ─────────────────────────────────────────────────
@@ -1067,13 +1116,20 @@
           var { error } = await sb.from('tasks').update(updates).eq('id', taskId);
           if (error) { console.error('Task update error:', error); return; }
 
+          // The status write above succeeded, so it's safe to reflect it
+          // locally without re-fetching the whole task row.
+          task.status = updates.status;
+
           var evtMap = {
             'start-task':    { type: 'task_started',   title: 'Task started' },
             'complete-task': { type: 'task_completed', title: 'Task completed' }
           };
           var evtDef = evtMap[action];
           if (evtDef) {
-            window.NauxicaTimeline.log({
+            // Sprint 029D.6: shared logTimelineEvent() wrapper, same as
+            // Evidence checks and Report Issue — event_type/event_title/
+            // metadata shape is unchanged from Sprint 029D.3.
+            await logTimelineEvent({
               property_id: task ? task.property_id : null,
               task_id:     taskId,
               actor_type:  'partner',
@@ -1083,7 +1139,12 @@
             });
           }
 
-          await loadAndRender();
+          // Targeted refresh only (no full loadAndRender()): Header/Banner/
+          // Timeline via the shared helper, plus the action bar itself —
+          // the one section specific to a lifecycle status change that
+          // refreshTimelineUI() intentionally does not touch.
+          refreshTimelineUI();
+          refreshActionBar();
         }
         window.__jdLifecycleAction = handleLifecycleAction;
 
@@ -1101,6 +1162,11 @@
             actionHtml = '<span class="jd-action-label">Awaiting your acceptance — use My Jobs to accept or decline.</span>';
           }
           return '<div class="jd-action-bar">' + actionHtml + '</div>';
+        }
+
+        function refreshActionBar() {
+          var el = document.getElementById('jdActionBarSlot');
+          if (el) el.innerHTML = renderActionBar();
         }
 
         // ── Load + render (initial load, and re-run after every lifecycle
@@ -1184,7 +1250,7 @@
                 renderRelatedJobs() +
               '</div>' +
             '</div>' +
-            renderActionBar();
+            '<div id="jdActionBarSlot">' + renderActionBar() + '</div>';
 
           wireTimelineToggle();
           wireJobReportEvents();
