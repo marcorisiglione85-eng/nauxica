@@ -304,6 +304,8 @@
     <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
     <script src="nauxica-timeline.js"></script>
+    <script src="nauxica-storage.js"></script>
+    <script src="nauxica-photos.js"></script>
 
     <script>
       localStorage.setItem('accountType', 'partner');
@@ -536,6 +538,16 @@
           el.style.display = msg ? 'block' : 'none';
         }
 
+        // Separate from setIssueModalError: the modal is already closed by
+        // the time a photo-upload failure is known (the issue report itself
+        // already succeeded), so this warns in the page itself rather than
+        // inside a modal that's no longer open.
+        function setIssuePhotoWarning(msg) {
+          var el = document.getElementById('jdIssuePhotoWarningSlot');
+          if (!el) return;
+          el.innerHTML = msg ? '<div class="jd-evidence-error">' + esc(msg) + '</div>' : '';
+        }
+
         function setIssueModalSaving(isSaving) {
           issueModalSaving = isSaving;
           var btn = document.getElementById('jdIssueSubmitBtn');
@@ -555,7 +567,9 @@
           document.getElementById('jdIssueCategory').value = 'damage';
           document.getElementById('jdIssueDescription').value = '';
           document.getElementById('jdIssueBlocking').checked = false;
+          document.getElementById('jdIssuePhoto').value = '';
           setIssueModalError('');
+          setIssuePhotoWarning('');
           setIssueModalSaving(false);
           overlay.style.display = 'flex';
           document.addEventListener('keydown', handleIssueModalKeydown);
@@ -580,9 +594,12 @@
           var categoryLabel  = ISSUE_CATEGORY_LABEL[category] || category;
           var severity       = deriveIssueSeverity(category, isBlocking);
           var eventDescription = description ? (categoryLabel + ': ' + description) : categoryLabel;
+          var photoInput     = document.getElementById('jdIssuePhoto');
+          var photoFile      = (photoInput && photoInput.files && photoInput.files[0]) || null;
 
           setIssueModalSaving(true);
           setIssueModalError('');
+          setIssuePhotoWarning('');
 
           // Sprint 029D.6: goes through the shared logTimelineEvent()
           // wrapper (defined in the Timeline section below), which logs
@@ -619,20 +636,71 @@
           closeIssueModal();
           refreshTimelineUI();
 
+          // Sprint 029E.4: the issue report has already succeeded above —
+          // a photo-upload problem here must not lose or reopen it. Fired
+          // after the modal is closed, so any failure surfaces as a page
+          // warning (setIssuePhotoWarning), never alert() or a blocking
+          // second modal.
+          if (photoFile) {
+            await handleIssuePhotoAttachment(photoFile, description);
+          }
+
           // ── Future hook points (not implemented this sprint) ──────────
-          // Photo evidence: would attach here, after a confirmed
-          // logTimelineEvent(), uploading to Storage and inserting
-          // task_photos rows with photo_type: 'issue' (already a valid
-          // value in that table's CHECK constraint), linked by this same
-          // taskId. The same logTimelineEvent() wrapper would be reused
-          // unmodified for any timeline entry that step also wants to write.
-          // Operations Conversation: would attach here too — looking up
-          // or creating the operations_conversations row for this taskId
+          // Operations Conversation: would attach here — looking up or
+          // creating the operations_conversations row for this taskId
           // (unique per task already) and inserting an operations_messages
           // row referencing this issue, instead of/alongside the timeline
-          // event. Neither is created in this sprint.
+          // event. Not created in this sprint.
         }
         window.__jdSubmitIssue = handleIssueSubmit;
+
+        // Sprint 029E.4: attaches one optional issue photo via the shared
+        // NauxicaPhotos coordinator, after the issue report itself has
+        // already been logged successfully. photo_type is always 'issue'
+        // here — Evidence Photos (a separate flow) are out of scope.
+        async function handleIssuePhotoAttachment(file, issueDescription) {
+          try {
+            if (!window.NauxicaPhotos || typeof window.NauxicaPhotos.attachTaskPhoto !== 'function') {
+              console.error('Issue photo upload error: NauxicaPhotos is not available');
+              setIssuePhotoWarning('Issue reported, but the photo could not be uploaded.');
+              return;
+            }
+
+            var result = await window.NauxicaPhotos.attachTaskPhoto({
+              taskId:    taskId,
+              file:      file,
+              photoType: 'issue',
+              caption:   issueDescription || null
+            });
+
+            if (!result || !result.ok) {
+              console.error('Issue photo upload error:', result && result.error);
+              setIssuePhotoWarning('Issue reported, but the photo could not be uploaded.');
+              return;
+            }
+
+            await logTimelineEvent({
+              property_id: task ? task.property_id : null,
+              task_id:     taskId,
+              actor_type:  'partner',
+              event_type:  'photo_uploaded',
+              event_title: 'Photo uploaded',
+              event_description: 'Issue photo attached',
+              metadata: {
+                source:       'partner_issue_report',
+                photo_id:     result.photo.id,
+                photo_type:   'issue',
+                storage_path: result.upload.path
+              }
+            });
+
+            refreshTimelineUI();
+
+          } catch (err) {
+            console.error('Issue photo upload error:', err);
+            setIssuePhotoWarning('Issue reported, but the photo could not be uploaded.');
+          }
+        }
 
         function ensureIssueModal() {
           if (document.getElementById('jdIssueModalOverlay')) return;
@@ -659,7 +727,8 @@
                 '<label class="jd-modal-label" for="jdIssueDescription">Description</label>' +
                 '<textarea id="jdIssueDescription" class="jd-modal-textarea" rows="3" placeholder="What happened?"></textarea>' +
                 '<label class="jd-modal-checkbox-row"><input type="checkbox" id="jdIssueBlocking" /> This is blocking the job</label>' +
-                '<p class="jd-modal-photo-placeholder">Photo evidence will be available in the next update.</p>' +
+                '<label class="jd-modal-label" for="jdIssuePhoto">Photo (optional)</label>' +
+                '<input type="file" id="jdIssuePhoto" accept="image/*" capture="environment" />' +
                 '<div class="jd-modal-error" id="jdIssueModalError" style="display:none"></div>' +
                 '<div class="jd-modal-footer">' +
                   '<button type="button" class="jd-modal-btn-secondary" id="jdIssueCancelBtn">Cancel</button>' +
@@ -1237,6 +1306,7 @@
           root.innerHTML =
             '<div id="jdHeaderSlot">' + renderHeader() + '</div>' +
             '<div id="jdBannerSlot">' + (bannerHtml || '') + '</div>' +
+            '<div id="jdIssuePhotoWarningSlot"></div>' +
             '<div class="jd-grid">' +
               '<div class="jd-grid-main">' +
                 renderPropertyEssentials() +
