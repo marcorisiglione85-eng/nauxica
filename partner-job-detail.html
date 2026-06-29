@@ -880,6 +880,31 @@
           return checks.find(function(c) { return c.check_key === checkKey; }) || null;
         }
 
+        // Shared upsert path for task_evidence_checks, used by both the
+        // checkbox toggle and (Sprint 029E.5) the optional evidence photo
+        // input — both need the row's real database id (not a locally
+        // fabricated placeholder) so a photo can be linked to
+        // task_evidence_checks.photo_id via NauxicaPhotos.attachTaskPhoto's
+        // evidenceCheckId. .select().single() returns the upserted row
+        // (existing or newly created) so `checks` always holds the real id.
+        async function upsertEvidenceCheckRow(payload) {
+          var { data: row, error } = await sb
+            .from('task_evidence_checks')
+            .upsert(payload, { onConflict: 'task_id,check_key' })
+            .select()
+            .single();
+
+          if (error) return { row: null, error: error };
+
+          var existing = getCheckRow(payload.check_key);
+          if (existing) {
+            Object.assign(existing, row);
+          } else {
+            checks.push(row);
+          }
+          return { row: row, error: null };
+        }
+
         async function handleEvidenceCheckToggle(checkKey, isChecked) {
           evidenceSaveError = '';
           var nowIso = new Date().toISOString();
@@ -891,24 +916,12 @@
             completed_by: isChecked ? uid : null
           };
 
-          var { error } = await sb.from('task_evidence_checks').upsert(payload, { onConflict: 'task_id,check_key' });
+          var { error } = await upsertEvidenceCheckRow(payload);
           if (error) {
             console.error('Evidence check save error:', error);
             evidenceSaveError = 'Could not save this check. Please try again.';
             renderJobReportSection();
             return;
-          }
-
-          var existing = getCheckRow(checkKey);
-          if (existing) {
-            existing.is_checked   = isChecked;
-            existing.completed_at = payload.completed_at;
-            existing.completed_by = payload.completed_by;
-          } else {
-            checks.push({
-              id: null, task_id: taskId, check_key: checkKey, is_checked: isChecked, note: null,
-              photo_id: null, completed_at: payload.completed_at, completed_by: payload.completed_by
-            });
           }
 
           renderJobReportSection();
@@ -926,6 +939,80 @@
             event_description: label + (isChecked ? ' marked complete' : ' marked incomplete'),
             metadata:    { check_key: checkKey, is_checked: isChecked }
           });
+          refreshTimelineUI();
+        }
+
+        // Separate from evidenceSaveError: a photo-upload failure here
+        // happens after the evidence check itself is already saved, so it
+        // warns next to that specific row instead of replacing the
+        // checklist-wide save error.
+        function setEvidencePhotoWarning(checkKey, msg) {
+          var el = document.querySelector('.jd-evidence-photo-warning[data-photo-warning-for="' + checkKey + '"]');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        // Sprint 029E.5: one optional photo per evidence check, via the
+        // shared NauxicaPhotos coordinator. evidenceCheckId must be the
+        // real task_evidence_checks.id, never check_key — if no row exists
+        // yet for this check (the partner picked a photo before toggling
+        // the checkbox), upsertEvidenceCheckRow() is used to create one
+        // first, without touching is_checked.
+        async function handleEvidencePhotoSelected(checkKey, inputEl) {
+          var file = inputEl.files && inputEl.files[0];
+          if (!file) return;
+
+          setEvidencePhotoWarning(checkKey, '');
+
+          var row = getCheckRow(checkKey);
+          if (!row || !row.id) {
+            var ensured = await upsertEvidenceCheckRow({ task_id: taskId, check_key: checkKey });
+            if (ensured.error) {
+              console.error('Evidence check save error:', ensured.error);
+              setEvidencePhotoWarning(checkKey, 'Evidence saved, but the photo could not be uploaded.');
+              inputEl.value = '';
+              return;
+            }
+            row = ensured.row;
+          }
+
+          var label = EVIDENCE_CHECK_LABEL[checkKey] || checkKey.replace(/_/g, ' ');
+
+          var result = await window.NauxicaPhotos.attachTaskPhoto({
+            taskId:          taskId,
+            file:            file,
+            photoType:       'other',
+            caption:         label,
+            evidenceCheckId: row.id
+          });
+
+          inputEl.value = '';
+
+          if (!result || !result.ok) {
+            console.error('Evidence photo upload error:', result && result.error);
+            setEvidencePhotoWarning(checkKey, 'Evidence saved, but the photo could not be uploaded.');
+            return;
+          }
+
+          if (result.evidenceLinked) row.photo_id = result.photo.id;
+
+          await logTimelineEvent({
+            property_id: task ? task.property_id : null,
+            task_id:     taskId,
+            actor_type:  'partner',
+            event_type:  'photo_uploaded',
+            event_title: 'Photo uploaded',
+            event_description: label + ' photo attached',
+            metadata: {
+              source:            'partner_evidence_check',
+              photo_id:          result.photo.id,
+              photo_type:        'other',
+              storage_path:      result.upload.path,
+              evidence_check_id: row.id
+            }
+          });
+
           refreshTimelineUI();
         }
 
@@ -978,6 +1065,12 @@
               scheduleEvidenceNoteSave(input.dataset.checkKey, input.value);
             });
           });
+
+          card.querySelectorAll('.jd-evidence-photo-input').forEach(function(input) {
+            input.addEventListener('change', function() {
+              handleEvidencePhotoSelected(input.dataset.checkKey, input);
+            });
+          });
         }
 
         function renderJobReportSection() {
@@ -1001,6 +1094,8 @@
                 '<span>' + esc(label) + '</span>' +
               '</label>' +
               '<input type="text" class="jd-evidence-note-input" data-check-key="' + esc(key) + '" placeholder="Add a note (optional)" value="' + esc(note) + '" />' +
+              '<input type="file" class="jd-evidence-photo-input" data-check-key="' + esc(key) + '" accept="image/*" capture="environment" />' +
+              '<div class="jd-evidence-error jd-evidence-photo-warning" data-photo-warning-for="' + esc(key) + '" style="display:none"></div>' +
             '</div>';
           }).join('');
 
