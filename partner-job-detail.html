@@ -679,6 +679,12 @@
               return;
             }
 
+            // Sprint 029E.6: push the new row into the local photos array
+            // so renderJobReport() can show the issue-photo count immediately,
+            // without a full page reload.
+            photos.push(result.photo);
+            renderJobReportSection();
+
             await logTimelineEvent({
               property_id: task ? task.property_id : null,
               task_id:     taskId,
@@ -996,6 +1002,7 @@
           }
 
           if (result.evidenceLinked) row.photo_id = result.photo.id;
+          renderJobReportSection(); // show "Photo attached" chip immediately
 
           await logTimelineEvent({
             property_id: task ? task.property_id : null,
@@ -1083,17 +1090,25 @@
         function renderJobReport() {
           var checkKeys = EVIDENCE_CHECK_KEYS[task.task_type] || EVIDENCE_CHECK_KEYS.other;
 
+          var issuePhotoCount = photos.filter(function(p) {
+            return p.photo_type === 'issue';
+          }).length;
+
           var checksHtml = checkKeys.map(function(key) {
             var row       = getCheckRow(key);
             var isChecked = row ? !!row.is_checked : false;
             var note      = row && row.note ? row.note : '';
             var label     = EVIDENCE_CHECK_LABEL[key] || key.replace(/_/g, ' ');
+            var photoChip = (row && row.photo_id)
+              ? '<span class="jd-photo-chip" style="margin-top:4px;display:inline-flex"><i class="fa-solid fa-image" aria-hidden="true"></i> Photo attached</span>'
+              : '';
             return '<div class="jd-evidence-row" data-check-key="' + esc(key) + '">' +
               '<label class="jd-evidence-checkbox-row">' +
                 '<input type="checkbox" class="jd-evidence-checkbox" data-check-key="' + esc(key) + '"' + (isChecked ? ' checked' : '') + ' />' +
                 '<span>' + esc(label) + '</span>' +
               '</label>' +
               '<input type="text" class="jd-evidence-note-input" data-check-key="' + esc(key) + '" placeholder="Add a note (optional)" value="' + esc(note) + '" />' +
+              photoChip +
               '<input type="file" class="jd-evidence-photo-input" data-check-key="' + esc(key) + '" accept="image/*" capture="environment" />' +
               '<div class="jd-evidence-error jd-evidence-photo-warning" data-photo-warning-for="' + esc(key) + '" style="display:none"></div>' +
             '</div>';
@@ -1115,6 +1130,10 @@
           return '<div class="dashboard-card jd-card" id="jdJobReportCard">' +
             '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Evidence checks</h3>' +
             '<p class="jd-evidence-intro">Confirm what was completed or noticed.</p>' +
+            (issuePhotoCount > 0
+              ? '<p class="jd-evidence-intro"><i class="fa-solid fa-camera" aria-hidden="true"></i> ' +
+                  issuePhotoCount + ' issue photo' + (issuePhotoCount === 1 ? '' : 's') + ' attached</p>'
+              : '') +
             checksHtml +
             (evidenceSaveError ? '<div class="jd-evidence-error">' + esc(evidenceSaveError) + '</div>' : '') +
             (photosHtml ? '<div style="margin-top:14px">' + photosHtml + '</div>' : '') +
