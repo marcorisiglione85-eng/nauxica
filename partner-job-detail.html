@@ -477,8 +477,21 @@
 
         // ── Header ───────────────────────────────────────────────────────
         function renderHeader() {
-          var propName  = (task.properties && task.properties.display_name) || 'Property not available';
-          var typeLabel = TASK_TYPE_LABELS[task.task_type] || task.task_type;
+          var propName   = (task.properties && task.properties.display_name) || 'Property not available';
+          var typeLabel  = TASK_TYPE_LABELS[task.task_type] || task.task_type;
+          var valueTxt   = (task.task_value_amount && task.task_value_currency)
+            ? currencySymbol(task.task_value_currency) + task.task_value_amount
+            : 'Not set';
+          var dueTxt     = task.due_date || 'Not set';
+          var descTxt    = task.description ? esc(task.description) : '<span style="color:var(--stone)">No description provided.</span>';
+          var infoRow    =
+            '<div style="flex-basis:100%;margin-top:12px;padding-top:12px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
+              '<div class="jd-info-grid" style="margin-bottom:0">' +
+                '<div class="jd-info-item"><span class="jd-info-label">Due date</span><span class="jd-info-value">' + esc(dueTxt) + '</span></div>' +
+                '<div class="jd-info-item"><span class="jd-info-label">Job value</span><span class="jd-info-value">' + esc(valueTxt) + '</span></div>' +
+                '<div class="jd-info-item" style="grid-column:1/-1"><span class="jd-info-label">Description</span><span class="jd-info-value">' + descTxt + '</span></div>' +
+              '</div>' +
+            '</div>';
           return '<div class="dashboard-card jd-header-card">' +
             '<div class="jd-header-left">' +
               '<div class="jd-header-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></div>' +
@@ -488,6 +501,7 @@
               '</div>' +
             '</div>' +
             '<div class="jd-header-badges">' + statusBadge(task.status) + priorityBadge(task.priority) + healthBadge(health) + '</div>' +
+            infoRow +
           '</div>';
         }
 
