@@ -106,6 +106,39 @@
       .td-photo-row:last-child { border-bottom: none; }
       .td-photo-count { font-weight: 700; }
 
+      .td-msg-list { max-height: 300px; overflow-y: auto; }
+      .td-msg-row {
+        padding: 9px 0;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+      }
+      .td-msg-row:last-child { border-bottom: none; }
+      .td-msg-sender { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--stone); }
+      .td-msg-text   { font-size: 0.85rem; margin: 2px 0; overflow-wrap: anywhere; }
+      .td-msg-time   { font-size: 0.72rem; color: var(--stone); margin-top: 2px; }
+
+      .td-msg-compose {
+        display: flex; gap: 8px; margin-top: 14px;
+        padding-top: 12px; border-top: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.07));
+        align-items: flex-end;
+      }
+      .td-msg-input {
+        flex: 1; padding: 8px 10px; border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        background: var(--color-background-primary, #fff); color: inherit;
+        font-family: inherit; resize: none; min-height: 36px;
+      }
+      .td-msg-send {
+        height: 36px; padding: 0 16px; border-radius: 10px; border: none; cursor: pointer;
+        background: var(--etna-orange, #E85D04); color: #fff; font-size: 0.82rem; font-weight: 700;
+        white-space: nowrap; flex-shrink: 0;
+      }
+      .td-msg-send:hover:not(:disabled) { opacity: 0.9; }
+      .td-msg-send:disabled { opacity: 0.6; cursor: default; }
+      .td-conv-error {
+        margin-top: 8px; padding: 6px 10px; border-radius: 8px; font-size: 0.78rem;
+        background: rgba(192,57,43,0.08); color: #7f1d1d; border: 1px solid rgba(192,57,43,0.2);
+      }
+
       @media (max-width: 600px) {
         .td-info-grid    { grid-template-columns: 1fr; }
         .td-header-top   { flex-direction: column; }
@@ -170,6 +203,7 @@
 
     <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
+    <script src="nauxica-timeline.js"></script>
 
     <script>
       localStorage.setItem('accountType', 'homeowner');
@@ -303,8 +337,8 @@
           other:      'Other photos'
         };
 
-        // ── Load timeline, evidence checks, and photos in parallel ─────────
-        var [ timelineRes, checksRes, photosRes ] = await Promise.all([
+        // ── Load timeline, evidence checks, photos, and conversation in parallel
+        var [ timelineRes, checksRes, photosRes, convRes ] = await Promise.all([
           sb.from('timeline_events')
             .select('id, event_type, event_title, event_description, created_at')
             .eq('task_id', taskId)
@@ -316,12 +350,27 @@
           sb.from('task_photos')
             .select('id, task_id, photo_type, storage_path, caption, created_at')
             .eq('task_id', taskId)
-            .order('created_at', { ascending: true })
+            .order('created_at', { ascending: true }),
+          sb.from('operations_conversations')
+            .select('id, task_id, property_id, status, created_at')
+            .eq('task_id', taskId)
+            .maybeSingle()
         ]);
 
         var timeline = timelineRes.data || [];
         var checks   = checksRes.data   || [];
         var photos   = photosRes.data   || [];
+        var conv     = convRes.data     || null;
+
+        var messages = [];
+        if (conv) {
+          var { data: msgData } = await sb
+            .from('operations_messages')
+            .select('id, operations_conversation_id, sender_type, message_text, is_read, created_at')
+            .eq('operations_conversation_id', conv.id)
+            .order('created_at', { ascending: true });
+          messages = msgData || [];
+        }
 
         // ── Render ─────────────────────────────────────────────────────────
         var propName     = (task.properties && task.properties.display_name) || 'Property';
@@ -333,6 +382,102 @@
         var partnerName  = task.assigned_partner
           ? (task.assigned_partner.display_name || task.assigned_partner.full_name || null)
           : null;
+
+        var SENDER_LABEL = {
+          homeowner: 'You', partner: 'Partner',
+          ai: 'Nauxica', system: 'Nauxica', operator: 'Nauxica'
+        };
+
+        function msgRowHtml(m) {
+          var sender = SENDER_LABEL[m.sender_type] || 'Nauxica';
+          return '<div class="td-msg-row">' +
+            '<div class="td-msg-sender">' + esc(sender) + '</div>' +
+            '<div class="td-msg-text">' + esc(m.message_text) + '</div>' +
+            '<div class="td-msg-time">' + esc(new Date(m.created_at).toLocaleString()) + '</div>' +
+          '</div>';
+        }
+
+        function renderMessages() {
+          var listEl = document.getElementById('tdMsgList');
+          if (!listEl) return;
+          listEl.innerHTML = messages.length
+            ? messages.map(msgRowHtml).join('')
+            : '<p class="td-empty">No messages yet. Use this space to contact the partner about this task.</p>';
+          listEl.scrollTop = listEl.scrollHeight;
+        }
+
+        function setConvError(msg) {
+          var el = document.getElementById('tdConvError');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        window.__tdSendMsg = async function () {
+          var input   = document.getElementById('tdMsgInput');
+          var sendBtn = document.getElementById('tdMsgSend');
+          var text    = input ? input.value.trim() : '';
+          if (!text) return;
+
+          if (sendBtn) sendBtn.disabled = true;
+          if (input)   input.disabled   = true;
+          setConvError('');
+
+          try {
+            if (!conv) {
+              var { data: newConv, error: convErr } = await sb
+                .from('operations_conversations')
+                .insert({ task_id: taskId, property_id: task.property_id })
+                .select()
+                .single();
+              if (convErr) {
+                setConvError('Could not start the conversation. Please try again.');
+                return;
+              }
+              conv = newConv;
+            }
+
+            var { data: newMsg, error: msgErr } = await sb
+              .from('operations_messages')
+              .insert({
+                operations_conversation_id: conv.id,
+                sender_type:  'homeowner',
+                message_text: text
+              })
+              .select()
+              .single();
+
+            if (msgErr) {
+              setConvError('Could not send the message. Please try again.');
+              return;
+            }
+
+            if (input) input.value = '';
+            messages.push(newMsg);
+            renderMessages();
+
+            // Best-effort timeline log — fire and forget; no UI depends on it
+            window.NauxicaTimeline && window.NauxicaTimeline.log({
+              property_id: task.property_id,
+              task_id:     taskId,
+              actor_type:  'homeowner',
+              event_type:  'support_message_sent',
+              event_title: 'Homeowner sent a message',
+              metadata:    { conversation_id: conv.id }
+            });
+
+          } catch (err) {
+            console.error('Message send error:', err);
+            setConvError('Could not send the message. Please try again.');
+          } finally {
+            if (sendBtn) sendBtn.disabled = false;
+            if (input)   input.disabled   = false;
+          }
+        };
+
+        var convBodyHtml = messages.length
+          ? messages.map(msgRowHtml).join('')
+          : '<p class="td-empty">No messages yet. Use this space to contact the partner about this task.</p>';
 
         var timelineHtml = timeline.length
           ? timeline.map(function(e) {
@@ -422,6 +567,23 @@
             '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
               '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--stone);margin-bottom:8px">Photos</div>' +
               photoCountsHtml +
+            '</div>' +
+          '</div>' +
+
+          // ── Conversation card ────────────────────────────────────────────
+          '<div class="dashboard-card td-card">' +
+            '<h3 class="td-card-title">' +
+              '<i class="fa-solid fa-comments" aria-hidden="true"></i>' +
+              ' Conversation' +
+            '</h3>' +
+            '<div class="td-msg-list" id="tdMsgList">' + convBodyHtml + '</div>' +
+            '<div class="td-conv-error" id="tdConvError" style="display:none"></div>' +
+            '<div class="td-msg-compose">' +
+              '<textarea id="tdMsgInput" class="td-msg-input" rows="2" ' +
+                'placeholder="Message the partner about this task…" ' +
+                'onkeydown="if(event.ctrlKey&&event.key===\'Enter\')window.__tdSendMsg()"' +
+              '></textarea>' +
+              '<button type="button" id="tdMsgSend" class="td-msg-send" onclick="window.__tdSendMsg()">Send</button>' +
             '</div>' +
           '</div>' +
 
