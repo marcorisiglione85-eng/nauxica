@@ -75,7 +75,8 @@
       .td-card-title { font-size: 0.95rem; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
       .td-card-title i { color: var(--etna-orange, #E85D04); font-size: 0.88rem; }
 
-      .td-timeline-empty { font-size: 0.84rem; color: var(--stone); margin: 0; }
+      .td-empty { font-size: 0.84rem; color: var(--stone); margin: 0; }
+
       .td-timeline-row {
         padding: 10px 0;
         border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
@@ -84,6 +85,26 @@
       .td-timeline-title { font-size: 0.85rem; font-weight: 600; }
       .td-timeline-desc  { font-size: 0.8rem; color: var(--stone); margin-top: 1px; }
       .td-timeline-time  { font-size: 0.72rem; color: var(--stone); margin-top: 3px; }
+
+      .td-evidence-row {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+      }
+      .td-evidence-row:last-child { border-bottom: none; }
+      .td-evidence-label { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+      .td-evidence-meta  { font-size: 0.72rem; color: var(--stone); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+      .td-evidence-note  { font-size: 0.8rem; color: var(--stone); margin-top: 3px; font-style: italic; }
+      .td-evidence-done    { color: #1A8C4E; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; }
+      .td-evidence-pending { color: var(--stone); font-size: 0.72rem; font-weight: 600; }
+
+      .td-photo-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+        font-size: 0.84rem;
+      }
+      .td-photo-row:last-child { border-bottom: none; }
+      .td-photo-count { font-weight: 700; }
 
       @media (max-width: 600px) {
         .td-info-grid    { grid-template-columns: 1fr; }
@@ -258,13 +279,49 @@
           return;
         }
 
-        // ── Load timeline ──────────────────────────────────────────────────
-        var { data: timeline } = await sb
-          .from('timeline_events')
-          .select('id, event_type, event_title, event_description, created_at')
-          .eq('task_id', taskId)
-          .order('created_at', { ascending: false });
-        timeline = timeline || [];
+        var EVIDENCE_CHECK_LABEL = {
+          property_accessed:              'Property accessed',
+          work_completed:                 'Work completed',
+          no_damage_or_issues:            'No damage or issues',
+          photos_uploaded:                'Photos uploaded',
+          issue_inspected:                'Issue inspected',
+          repair_attempted_or_completed:  'Repair attempted or completed',
+          follow_up_needed:               'Follow-up needed',
+          items_collected_or_delivered:   'Items collected or delivered',
+          issue_reported_if_any:          'Issue reported (if any)',
+          guest_picked_up_or_dropped_off: 'Guest picked up or dropped off',
+          delay_reported_if_any:          'Delay reported (if any)',
+          guest_attended:                 'Guest attended',
+          request_fulfilled:              'Request fulfilled'
+        };
+
+        var PHOTO_TYPE_LABEL = {
+          before:     'Before photos',
+          after:      'After photos',
+          issue:      'Issue photos',
+          completion: 'Completion photos',
+          other:      'Other photos'
+        };
+
+        // ── Load timeline, evidence checks, and photos in parallel ─────────
+        var [ timelineRes, checksRes, photosRes ] = await Promise.all([
+          sb.from('timeline_events')
+            .select('id, event_type, event_title, event_description, created_at')
+            .eq('task_id', taskId)
+            .order('created_at', { ascending: false }),
+          sb.from('task_evidence_checks')
+            .select('id, task_id, check_key, is_checked, note, photo_id, completed_at, completed_by')
+            .eq('task_id', taskId)
+            .order('check_key', { ascending: true }),
+          sb.from('task_photos')
+            .select('id, task_id, photo_type, storage_path, caption, created_at')
+            .eq('task_id', taskId)
+            .order('created_at', { ascending: true })
+        ]);
+
+        var timeline = timelineRes.data || [];
+        var checks   = checksRes.data   || [];
+        var photos   = photosRes.data   || [];
 
         // ── Render ─────────────────────────────────────────────────────────
         var propName     = (task.properties && task.properties.display_name) || 'Property';
@@ -285,7 +342,51 @@
                 '<div class="td-timeline-time">' + esc(new Date(e.created_at).toLocaleString()) + '</div>' +
               '</div>';
             }).join('')
-          : '<p class="td-timeline-empty">No timeline events yet.</p>';
+          : '<p class="td-empty">No timeline events yet.</p>';
+
+        // ── Evidence checks ────────────────────────────────────────────────
+        var checksHtml = checks.length
+          ? checks.map(function(c) {
+              var label  = EVIDENCE_CHECK_LABEL[c.check_key] || c.check_key.replace(/_/g, ' ');
+              var isDone = !!c.is_checked;
+              var statusHtml = isDone
+                ? '<span class="td-evidence-done"><i class="fa-solid fa-check" aria-hidden="true"></i> Submitted</span>'
+                : '<span class="td-evidence-pending">Not submitted</span>';
+              var completedHtml = (isDone && c.completed_at)
+                ? '<div class="td-evidence-meta">Submitted ' + esc(new Date(c.completed_at).toLocaleString()) + '</div>'
+                : '';
+              var noteHtml = c.note
+                ? '<div class="td-evidence-note">Partner note: ' + esc(c.note) + '</div>'
+                : '';
+              var photoHtml = c.photo_id
+                ? '<div class="td-evidence-meta"><i class="fa-solid fa-image" aria-hidden="true"></i> Photo attached</div>'
+                : '';
+              return '<div class="td-evidence-row">' +
+                '<div class="td-evidence-label">' + esc(label) + statusHtml + '</div>' +
+                completedHtml +
+                noteHtml +
+                photoHtml +
+              '</div>';
+            }).join('')
+          : '<p class="td-empty">No evidence submitted yet.</p>';
+
+        // ── Photo counts ───────────────────────────────────────────────────
+        var photoCountsHtml = '';
+        if (!photos.length) {
+          photoCountsHtml = '<p class="td-empty">No photos attached yet.</p>';
+        } else {
+          var byType = {};
+          photos.forEach(function(p) {
+            byType[p.photo_type] = (byType[p.photo_type] || 0) + 1;
+          });
+          photoCountsHtml = Object.keys(byType).map(function(type) {
+            var label = PHOTO_TYPE_LABEL[type] || type.replace(/_/g, ' ');
+            return '<div class="td-photo-row">' +
+              '<span>' + esc(label) + '</span>' +
+              '<span class="td-photo-count">' + byType[type] + '</span>' +
+            '</div>';
+          }).join('');
+        }
 
         root.innerHTML =
           // ── Header card ──────────────────────────────────────────────────
@@ -308,6 +409,19 @@
                   ? '<span class="td-info-value">' + esc(task.description) + '</span>'
                   : '<span class="td-info-value td-info-muted">No description provided.</span>') +
               '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // ── Evidence & Photos card ───────────────────────────────────────
+          '<div class="dashboard-card td-card">' +
+            '<h3 class="td-card-title">' +
+              '<i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>' +
+              ' Evidence &amp; Photos' +
+            '</h3>' +
+            checksHtml +
+            '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
+              '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--stone);margin-bottom:8px">Photos</div>' +
+              photoCountsHtml +
             '</div>' +
           '</div>' +
 
