@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Task Detail — Nauxica</title>
+    <link rel="icon" href="assets/logo/favicon.ico" />
+    <link rel="stylesheet" href="style.css?v=9999" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+      .td-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--etna-orange, #E85D04);
+        text-decoration: none;
+        margin-bottom: 8px;
+      }
+
+      .td-state-card {
+        max-width: 480px;
+        margin: 60px auto;
+        text-align: center;
+        padding: 32px 24px;
+      }
+      .td-state-card h2 { margin: 0 0 8px; font-size: 1.2rem; }
+      .td-state-card p  { color: var(--stone); margin: 0 0 16px; }
+
+      .td-header-card {
+        padding: 22px 24px;
+        margin-bottom: 16px;
+      }
+      .td-header-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.07));
+      }
+      .td-property-name { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+      .td-task-title    { font-size: 0.95rem; color: var(--stone); margin-top: 2px; }
+      .td-badges        { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+      .td-badge {
+        display: inline-flex; align-items: center; height: 26px; padding: 0 11px;
+        border-radius: 999px; font-size: 0.71rem; font-weight: 700; white-space: nowrap;
+      }
+      .td-badge-status-open        { background: rgba(120,113,108,0.12); color: #78716C; }
+      .td-badge-status-assigned    { background: rgba(120,113,108,0.12); color: #78716C; }
+      .td-badge-status-accepted    { background: rgba(0,110,182,0.12);   color: #006EB6; }
+      .td-badge-status-in_progress { background: rgba(217,119,6,0.14);   color: #D97706; }
+      .td-badge-status-completed   { background: rgba(26,140,78,0.14);   color: #1A8C4E; }
+      .td-badge-status-cancelled   { background: rgba(192,57,43,0.12);   color: #C0392B; }
+      .td-badge-priority-high   { background: rgba(192,57,43,0.12); color: #C0392B; }
+      .td-badge-priority-normal { background: rgba(29,35,39,0.08);  color: var(--stone); }
+      .td-badge-priority-low    { background: rgba(26,140,78,0.12); color: #1A8C4E; }
+      .td-badge-priority-urgent { background: rgba(192,57,43,0.18); color: #7f1d1d; }
+
+      .td-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px 20px;
+      }
+      .td-info-item  { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+      .td-info-label { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stone); }
+      .td-info-value { font-size: 0.88rem; overflow-wrap: anywhere; }
+      .td-info-muted { color: var(--stone); }
+
+      .td-card       { padding: 20px 22px; margin-bottom: 16px; }
+      .td-card-title { font-size: 0.95rem; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+      .td-card-title i { color: var(--etna-orange, #E85D04); font-size: 0.88rem; }
+
+      .td-timeline-empty { font-size: 0.84rem; color: var(--stone); margin: 0; }
+      .td-timeline-row {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.06));
+      }
+      .td-timeline-row:last-child { border-bottom: none; }
+      .td-timeline-title { font-size: 0.85rem; font-weight: 600; }
+      .td-timeline-desc  { font-size: 0.8rem; color: var(--stone); margin-top: 1px; }
+      .td-timeline-time  { font-size: 0.72rem; color: var(--stone); margin-top: 3px; }
+
+      @media (max-width: 600px) {
+        .td-info-grid    { grid-template-columns: 1fr; }
+        .td-header-top   { flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body class="homeowner-dashboard-page">
+
+    <header class="nx-header app-top-header">
+      <nav class="nx-nav">
+        <a href="index.html" class="site-logo" aria-label="Nauxica home">
+          <img src="assets/logo/nauxica-logo-horizontal.svg" alt="Nauxica" />
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nx-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="contacts.html">Contact</a></li>
+          <li>
+            <button class="btn app-logout-btn" type="button" id="logout-button">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="dashboard-shell homeowner-dashboard">
+      <aside class="dashboard-sidebar" role="navigation" aria-label="Dashboard navigation">
+        <div class="dashboard-sidebar-inner">
+          <div class="sidebar-brand">Nauxica</div>
+          <nav class="dashboard-nav"></nav>
+        </div>
+      </aside>
+
+      <section class="dashboard-main">
+        <div class="dashboard-topbar">
+          <div class="topbar-left">
+            <div class="eyebrow-label" id="workspace-label">Nauxica homeowner workspace</div>
+            <a class="td-back-link" href="tasks.html">&#8592; Back to Tasks</a>
+            <h1 class="dashboard-title">Task Detail</h1>
+          </div>
+          <div class="topbar-right">
+            <div class="topbar-controls">
+              <div class="profile-chip">
+                <div class="avatar" id="profile-avatar">HO</div>
+                <div class="profile-meta">
+                  <strong id="profile-name">Homeowner</strong>
+                  <span id="profile-role">Homeowner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tdRoot">
+          <div class="dashboard-card td-state-card">
+            <h2>Loading&hellip;</h2>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="nauxica-shared.js"></script>
+    <script type="module" src="supabase-client.js"></script>
+
+    <script>
+      localStorage.setItem('accountType', 'homeowner');
+      NauxicaShared.updateTopbar('homeowner');
+      NauxicaShared.renderNav(document.querySelector('.dashboard-nav'), 'homeowner');
+      NauxicaShared.setActivePage('tasks');
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var mobileMenuBtn = document.querySelector('.mobile-menu-toggle');
+        var header        = document.querySelector('.nx-header');
+        if (mobileMenuBtn && header) {
+          mobileMenuBtn.addEventListener('click', function () {
+            var isOpen = header.classList.toggle('nav-open');
+            mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+      });
+
+      document.getElementById('logout-button')
+        ?.addEventListener('click', NauxicaShared.handleLogout);
+    </script>
+
+    <script type="module">
+      (async () => {
+        var sb   = window.NauxicaSupabase;
+        var root = document.getElementById('tdRoot');
+
+        var { data: sessData } = await sb.auth.getSession();
+        if (!sessData.session) { window.location.replace('login.html'); throw 0; }
+
+        var taskId = new URLSearchParams(window.location.search).get('task_id');
+        if (!taskId) {
+          root.innerHTML =
+            '<div class="dashboard-card td-state-card">' +
+              '<h2>No task selected</h2>' +
+              '<p>No task was specified in the link.</p>' +
+              '<a class="td-back-link" href="tasks.html">&#8592; Return to Tasks</a>' +
+            '</div>';
+          throw 0;
+        }
+
+        function esc(s) {
+          if (!s) return '';
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        var TASK_TYPE_LABELS = {
+          cleaning: 'Cleaning', maintenance: 'Maintenance', inspection: 'Inspection',
+          laundry: 'Laundry', guest_request: 'Guest request', other: 'Other',
+          transfers: 'Transfers', experiences: 'Experiences'
+        };
+
+        var STATUS_LABEL = {
+          open: 'Open', assigned: 'Assigned', accepted: 'Accepted',
+          in_progress: 'In progress', completed: 'Completed', cancelled: 'Cancelled'
+        };
+
+        var PRIORITY_LABEL = { high: 'High', normal: 'Normal', low: 'Low', urgent: 'Urgent' };
+
+        function statusBadge(status) {
+          var label = STATUS_LABEL[status] || status;
+          var cls   = STATUS_LABEL[status] ? status : 'open';
+          return '<span class="td-badge td-badge-status-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+
+        function priorityBadge(priority) {
+          var label = PRIORITY_LABEL[priority] || priority;
+          var cls   = PRIORITY_LABEL[priority] ? priority : 'normal';
+          return '<span class="td-badge td-badge-priority-' + esc(cls) + '">' + esc(label) + '</span>';
+        }
+
+        function fmtValue(amount, currency) {
+          if (!amount) return null;
+          var sym = currency === 'EUR' ? '€' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : (currency || 'EUR') + ' ';
+          return sym + parseFloat(amount).toFixed(2);
+        }
+
+        function infoItem(label, value, fallback) {
+          var display = (value != null && value !== '')
+            ? '<span class="td-info-value">' + esc(String(value)) + '</span>'
+            : '<span class="td-info-value td-info-muted">' + esc(fallback) + '</span>';
+          return '<div class="td-info-item"><span class="td-info-label">' + esc(label) + '</span>' + display + '</div>';
+        }
+
+        // ── Load task ──────────────────────────────────────────────────────
+        var { data: task, error: taskErr } = await sb
+          .from('tasks')
+          .select(
+            'id, title, task_type, priority, status, due_date, description, ' +
+            'task_value_amount, task_value_currency, property_id, reservation_id, ' +
+            'assigned_partner_id, ' +
+            'properties(display_name, address_city, address_province), ' +
+            'reservations(guest_name, checkin_date, checkout_date), ' +
+            'assigned_partner:users!assigned_partner_id(display_name, full_name)'
+          )
+          .eq('id', taskId)
+          .maybeSingle();
+
+        if (taskErr) console.error('Task load error:', taskErr);
+        if (!task) {
+          root.innerHTML =
+            '<div class="dashboard-card td-state-card">' +
+              '<h2>Task not found</h2>' +
+              '<p>This task does not exist or you do not have access to it.</p>' +
+              '<a class="td-back-link" href="tasks.html">&#8592; Return to Tasks</a>' +
+            '</div>';
+          return;
+        }
+
+        // ── Load timeline ──────────────────────────────────────────────────
+        var { data: timeline } = await sb
+          .from('timeline_events')
+          .select('id, event_type, event_title, event_description, created_at')
+          .eq('task_id', taskId)
+          .order('created_at', { ascending: false });
+        timeline = timeline || [];
+
+        // ── Render ─────────────────────────────────────────────────────────
+        var propName     = (task.properties && task.properties.display_name) || 'Property';
+        var propLocation = task.properties
+          ? [task.properties.address_city, task.properties.address_province].filter(Boolean).join(', ')
+          : null;
+        var typeLabel    = TASK_TYPE_LABELS[task.task_type] || task.task_type;
+        var valueStr     = fmtValue(task.task_value_amount, task.task_value_currency);
+        var partnerName  = task.assigned_partner
+          ? (task.assigned_partner.display_name || task.assigned_partner.full_name || null)
+          : null;
+
+        var timelineHtml = timeline.length
+          ? timeline.map(function(e) {
+              return '<div class="td-timeline-row">' +
+                '<div class="td-timeline-title">' + esc(e.event_title) + '</div>' +
+                (e.event_description ? '<div class="td-timeline-desc">' + esc(e.event_description) + '</div>' : '') +
+                '<div class="td-timeline-time">' + esc(new Date(e.created_at).toLocaleString()) + '</div>' +
+              '</div>';
+            }).join('')
+          : '<p class="td-timeline-empty">No timeline events yet.</p>';
+
+        root.innerHTML =
+          // ── Header card ──────────────────────────────────────────────────
+          '<div class="dashboard-card td-header-card">' +
+            '<div class="td-header-top">' +
+              '<div>' +
+                '<div class="td-property-name">' + esc(propName) + '</div>' +
+                '<div class="td-task-title">' + esc(task.title) + ' &middot; ' + esc(typeLabel) + '</div>' +
+              '</div>' +
+              '<div class="td-badges">' + statusBadge(task.status) + priorityBadge(task.priority) + '</div>' +
+            '</div>' +
+            '<div class="td-info-grid">' +
+              infoItem('Due date',    task.due_date,                'Not set') +
+              infoItem('Task value',  valueStr,                     'Not set') +
+              infoItem('Location',    propLocation,                 '—') +
+              infoItem('Assigned to', partnerName,                  'Not assigned') +
+              '<div class="td-info-item" style="grid-column:1/-1">' +
+                '<span class="td-info-label">Description</span>' +
+                (task.description
+                  ? '<span class="td-info-value">' + esc(task.description) + '</span>'
+                  : '<span class="td-info-value td-info-muted">No description provided.</span>') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // ── Timeline card ─────────────────────────────────────────────────
+          '<div class="dashboard-card td-card">' +
+            '<h3 class="td-card-title">' +
+              '<i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>' +
+              ' Timeline (' + timeline.length + ')' +
+            '</h3>' +
+            timelineHtml +
+          '</div>';
+      })();
+    </script>
+
+  </body>
+</html>

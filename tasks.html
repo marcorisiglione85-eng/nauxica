@@ -190,7 +190,7 @@
               '<div class="task-main">' +
                 '<span class="task-dot"></span>' +
                 '<div>' +
-                  '<strong>' + esc(dispTitle) + '</strong>' + aiBadge +
+                  '<a href="homeowner-task-detail.html?task_id=' + esc(t.id) + '" style="font-weight:700;color:inherit;text-decoration:none">' + esc(dispTitle) + '</a>' + aiBadge +
                   '<p>' + esc(propName) + ' \xb7 ' + esc(typeLabel) + ' \xb7 ' + esc(t.priority) + ' priority</p>' +
                   (due ? '<small>' + esc(due) + '</small>' : '') +
                   guestLine +
