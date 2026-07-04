@@ -475,6 +475,31 @@
           }
         };
 
+        function setPhotoViewError(msg) {
+          var el = document.getElementById('tdPhotoViewError');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        window.__openTaskPhoto = async function(storagePath) {
+          setPhotoViewError('');
+          try {
+            var res = await sb.storage.from('task-photos').createSignedUrl(storagePath, 300);
+            if (res.error || !res.data || !res.data.signedUrl) {
+              setPhotoViewError('Could not open the photo. Please try again.');
+              return;
+            }
+            var opened = window.open(res.data.signedUrl, '_blank', 'noopener,noreferrer');
+            if (!opened) {
+              setPhotoViewError('Pop-up blocked — please allow pop-ups for this page and try again.');
+            }
+          } catch (err) {
+            console.error('Photo open error:', err);
+            setPhotoViewError('Could not open the photo. Please try again.');
+          }
+        };
+
         var convBodyHtml = messages.length
           ? messages.map(msgRowHtml).join('')
           : '<p class="td-empty">No messages yet. Use this space to contact the partner about this task.</p>';
@@ -515,20 +540,24 @@
             }).join('')
           : '<p class="td-empty">No evidence submitted yet.</p>';
 
-        // ── Photo counts ───────────────────────────────────────────────────
+        // ── Photo chips (one per photo, each clickable) ────────────────────
         var photoCountsHtml = '';
         if (!photos.length) {
           photoCountsHtml = '<p class="td-empty">No photos attached yet.</p>';
         } else {
-          var byType = {};
-          photos.forEach(function(p) {
-            byType[p.photo_type] = (byType[p.photo_type] || 0) + 1;
-          });
-          photoCountsHtml = Object.keys(byType).map(function(type) {
-            var label = PHOTO_TYPE_LABEL[type] || type.replace(/_/g, ' ');
-            return '<div class="td-photo-row">' +
-              '<span>' + esc(label) + '</span>' +
-              '<span class="td-photo-count">' + byType[type] + '</span>' +
+          photoCountsHtml = photos.map(function(p) {
+            var label = PHOTO_TYPE_LABEL[p.photo_type] || p.photo_type.replace(/_/g, ' ');
+            var chip  = p.caption || p.storage_path.split('/').pop();
+            return '<div class="td-photo-row" style="cursor:pointer" ' +
+              'data-storage-path="' + esc(p.storage_path) + '" ' +
+              'onclick="window.__openTaskPhoto(this.dataset.storagePath)" ' +
+              'role="button" aria-label="Open ' + esc(label) + '">' +
+              '<span><i class="fa-solid fa-image" aria-hidden="true" ' +
+                'style="margin-right:5px;color:var(--etna-orange,#E85D04)"></i>' +
+                esc(label) + '</span>' +
+              '<span style="font-size:0.78rem;color:var(--stone);' +
+                'max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+                esc(chip) + '</span>' +
             '</div>';
           }).join('');
         }
@@ -567,6 +596,7 @@
             '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
               '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--stone);margin-bottom:8px">Photos</div>' +
               photoCountsHtml +
+              '<div id="tdPhotoViewError" class="td-conv-error" style="display:none"></div>' +
             '</div>' +
           '</div>' +
 

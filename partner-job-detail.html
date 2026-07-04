@@ -973,6 +973,31 @@
           el.style.display = msg ? 'block' : 'none';
         }
 
+        function setPhotoViewError(msg) {
+          var el = document.getElementById('jdPhotoViewError');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        window.__openTaskPhoto = async function(storagePath) {
+          setPhotoViewError('');
+          try {
+            var res = await sb.storage.from('task-photos').createSignedUrl(storagePath, 300);
+            if (res.error || !res.data || !res.data.signedUrl) {
+              setPhotoViewError('Could not open the photo. Please try again.');
+              return;
+            }
+            var opened = window.open(res.data.signedUrl, '_blank', 'noopener,noreferrer');
+            if (!opened) {
+              setPhotoViewError('Pop-up blocked — please allow pop-ups for this page and try again.');
+            }
+          } catch (err) {
+            console.error('Photo open error:', err);
+            setPhotoViewError('Could not open the photo. Please try again.');
+          }
+        };
+
         // Sprint 029E.5: one optional photo per evidence check, via the
         // shared NauxicaPhotos coordinator. evidenceCheckId must be the
         // real task_evidence_checks.id, never check_key — if no row exists
@@ -1113,9 +1138,17 @@
             var isChecked = row ? !!row.is_checked : false;
             var note      = row && row.note ? row.note : '';
             var label     = EVIDENCE_CHECK_LABEL[key] || key.replace(/_/g, ' ');
-            var photoChip = (row && row.photo_id)
-              ? '<span class="jd-photo-chip" style="margin-top:4px;display:inline-flex"><i class="fa-solid fa-image" aria-hidden="true"></i> Photo attached</span>'
-              : '';
+            var evidencePhoto = (row && row.photo_id)
+              ? photos.find(function(p) { return p.id === row.photo_id; }) : null;
+            var photoChip = evidencePhoto
+              ? '<span class="jd-photo-chip" style="margin-top:4px;display:inline-flex;cursor:pointer" ' +
+                'data-storage-path="' + esc(evidencePhoto.storage_path) + '" ' +
+                'onclick="window.__openTaskPhoto(this.dataset.storagePath)" ' +
+                'role="button" aria-label="Open evidence photo">' +
+                '<i class="fa-solid fa-image" aria-hidden="true"></i> Photo attached</span>'
+              : (row && row.photo_id)
+                ? '<span class="jd-photo-chip" style="margin-top:4px;display:inline-flex"><i class="fa-solid fa-image" aria-hidden="true"></i> Photo attached</span>'
+                : '';
             return '<div class="jd-evidence-row" data-check-key="' + esc(key) + '">' +
               '<label class="jd-evidence-checkbox-row">' +
                 '<input type="checkbox" class="jd-evidence-checkbox" data-check-key="' + esc(key) + '"' + (isChecked ? ' checked' : '') + ' />' +
@@ -1134,7 +1167,11 @@
           });
           var photosHtml = Object.keys(photosByType).map(function(type) {
             var chips = photosByType[type].map(function(p) {
-              return '<span class="jd-photo-chip"><i class="fa-solid fa-image" aria-hidden="true"></i> ' +
+              return '<span class="jd-photo-chip" style="cursor:pointer" ' +
+                'data-storage-path="' + esc(p.storage_path) + '" ' +
+                'onclick="window.__openTaskPhoto(this.dataset.storagePath)" ' +
+                'role="button" aria-label="Open photo">' +
+                '<i class="fa-solid fa-image" aria-hidden="true"></i> ' +
                 esc(p.caption || p.storage_path.split('/').pop()) + '</span>';
             }).join('');
             return '<div class="jd-photo-group"><div class="jd-photo-group-label">' + esc(type) + '</div>' +
@@ -1150,7 +1187,11 @@
               : '') +
             checksHtml +
             (evidenceSaveError ? '<div class="jd-evidence-error">' + esc(evidenceSaveError) + '</div>' : '') +
-            (photosHtml ? '<div style="margin-top:14px">' + photosHtml + '</div>' : '') +
+            (photosHtml
+              ? '<div style="margin-top:14px">' + photosHtml +
+                '<div class="jd-evidence-error" id="jdPhotoViewError" style="display:none"></div>' +
+                '</div>'
+              : '') +
           '</div>';
         }
 
