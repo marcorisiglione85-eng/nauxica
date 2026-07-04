@@ -330,11 +330,23 @@
         };
 
         var PHOTO_TYPE_LABEL = {
-          before:     'Before photos',
-          after:      'After photos',
-          issue:      'Issue photos',
-          completion: 'Completion photos',
-          other:      'Other photos'
+          before:     'Before',
+          after:      'After',
+          issue:      'Issue',
+          completion: 'Completion',
+          other:      'Other'
+        };
+
+        // Same ordered key lists as partner-job-detail.html — display order only,
+        // no effect on what is stored in the DB.
+        var EVIDENCE_CHECK_KEYS = {
+          cleaning:      ['property_accessed', 'work_completed', 'no_damage_or_issues', 'photos_uploaded'],
+          maintenance:   ['issue_inspected', 'repair_attempted_or_completed', 'photos_uploaded', 'follow_up_needed'],
+          laundry:       ['items_collected_or_delivered', 'issue_reported_if_any'],
+          transfers:     ['guest_picked_up_or_dropped_off', 'delay_reported_if_any'],
+          experiences:   ['guest_attended', 'issue_reported_if_any'],
+          guest_request: ['request_fulfilled', 'issue_reported_if_any'],
+          other:         ['work_completed', 'issue_reported_if_any']
         };
 
         // ── Load timeline, evidence checks, photos, and conversation in parallel
@@ -514,9 +526,23 @@
             }).join('')
           : '<p class="td-empty">No timeline events yet.</p>';
 
-        // ── Evidence checks ────────────────────────────────────────────────
-        var checksHtml = checks.length
-          ? checks.map(function(c) {
+        // ── Evidence checks — ordered by task_type key list ──────────────
+        // Walk the known key order first, then any unexpected keys at the end.
+        var _orderedKeys = EVIDENCE_CHECK_KEYS[task.task_type] || [];
+        var _knownKeySet = {};
+        _orderedKeys.forEach(function(k) { _knownKeySet[k] = true; });
+        var _checksMap = {};
+        checks.forEach(function(c) { _checksMap[c.check_key] = c; });
+        var orderedChecks = [];
+        _orderedKeys.forEach(function(k) {
+          if (_checksMap[k]) orderedChecks.push(_checksMap[k]);
+        });
+        checks.forEach(function(c) {
+          if (!_knownKeySet[c.check_key]) orderedChecks.push(c);
+        });
+
+        var checksHtml = orderedChecks.length
+          ? orderedChecks.map(function(c) {
               var label  = EVIDENCE_CHECK_LABEL[c.check_key] || c.check_key.replace(/_/g, ' ');
               var isDone = !!c.is_checked;
               var statusHtml = isDone
@@ -539,6 +565,21 @@
               '</div>';
             }).join('')
           : '<p class="td-empty">No evidence submitted yet.</p>';
+
+        // ── Reservation context (only when linked) ─────────────────────────
+        var reservationHtml = '';
+        if (task.reservations) {
+          var rv = task.reservations;
+          reservationHtml =
+            '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
+              '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--stone);margin-bottom:8px">Linked reservation</div>' +
+              '<div class="td-info-grid">' +
+                infoItem('Guest',     rv.guest_name,    '—') +
+                infoItem('Check-in',  rv.checkin_date,  '—') +
+                infoItem('Check-out', rv.checkout_date, '—') +
+              '</div>' +
+            '</div>';
+        }
 
         // ── Photo chips (one per photo, each clickable) ────────────────────
         var photoCountsHtml = '';
@@ -584,6 +625,7 @@
                   : '<span class="td-info-value td-info-muted">No description provided.</span>') +
               '</div>' +
             '</div>' +
+          reservationHtml +
           '</div>' +
 
           // ── Evidence & Photos card ───────────────────────────────────────
@@ -606,6 +648,7 @@
               '<i class="fa-solid fa-comments" aria-hidden="true"></i>' +
               ' Conversation' +
             '</h3>' +
+            '<p style="font-size:0.82rem;color:var(--stone,#78716C);margin:0 0 10px">Use this conversation to coordinate directly with the assigned partner about this task.</p>' +
             '<div class="td-msg-list" id="tdMsgList">' + convBodyHtml + '</div>' +
             '<div class="td-conv-error" id="tdConvError" style="display:none"></div>' +
             '<div class="td-msg-compose">' +
