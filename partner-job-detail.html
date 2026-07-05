@@ -141,6 +141,25 @@
       .jd-message-text { font-size: 0.85rem; margin: 2px 0; }
       .jd-message-time { font-size: 0.72rem; color: var(--stone); }
 
+      .jd-support-compose {
+        display: flex; gap: 8px; margin-top: 14px;
+        padding-top: 12px; border-top: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.07));
+        align-items: flex-end;
+      }
+      .jd-support-input {
+        flex: 1; padding: 8px 10px; border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
+        border: 1px solid var(--color-border-tertiary, rgba(29,35,39,0.15));
+        background: var(--color-background-primary, #fff); color: inherit;
+        font-family: inherit; resize: none; min-height: 36px;
+      }
+      .jd-support-send {
+        height: 36px; padding: 0 16px; border-radius: 10px; border: none; cursor: pointer;
+        background: var(--etna-orange, #E85D04); color: #fff; font-size: 0.82rem; font-weight: 700;
+        white-space: nowrap; flex-shrink: 0;
+      }
+      .jd-support-send:hover:not(:disabled) { opacity: 0.9; }
+      .jd-support-send:disabled { opacity: 0.6; cursor: default; }
+
       .jd-timeline-toggle {
         display: flex; align-items: center; justify-content: space-between; cursor: pointer;
         user-select: none;
@@ -505,8 +524,8 @@
           '</div>';
         }
 
-        // ── Quick Actions (Report Issue wired in Sprint 029D.5; Add
-        // Evidence/Support remain visual-only placeholders) ─────────────
+        // ── Quick Actions (Report Issue wired 029D.5; Support wired 030B.1;
+        // Add Evidence remains a placeholder) ───────────────────────────
         function comingSoon() { alert('Coming soon.'); }
         window.__jdComingSoon = comingSoon;
 
@@ -516,7 +535,7 @@
             '<div class="jd-quick-actions">' +
               '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-camera" aria-hidden="true"></i> Add Evidence</button>' +
               '<button type="button" onclick="window.__jdOpenIssueModal()"><i class="fa-solid fa-flag" aria-hidden="true"></i> Report Issue</button>' +
-              '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</button>' +
+              '<button type="button" onclick="window.__jdScrollToSupport()"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</button>' +
             '</div>' +
           '</div>';
         }
@@ -1195,28 +1214,114 @@
           '</div>';
         }
 
-        // ── Support (operations conversation — read-only) ──────────────
+        // ── Support (operations conversation — read + send, Sprint 030B.1) ─
         function renderSupport() {
-          var SENDER_LABEL = { partner: 'You', ai: 'AI', homeowner: 'Owner', system: 'System' };
-          var body;
-          if (!conv) {
-            body = '<p class="jd-empty">No support conversation yet.</p>';
-          } else if (!messages.length) {
-            body = '<p class="jd-empty">No messages yet.</p>';
-          } else {
-            body = messages.slice(-5).map(function(m) {
-              return '<div class="jd-message-row">' +
-                '<div class="jd-message-sender">' + esc(SENDER_LABEL[m.sender_type] || m.sender_type) + '</div>' +
-                '<div class="jd-message-text">' + esc(m.message_text) + '</div>' +
-                '<div class="jd-message-time">' + esc(new Date(m.created_at).toLocaleString()) + '</div>' +
-              '</div>';
-            }).join('');
-          }
-          return '<div class="dashboard-card jd-card">' +
+          var SENDER_LABEL = {
+            partner: 'You', homeowner: 'Owner',
+            ai: 'Nauxica', system: 'Nauxica', operator: 'Nauxica'
+          };
+          var msgBody = messages.length
+            ? messages.map(function(m) {
+                return '<div class="jd-message-row">' +
+                  '<div class="jd-message-sender">' + esc(SENDER_LABEL[m.sender_type] || m.sender_type) + '</div>' +
+                  '<div class="jd-message-text">' + esc(m.message_text) + '</div>' +
+                  '<div class="jd-message-time">' + esc(new Date(m.created_at).toLocaleString()) + '</div>' +
+                '</div>';
+              }).join('')
+            : '<p class="jd-empty">No messages yet. Send a message below to start the conversation.</p>';
+          return '<div class="dashboard-card jd-card" id="jdSupportCard">' +
             '<h3 class="jd-card-title"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</h3>' +
-            body +
+            '<div style="max-height:260px;overflow-y:auto">' + msgBody + '</div>' +
+            '<div class="jd-evidence-error" id="jdSupportError" style="display:none"></div>' +
+            '<div class="jd-support-compose">' +
+              '<textarea id="jdSupportInput" class="jd-support-input" rows="2" ' +
+                'placeholder="Message the homeowner about this task…" ' +
+                'onkeydown="if(event.ctrlKey&&event.key===\'Enter\')window.__jdSupportSend()"' +
+              '></textarea>' +
+              '<button type="button" id="jdSupportSend" class="jd-support-send" onclick="window.__jdSupportSend()">Send</button>' +
+            '</div>' +
           '</div>';
         }
+
+        function setJdSupportError(msg) {
+          var el = document.getElementById('jdSupportError');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        function refreshSupportUI() {
+          var el = document.getElementById('jdSupportCard');
+          if (!el) return;
+          el.outerHTML = renderSupport();
+        }
+
+        window.__jdScrollToSupport = function() {
+          var el = document.getElementById('jdSupportCard');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.__jdSupportSend = async function() {
+          var input   = document.getElementById('jdSupportInput');
+          var sendBtn = document.getElementById('jdSupportSend');
+          var text    = input ? input.value.trim() : '';
+          if (!text) return;
+
+          if (sendBtn) sendBtn.disabled = true;
+          if (input)   input.disabled   = true;
+          setJdSupportError('');
+
+          try {
+            if (!conv) {
+              var { data: newConv, error: convErr } = await sb
+                .from('operations_conversations')
+                .insert({ task_id: taskId, property_id: task.property_id })
+                .select()
+                .single();
+              if (convErr) {
+                setJdSupportError('Could not start the conversation. Please try again.');
+                return;
+              }
+              conv = newConv;
+            }
+
+            var { data: newMsg, error: msgErr } = await sb
+              .from('operations_messages')
+              .insert({
+                operations_conversation_id: conv.id,
+                sender_type:  'partner',
+                message_text: text
+              })
+              .select()
+              .single();
+
+            if (msgErr) {
+              setJdSupportError('Could not send the message. Please try again.');
+              return;
+            }
+
+            if (input) input.value = '';
+            messages.push(newMsg);
+            refreshSupportUI();
+
+            // Best-effort timeline log — fire and forget; no UI depends on it
+            window.NauxicaTimeline && window.NauxicaTimeline.log({
+              property_id: task ? task.property_id : null,
+              task_id:     taskId,
+              actor_type:  'partner',
+              event_type:  'support_message_sent',
+              event_title: 'Partner sent a message',
+              metadata:    { conversation_id: conv.id }
+            });
+
+          } catch (err) {
+            console.error('Support send error:', err);
+            setJdSupportError('Could not send the message. Please try again.');
+          } finally {
+            if (sendBtn) sendBtn.disabled = false;
+            if (input)   input.disabled   = false;
+          }
+        };
 
         // ── Timeline (collapsed by default — read-only) ─────────────────
         function renderTimeline() {
