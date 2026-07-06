@@ -1081,6 +1081,67 @@
           refreshTimelineUI();
         }
 
+        function setJobPhotosError(msg) {
+          var el = document.getElementById('jdJobPhotosError');
+          if (!el) return;
+          el.textContent = msg || '';
+          el.style.display = msg ? 'block' : 'none';
+        }
+
+        // Sprint 030C.1: before / after / completion photo upload.
+        // Follows the same structure as handleEvidencePhotoSelected:
+        //   clear input immediately → call attachTaskPhoto → on success push
+        //   to local photos + re-render; on failure surface inline error.
+        async function handleJobPhotoSelected(photoType, inputEl) {
+          var file = inputEl.files && inputEl.files[0];
+          if (!file) return;
+
+          setJobPhotosError('');
+          inputEl.value = ''; // clear upfront so partner can retry same file
+
+          var JOB_PHOTO_LABELS = { before: 'Before', after: 'After', completion: 'Completion' };
+          var label = JOB_PHOTO_LABELS[photoType] || photoType;
+
+          if (!window.NauxicaPhotos || typeof window.NauxicaPhotos.attachTaskPhoto !== 'function') {
+            console.error('Job photo upload error: NauxicaPhotos is not available');
+            setJobPhotosError('Could not upload the photo. Please try again.');
+            return;
+          }
+
+          var result = await window.NauxicaPhotos.attachTaskPhoto({
+            taskId:    taskId,
+            file:      file,
+            photoType: photoType,
+            caption:   label
+          });
+
+          if (!result || !result.ok) {
+            console.error('Job photo upload error:', result && result.error);
+            setJobPhotosError('Could not upload the ' + label.toLowerCase() + ' photo. Please try again.');
+            return;
+          }
+
+          photos.push(result.photo);
+          renderJobReportSection(); // shows photo chip immediately; re-wires inputs
+
+          await logTimelineEvent({
+            property_id: task ? task.property_id : null,
+            task_id:     taskId,
+            actor_type:  'partner',
+            event_type:  'photo_uploaded',
+            event_title: 'Photo uploaded',
+            event_description: label + ' photo attached',
+            metadata: {
+              source:       'partner_job_photo',
+              photo_id:     result.photo.id,
+              photo_type:   photoType,
+              storage_path: result.upload.path
+            }
+          });
+
+          refreshTimelineUI();
+        }
+
         function scheduleEvidenceNoteSave(checkKey, noteValue) {
           if (evidenceNoteTimers[checkKey]) clearTimeout(evidenceNoteTimers[checkKey]);
           evidenceNoteTimers[checkKey] = setTimeout(function() {
@@ -1136,6 +1197,12 @@
               handleEvidencePhotoSelected(input.dataset.checkKey, input);
             });
           });
+
+          card.querySelectorAll('.jd-job-photo-input').forEach(function(input) {
+            input.addEventListener('change', function() {
+              if (input.dataset.photoType) handleJobPhotoSelected(input.dataset.photoType, input);
+            });
+          });
         }
 
         function renderJobReportSection() {
@@ -1180,6 +1247,11 @@
             '</div>';
           }).join('');
 
+          var PHOTO_GROUP_LABELS = {
+            before: 'Before', after: 'After', completion: 'Completion',
+            issue: 'Issue', other: 'Other'
+          };
+
           var photosByType = {};
           photos.forEach(function(p) {
             (photosByType[p.photo_type] = photosByType[p.photo_type] || []).push(p);
@@ -1193,9 +1265,31 @@
                 '<i class="fa-solid fa-image" aria-hidden="true"></i> ' +
                 esc(p.caption || p.storage_path.split('/').pop()) + '</span>';
             }).join('');
-            return '<div class="jd-photo-group"><div class="jd-photo-group-label">' + esc(type) + '</div>' +
-              '<div class="jd-photo-strip">' + chips + '</div></div>';
+            return '<div class="jd-photo-group">' +
+              '<div class="jd-photo-group-label">' + esc(PHOTO_GROUP_LABELS[type] || type) + '</div>' +
+              '<div class="jd-photo-strip">' + chips + '</div>' +
+            '</div>';
           }).join('');
+
+          var jobPhotosSection =
+            '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border-tertiary,rgba(29,35,39,0.07))">' +
+              '<div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--stone);margin-bottom:10px">Job photos</div>' +
+              '<div style="display:flex;gap:14px;flex-wrap:wrap">' +
+                '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.78rem;cursor:pointer">' +
+                  '<span>Before</span>' +
+                  '<input type="file" class="jd-job-photo-input" data-photo-type="before" accept="image/*" />' +
+                '</label>' +
+                '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.78rem;cursor:pointer">' +
+                  '<span>After</span>' +
+                  '<input type="file" class="jd-job-photo-input" data-photo-type="after" accept="image/*" />' +
+                '</label>' +
+                '<label style="display:flex;flex-direction:column;gap:4px;font-size:0.78rem;cursor:pointer">' +
+                  '<span>Completion</span>' +
+                  '<input type="file" class="jd-job-photo-input" data-photo-type="completion" accept="image/*" />' +
+                '</label>' +
+              '</div>' +
+              '<div class="jd-evidence-error" id="jdJobPhotosError" style="display:none"></div>' +
+            '</div>';
 
           return '<div class="dashboard-card jd-card" id="jdJobReportCard">' +
             '<h3 class="jd-card-title"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Evidence checks</h3>' +
@@ -1211,6 +1305,7 @@
                 '<div class="jd-evidence-error" id="jdPhotoViewError" style="display:none"></div>' +
                 '</div>'
               : '') +
+            jobPhotosSection +
           '</div>';
         }
 
