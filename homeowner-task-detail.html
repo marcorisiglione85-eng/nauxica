@@ -139,6 +139,30 @@
         background: rgba(192,57,43,0.08); color: #7f1d1d; border: 1px solid rgba(192,57,43,0.2);
       }
 
+      .td-review-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+      .td-review-confirm {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 36px; padding: 0 16px; border-radius: 10px; border: none;
+        cursor: pointer; font-size: 0.82rem; font-weight: 700;
+        background: #1A8C4E; color: #fff;
+      }
+      .td-review-confirm:hover:not(:disabled) { opacity: 0.9; }
+      .td-review-confirm:disabled { opacity: 0.6; cursor: default; }
+      .td-review-followup {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 36px; padding: 0 16px; border-radius: 10px;
+        cursor: pointer; font-size: 0.82rem; font-weight: 700;
+        background: transparent; color: var(--etna-orange, #E85D04);
+        border: 1.5px solid var(--etna-orange, #E85D04);
+      }
+      .td-review-followup:hover { background: rgba(232,93,4,0.06); }
+      .td-review-done {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.82rem; font-weight: 700; color: #1A8C4E;
+        background: rgba(26,140,78,0.1); border-radius: 999px;
+        padding: 4px 12px; margin-bottom: 8px;
+      }
+
       @media (max-width: 600px) {
         .td-info-grid    { grid-template-columns: 1fr; }
         .td-header-top   { flex-direction: column; }
@@ -603,6 +627,88 @@
           }).join('');
         }
 
+        // ── Task Review (Sprint 030B.2) ─────────────────────────────────
+        // Derives reviewed state from timeline — no status write needed.
+        var hasReviewed = timeline.some(function(e) {
+          return e.event_type === 'homeowner_confirmed_completion';
+        });
+
+        function buildReviewHtml() {
+          if (task.status !== 'completed') return '';
+          if (hasReviewed) {
+            return '<div class="dashboard-card td-card" id="tdReviewCard">' +
+              '<h3 class="td-card-title">' +
+                '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Task Review' +
+              '</h3>' +
+              '<div class="td-review-done">' +
+                '<i class="fa-solid fa-check" aria-hidden="true"></i> Completion confirmed' +
+              '</div>' +
+              '<p style="font-size:0.82rem;color:var(--stone,#78716C);margin:0">' +
+                'You\'ve reviewed this task. Use the Conversation below if you have further questions.' +
+              '</p>' +
+            '</div>';
+          }
+          return '<div class="dashboard-card td-card" id="tdReviewCard">' +
+            '<h3 class="td-card-title">' +
+              '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Task Review' +
+            '</h3>' +
+            '<p style="font-size:0.82rem;color:var(--stone,#78716C);margin:0 0 14px">' +
+              'The partner has marked this task complete. Review the evidence and photos above, then take an action below.' +
+            '</p>' +
+            '<div class="td-review-actions">' +
+              '<button type="button" class="td-review-confirm" onclick="window.__tdConfirmCompletion()">' +
+                '<i class="fa-solid fa-check" aria-hidden="true"></i> Confirm completion' +
+              '</button>' +
+              '<button type="button" class="td-review-followup" onclick="window.__tdRequestFollowUp()">' +
+                '<i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i> Request follow-up' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }
+
+        function refreshReviewUI() {
+          var el = document.getElementById('tdReviewCard');
+          if (!el) return;
+          el.outerHTML = buildReviewHtml();
+        }
+
+        window.__tdConfirmCompletion = function() {
+          var btn = document.querySelector('#tdReviewCard .td-review-confirm');
+          if (btn) btn.disabled = true;
+
+          // Best-effort timeline log — fire and forget
+          window.NauxicaTimeline && window.NauxicaTimeline.log({
+            property_id: task.property_id,
+            task_id:     taskId,
+            actor_type:  'homeowner',
+            event_type:  'homeowner_confirmed_completion',
+            event_title: 'Homeowner confirmed task completion',
+            metadata:    { task_status: task.status }
+          });
+
+          hasReviewed = true;
+          refreshReviewUI();
+        };
+
+        window.__tdRequestFollowUp = function() {
+          // Best-effort timeline log — fire and forget
+          window.NauxicaTimeline && window.NauxicaTimeline.log({
+            property_id: task.property_id,
+            task_id:     taskId,
+            actor_type:  'homeowner',
+            event_type:  'homeowner_requested_follow_up',
+            event_title: 'Homeowner requested follow-up',
+            metadata:    { task_status: task.status }
+          });
+
+          var input = document.getElementById('tdMsgInput');
+          if (input) {
+            input.value = 'Hi, I’ve reviewed the completed task and would like to request a follow-up on: ';
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        };
+
         root.innerHTML =
           // ── Header card ──────────────────────────────────────────────────
           '<div class="dashboard-card td-header-card">' +
@@ -641,6 +747,9 @@
               '<div id="tdPhotoViewError" class="td-conv-error" style="display:none"></div>' +
             '</div>' +
           '</div>' +
+
+          // ── Task Review card (completed tasks only) ────────────────────────
+          buildReviewHtml() +
 
           // ── Conversation card ────────────────────────────────────────────
           '<div class="dashboard-card td-card">' +
