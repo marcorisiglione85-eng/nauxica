@@ -524,8 +524,8 @@
           '</div>';
         }
 
-        // ── Quick Actions (Report Issue wired 029D.5; Support wired 030B.1;
-        // Add Evidence remains a placeholder) ───────────────────────────
+        // ── Quick Actions (all three wired: 029D.5 Report Issue, 030B.1
+        // Support, 030B.4 Add Evidence) ──────────────────────────────────
         function comingSoon() { alert('Coming soon.'); }
         window.__jdComingSoon = comingSoon;
 
@@ -533,7 +533,7 @@
           return '<div class="dashboard-card jd-card">' +
             '<h3 class="jd-card-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Quick actions</h3>' +
             '<div class="jd-quick-actions">' +
-              '<button type="button" onclick="window.__jdComingSoon()"><i class="fa-solid fa-camera" aria-hidden="true"></i> Add Evidence</button>' +
+              '<button type="button" onclick="window.__jdScrollToEvidence()"><i class="fa-solid fa-camera" aria-hidden="true"></i> Add Evidence</button>' +
               '<button type="button" onclick="window.__jdOpenIssueModal()"><i class="fa-solid fa-flag" aria-hidden="true"></i> Report Issue</button>' +
               '<button type="button" onclick="window.__jdScrollToSupport()"><i class="fa-solid fa-comments" aria-hidden="true"></i> Support</button>' +
             '</div>' +
@@ -1258,6 +1258,11 @@
 
         window.__jdScrollToSupport = function() {
           var el = document.getElementById('jdSupportCard');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.__jdScrollToEvidence = function() {
+          var el = document.getElementById('jdJobReportCard');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
