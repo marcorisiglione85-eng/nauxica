@@ -321,7 +321,7 @@
             'assigned_partner_id, ' +
             'properties(display_name, address_city, address_province), ' +
             'reservations(guest_name, checkin_date, checkout_date), ' +
-            'assigned_partner:users!assigned_partner_id(display_name, full_name)'
+            'assigned_partner:users!assigned_partner_id(display_name, full_name, partner_service_types, is_identity_verified)'
           )
           .eq('id', taskId)
           .maybeSingle();
@@ -413,11 +413,42 @@
         var propLocation = task.properties
           ? [task.properties.address_city, task.properties.address_province].filter(Boolean).join(', ')
           : null;
-        var typeLabel    = TASK_TYPE_LABELS[task.task_type] || task.task_type;
-        var valueStr     = fmtValue(task.task_value_amount, task.task_value_currency);
-        var partnerName  = task.assigned_partner
-          ? (task.assigned_partner.display_name || task.assigned_partner.full_name || null)
-          : null;
+        var typeLabel = TASK_TYPE_LABELS[task.task_type] || task.task_type;
+        var valueStr  = fmtValue(task.task_value_amount, task.task_value_currency);
+
+        var PARTNER_SERVICE_LABELS = {
+          cleaning:    'Cleaning',
+          maintenance: 'Maintenance',
+          laundry:     'Laundry',
+          transfers:   'Transfers',
+          experiences: 'Experiences'
+        };
+
+        function partnerInfoHtml() {
+          var p = task.assigned_partner;
+          if (!p) return infoItem('Assigned to', null, 'Not assigned');
+
+          var name = p.display_name || p.full_name || 'Partner';
+
+          var serviceLabel = null;
+          if (Array.isArray(p.partner_service_types) && p.partner_service_types.length) {
+            serviceLabel = PARTNER_SERVICE_LABELS[p.partner_service_types[0]] || null;
+          }
+
+          var verifiedLabel = (p.is_identity_verified === true) ? 'Verified partner' : null;
+          var parts = [serviceLabel, verifiedLabel].filter(Boolean);
+          var subLine = parts.length
+            ? '<span style="font-size:0.72rem;color:var(--stone,#78716C);margin-top:3px;display:block">' +
+                esc(parts.join(' \xb7 ')) +
+              '</span>'
+            : '';
+
+          return '<div class="td-info-item">' +
+            '<span class="td-info-label">Assigned to</span>' +
+            '<span class="td-info-value">' + esc(name) + '</span>' +
+            subLine +
+          '</div>';
+        }
 
         var SENDER_LABEL = {
           homeowner: 'You', partner: 'Partner',
@@ -723,7 +754,7 @@
               infoItem('Due date',    task.due_date,                'Not set') +
               infoItem('Task value',  valueStr,                     'Not set') +
               infoItem('Location',    propLocation,                 '—') +
-              infoItem('Assigned to', partnerName,                  'Not assigned') +
+              partnerInfoHtml() +
               '<div class="td-info-item" style="grid-column:1/-1">' +
                 '<span class="td-info-label">Description</span>' +
                 (task.description
