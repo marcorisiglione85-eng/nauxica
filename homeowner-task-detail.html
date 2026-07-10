@@ -228,6 +228,7 @@
     <script src="nauxica-shared.js"></script>
     <script type="module" src="supabase-client.js"></script>
     <script src="nauxica-timeline.js"></script>
+    <script src="nauxica-tasks.js"></script>
 
     <script>
       localStorage.setItem('accountType', 'homeowner');
@@ -361,17 +362,9 @@
           other:      'Other'
         };
 
-        // Same ordered key lists as partner-job-detail.html — display order only,
-        // no effect on what is stored in the DB.
-        var EVIDENCE_CHECK_KEYS = {
-          cleaning:      ['property_accessed', 'work_completed', 'no_damage_or_issues', 'photos_uploaded'],
-          maintenance:   ['issue_inspected', 'repair_attempted_or_completed', 'photos_uploaded', 'follow_up_needed'],
-          laundry:       ['items_collected_or_delivered', 'issue_reported_if_any'],
-          transfers:     ['guest_picked_up_or_dropped_off', 'delay_reported_if_any'],
-          experiences:   ['guest_attended', 'issue_reported_if_any'],
-          guest_request: ['request_fulfilled', 'issue_reported_if_any'],
-          other:         ['work_completed', 'issue_reported_if_any']
-        };
+        var EVIDENCE_CHECK_KEYS = window.NauxicaTasks && window.NauxicaTasks.EVIDENCE_CHECK_KEYS
+          ? window.NauxicaTasks.EVIDENCE_CHECK_KEYS
+          : {};
 
         // ── Load timeline, evidence checks, photos, and conversation in parallel
         var [ timelineRes, checksRes, photosRes, convRes ] = await Promise.all([
@@ -551,19 +544,15 @@
 
         window.__openTaskPhoto = async function(storagePath) {
           setPhotoViewError('');
-          try {
-            var res = await sb.storage.from('task-photos').createSignedUrl(storagePath, 300);
-            if (res.error || !res.data || !res.data.signedUrl) {
-              setPhotoViewError('Could not open the photo. Please try again.');
-              return;
-            }
-            var opened = window.open(res.data.signedUrl, '_blank', 'noopener,noreferrer');
-            if (!opened) {
-              setPhotoViewError('Pop-up blocked — please allow pop-ups for this page and try again.');
-            }
-          } catch (err) {
-            console.error('Photo open error:', err);
+          var result = await window.NauxicaTasks.openTaskPhoto({ supabase: sb, storagePath: storagePath });
+          if (!result.ok) {
+            console.error('Photo open error:', result.code, result.error);
             setPhotoViewError('Could not open the photo. Please try again.');
+            return;
+          }
+          var opened = window.open(result.signedUrl, '_blank', 'noopener,noreferrer');
+          if (!opened) {
+            setPhotoViewError('Pop-up blocked — please allow pop-ups for this page and try again.');
           }
         };
 
