@@ -1,9 +1,29 @@
 # Phase Control Log
 
-**Version:** 1.0
+**Version:** 1.1
 **Applies to:** All Claude Code agents — check before starting any task
 **Authority:** Only the human operator (project owner) may advance, block, or close phases
-**Last updated:** 2026-05-28
+**Last updated:** 2026-08-10
+
+---
+
+## Current State — 2026-08-10
+
+> **IMPORTANT FOR ANY AGENT READING THIS FILE:**
+>
+> The phase structure below (Phases 0–6) was defined in May 2026 when the Nauxica frontend was a static prototype backed by `nauxica-demo-data.js` and `localStorage`. That era is over.
+>
+> **The platform now has a live Supabase production backend.** Phases 2, 3, and 4 (frontend prototype consistency, data layer stabilisation, UX polish) describe work against a demo data layer that no longer represents the platform's primary development path. These phases are neither the current active work nor the blocker to future work.
+>
+> **The current active workstream is:** Architecture & Agent Control Migration — establishing Claude Code as the persistent engineering control system, consolidating architecture documentation, and defining the agent governance framework. This workstream does not appear in the phase structure below because it post-dates the original phase plan.
+>
+> **Do not treat Phase 2 status `OPEN` as permission to begin frontend prototype work.** Before starting any task, reconcile against:
+> 1. `docs/architecture/current-state.md` — authoritative platform status as of 2026-08-10
+> 2. `CLAUDE.md` (repository root) — execution entry point and safety rules
+> 3. `docs/agent-ops/claude-code-master-rules.md` v2.0 — universal agent rules
+> 4. The human operator — for current sprint assignment
+>
+> The phase history below is preserved as a record. It is not superseded; it is contextualised.
 
 ---
 

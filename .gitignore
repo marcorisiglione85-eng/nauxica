@@ -11,3 +11,7 @@ nauxica_landing.html
 # Supabase local dev
 supabase/.temp/
 supabase/.env
+
+# Claude Code — local machine state (agents/ and hooks/ remain versionable)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

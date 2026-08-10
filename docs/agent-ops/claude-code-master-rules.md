@@ -1,9 +1,9 @@
 # Claude Code Master Rules
 
-**Version:** 1.0
+**Version:** 2.0
 **Applies to:** All Claude Code agents working on the Nauxica project
 **Authority:** These rules supersede agent-level preferences. They cannot be overridden by task instructions unless this document is explicitly updated.
-**Last updated:** 2026-05-28
+**Last updated:** 2026-08-10
 
 ---
 
@@ -88,8 +88,7 @@ Do not introduce new architectural patterns, structures, or systems that are not
 Specifically:
 - Do not add frameworks (no React, Vue, Alpine, Tailwind, etc.)
 - Do not introduce module systems or bundlers
-- Do not create new data flow patterns not present in `nauxica-demo-data.js`
-- Do not invent new localStorage key names or structures
+- Do not create new production data flow patterns outside the established Supabase architecture (Supabase Auth, database queries via the Supabase JS client, Edge Functions, Storage). Legacy demo dependencies (`nauxica-demo-data.js`, `localStorage`) may remain on pages that still use them but must not be extended into new production flows without explicit approval.
 - Do not create new CSS systems or naming conventions not already in `style.css`
 - Do not propose backend structures that contradict the architecture docs in `docs/backend/`, `docs/architecture/`, or `docs/ai-concierge/`
 
@@ -110,19 +109,25 @@ Do not work on a phase that is:
 
 If the task's phase is unclear, ask before proceeding.
 
+**Reconciliation clause:** `phase-control-log.md` may not reflect the current state of the platform. If phase records appear inconsistent with the current repository state, git history, or architecture documentation, do not treat stale phase records as authoritative. Reconcile against: (1) current architecture documents in `docs/architecture/`, (2) `git log`, and (3) the human operator. Flag the inconsistency and ask before proceeding.
+
 ---
 
 ## Rule 7 — Scope Boundary Awareness
 
 Know which agent scope applies to your task and stay within it.
 
-| Task type | Scope document to read |
+| Task type / role | Scope document to read |
 |---|---|
 | HTML, CSS, JavaScript | [frontend-agent-scope.md](frontend-agent-scope.md) |
 | Backend design, API, database | [backend-agent-scope.md](backend-agent-scope.md) |
 | Documentation in `docs/` | [docs-agent-scope.md](docs-agent-scope.md) |
+| Architecture planning, sprint design | Architect role — `docs/agent-ops/` (definition to be created) |
+| Sprint execution (approved file list only) | Implementer role — `docs/agent-ops/` (definition to be created) |
+| Output review | Reviewer role — `docs/agent-ops/` (definition to be created) |
+| Migrations, RLS, Auth triggers, Edge Functions, Storage policies | Security/Supabase role — `docs/agent-ops/` (definition to be created) |
 
-Do not cross scope boundaries. A frontend agent must not edit architecture documents. A docs agent must not edit HTML files.
+Do not cross scope boundaries. A frontend agent must not edit architecture documents. A docs agent must not edit HTML files. An Architect must not edit any implementation file. A Reviewer must not silently fix its own findings.
 
 ---
 
@@ -187,16 +192,21 @@ The following files are the authoritative source of truth for their domain. When
 
 | Domain | Source of truth |
 |---|---|
-| Visual design and layout | `dashboard-homeowner.html` |
-| Project rules and conventions | `PROJECT_RULES.md` |
-| Shared data structure | `nauxica-demo-data.js` |
-| Shared UI components and nav | `nauxica-shared.js` |
-| CSS classes and design tokens | `style.css` |
+| Execution entry point (auto-loaded by Claude Code) | `CLAUDE.md` (repository root) |
+| Universal agent governance | `docs/agent-ops/claude-code-master-rules.md` (this file) |
+| Architecture and product decisions | `docs/architecture/` |
+| Backend implementation references | `docs/backend/` |
+| Database evolution | `supabase/migrations/` — applied in chronological order |
+| Security architecture | `docs/architecture/security-model.md` |
+| Data visibility scoping | `docs/architecture/data-visibility-model.md` |
 | Data model architecture | `docs/backend/data-models.md` |
 | AI concierge behaviour | `docs/ai-concierge/knowledge-retrieval-model.md` |
-| Data visibility scoping | `docs/architecture/data-visibility-model.md` |
-| Security boundaries | `docs/architecture/security-model.md` |
-| Agent governance | `docs/agent-ops/claude-code-master-rules.md` (this file) |
+| Visual design and layout | `dashboard-homeowner.html` |
+| Shared UI components and nav | `nauxica-shared.js` |
+| CSS classes and design tokens | `style.css` |
+| Legacy frontend conventions | `PROJECT_RULES.md` — frontend layout reference only; governance sections are deprecated |
+| Application data (production) | Supabase database — queried via the Supabase JS client or Edge Functions |
+| Session continuity | Memory system — non-authoritative for architecture or schema |
 
 ---
 
@@ -211,15 +221,75 @@ A wrong assumption that propagates through a codebase is harder to fix than a de
 
 ---
 
+## Rule 15 — Database and Migration Safety
+
+The Nauxica database is a live production system. Mistakes here cannot be undone by reverting a file.
+
+- **Never modify a migration that has already been applied to production.** Applied migrations are immutable. If a migration contains an error, write a new corrective migration.
+- **Schema changes require a new migration file** in `supabase/migrations/`. Never apply schema changes directly in the SQL Editor without a corresponding migration file in the repository.
+- **The following require Security/Supabase review before being applied to production:**
+  - Auth triggers (`handle_new_user` or any function on `auth.users`)
+  - RLS policy additions, removals, or modifications
+  - SECURITY DEFINER function additions or changes
+  - Storage bucket policy changes
+  - Database triggers on any table
+- **`service_role` credentials must never appear in browser-facing code.** They bypass RLS entirely. They belong only in Edge Functions and server-side administrative tooling.
+- **RLS must not be bypassed from frontend JavaScript.** Authorization enforcement belongs at the database (RLS) or Edge Function layer, not in client-side conditional logic.
+
+---
+
+## Rule 16 — Deployment and Git Authority
+
+These operations affect shared production systems. They require explicit human instruction per occurrence. A general instruction ("you may push when ready") does not constitute per-operation approval.
+
+- No `git add` / `git commit` / `git push` without explicit human instruction
+- No `supabase db push` without explicit human instruction
+- No `supabase functions deploy` without explicit human instruction
+- No destructive production SQL (`DELETE`, `DROP`, `TRUNCATE` against production data) without explicit human instruction per operation
+
+**Stopping point before each of these is mandatory.** Do not chain them. Do not assume approval from a previous deployment carries forward.
+
+---
+
+## Rule 17 — Agent Workflow
+
+Four roles operate in this project. Each has a defined permission boundary.
+
+| Role | May read files | May edit files | May commit / push / deploy |
+|---|---|---|---|
+| **Architect** | Yes — all files | No | No |
+| **Implementer** | Yes — all files | Yes — approved sprint list only | No |
+| **Reviewer** | Yes — all files | No | No |
+| **Security/Supabase** | Yes — migrations, Edge Functions, architecture docs | No | No |
+
+**Workflow sequence:**
+
+```
+Architect (read-only: produces sprint plan)
+  → Human approval (required before implementation begins)
+  → Implementer (edits approved files only)
+  → Reviewer (read-only: produces findings report)
+  → Security/Supabase review (when applicable — migrations, RLS, Auth, Edge Functions)
+  → Human deployment (supabase db push / supabase functions deploy)
+  → Human commit / push
+```
+
+No stage advances automatically. The human controls every transition between stages.
+
+Agent role definitions (permitted actions, output templates, handoff rules) will be documented in `docs/agent-ops/` in a later sprint. Until those files exist, use the role boundary table above as the authority.
+
+---
+
 ## Quick Reference — Before Any Task
 
 ```
-1. Read this file (done — you're reading it)
-2. Read the scope document for your task type
-3. Read the relevant files you will touch
-4. Fill out the pre-approval template
-5. Wait for approval
-6. Execute only what was approved
-7. Run the testing checklist
-8. File your handoff report
+1. Read CLAUDE.md (auto-loaded — confirms you are on the Nauxica project)
+2. Read this file (done — you're reading it)
+3. Read the scope document for your role / task type (Rule 7)
+4. Read the relevant files you will touch (Rule 2)
+5. Fill out the pre-approval template
+6. Wait for approval (Rule 1)
+7. Execute only what was approved (Rules 3, 15, 16, 17)
+8. Run the testing checklist (Rule 8)
+9. File your handoff report (Rule 9)
 ```
