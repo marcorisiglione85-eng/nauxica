@@ -1,74 +1,110 @@
 # Backend Agent Scope
 
-**Version:** 1.0
-**Applies to:** Claude Code agents working on backend design, API architecture, database models, or AI runtime architecture
-**Prerequisite:** Read [claude-code-master-rules.md](claude-code-master-rules.md) first
-**Last updated:** 2026-05-28
+**Version:** 2.0
+**Status:** Active
+**Scope:** Sicily launch · Agents performing backend design, schema work, Edge Function implementation, or API architecture tasks
+**Last updated:** 2026-08-10
+**Related:** [claude-code-master-rules.md](claude-code-master-rules.md) · [docs-agent-scope.md](docs-agent-scope.md) · [agent-task-protocol.md](agent-task-protocol.md) · [../architecture/current-state.md](../architecture/current-state.md) · [../architecture/security-model.md](../architecture/security-model.md) · [../architecture/rbac.md](../architecture/rbac.md) · [../architecture/task-workspace.md](../architecture/task-workspace.md)
 
 ---
 
-## Current Status: Design Phase Only
+## 1. What This Document Is
 
-**There is no backend code in this project.**
+Nauxica is a production-backed hospitality operations SaaS running against a live Supabase instance — Postgres with Row Level Security, GoTrue Auth, Supabase Storage, and Edge Functions (Deno / TypeScript). It is not a prototype. Applied migrations, live user accounts, and production RLS policies are in place.
 
-The Nauxica platform is currently a frontend prototype. All state is managed via localStorage. Backend implementation has not yet begun.
+Backend work is governed by the four-role agent workflow: Architect, Implementer, Reviewer, and Security/Supabase. This document defines what backend work means at each role boundary. It covers database migrations, Edge Functions, RLS policies, and API design constraints.
 
-Backend agents at this stage are **architecture and design agents**, not implementation agents. Their work product is documentation — not code.
-
-**Backend agents do not write:**
-- Server-side code (Node.js, Python, Go, or any other language)
-- SQL schemas or migration files
-- API endpoint implementations
-- Docker or deployment configuration
-- Environment variable files
-- Authentication middleware
-- Database connection code
-
-All of the above are deferred until the frontend prototype is stable and architecture documentation is approved. See [phase-control-log.md](phase-control-log.md) for current phase status.
+For execution rules and role permission tables, `CLAUDE.md` and `docs/agent-ops/claude-code-master-rules.md` are the authoritative sources. This document does not restate those rules — it references them and adds backend-specific guidance.
 
 ---
 
-## What Backend Agents Do Now
+## 2. What Backend Agents Do Today
 
-Backend agents work exclusively on architecture documentation in `docs/`.
+### Role permission table — backend layer
 
-**Current backend agent tasks may include:**
-- Updating or extending existing architecture documents
-- Reviewing existing documents for internal consistency
-- Adding detail to data models, API contracts, or event definitions
-- Identifying gaps in existing documentation
-- Proposing new architecture documents (requires pre-approval before creation)
+| Role | May read backend files | May write backend files | May deploy to production |
+|---|---|---|---|
+| **Architect** | Yes — all files, including migrations and Edge Functions | No | No |
+| **Implementer** | Yes — all files | Yes — approved sprint list only. New migration files in `supabase/migrations/`. Edge Function files when explicitly approved. | No |
+| **Reviewer** | Yes — all files | No | No |
+| **Security/Supabase** | Yes — migrations, Edge Functions, architecture docs, RLS policies | No | No |
 
-All work must follow the [docs-agent-scope.md](docs-agent-scope.md) rules in addition to the backend-specific rules in this document.
+### Key facts at each boundary
+
+**Architect:**
+- Reads existing migrations, schema, and architecture documents to produce accurate sprint plans
+- Produces migration file content and Edge Function code for Implementer to write — does not write files itself
+- Flags any migration that will require Security/Supabase review before production deployment
+
+**Implementer:**
+- Writes new migration files in `supabase/migrations/` when explicitly listed in an approved sprint plan
+- Never modifies an applied migration — applied migrations are immutable
+- Writes or updates Edge Function files (in `supabase/functions/`) when explicitly approved
+- Does not run `supabase db push` or `supabase functions deploy` — these are human-controlled operations
+
+**Reviewer:**
+- Reads the Implementer's output (migration files, Edge Function code, updated frontend files) and produces a findings report
+- Does not silently fix its own findings — findings go to the handoff report for human decision
+
+**Security/Supabase:**
+- Reviews any migration or Edge Function that touches Auth triggers, RLS policies, SECURITY DEFINER functions, storage policies, or database triggers before it is applied to production
+- Security/Supabase review is a required gate — not optional — for these change types
+- Does not apply changes itself — the human controls `supabase db push` and `supabase functions deploy`
+
+For the complete role permission table and workflow sequence, see `CLAUDE.md` "Engineering workflow" and `docs/agent-ops/claude-code-master-rules.md` Rule 17.
 
 ---
 
-## Architecture Documents as Source of Truth
+## 3. Mandatory Reading
 
-Before proposing any backend design decision, read the relevant existing documents. The architecture documents are the source of truth — not general best practices, not the agent's preferred stack.
+Before working on any backend task, read the relevant documents from this table. Consult the authoritative sources for current platform state; do not rely on memory from prior sessions.
 
-**Required reading for any backend design task:**
+### Authoritative (production-era) documents
 
 | Topic | Document |
 |---|---|
-| Data models | `docs/backend/data-models.md` |
-| API overview | `docs/api/api-overview.md` |
-| Authentication | `docs/backend/auth-strategy.md` |
-| Data visibility scoping | `docs/architecture/data-visibility-model.md` |
-| Security model | `docs/architecture/security-model.md` |
-| Event system | `docs/architecture/event-driven-architecture.md` |
-| AI runtime | `docs/ai-runtime/ai-runtime-orchestration.md` |
-| Knowledge retrieval | `docs/ai-concierge/knowledge-retrieval-model.md` |
-| Partner assignments | `docs/architecture/partner-assignment-model.md` |
-| Service request flow | `docs/operations/service-request-flow.md` |
+| Platform status — what is built, what is deployed, what is not built | `docs/architecture/current-state.md` |
+| Database schema evolution — canonical and chronological | `supabase/migrations/` directory |
+| Security constraints, encryption, access boundaries by role | `docs/architecture/security-model.md` |
+| Operator RBAC — `is_operator` flag, self-promotion guard, operator SELECT policies | `docs/architecture/rbac.md` |
+| Task workspace — evidence checks, photos, operations conversations, storage | `docs/architecture/task-workspace.md` |
+| Execution rules, safety rules, deployment authority | `CLAUDE.md` |
+| Agent roles, approval requirements, scope discipline | `docs/agent-ops/claude-code-master-rules.md` |
+| Data visibility scoping (PUB/GST/PTR/INT) | `docs/architecture/data-visibility-model.md` |
+| Event naming conventions and event catalogue | `docs/architecture/event-driven-architecture.md` |
+| AI concierge knowledge retrieval and KBB scope filter | `docs/ai-concierge/knowledge-retrieval-model.md` |
 
-A backend agent must not contradict a decision already documented in these files without first flagging the conflict, explaining why it should be revisited, and receiving explicit approval to revise the document.
+### Historical-reference-only documents (stale — read with caution)
+
+The following documents were authoritative at an earlier phase of the project but have not been updated to reflect the current production state. They may contain useful historical context but must not be treated as canonical for schema, role model, or auth architecture decisions.
+
+| Document | Status | What is stale |
+|---|---|---|
+| `docs/backend/database-schema.md` | Historical reference only — stale at v1.10 | Predates `task_photos`, `task_evidence_checks`, `operations_conversations`, `operations_messages`, `timeline_events.operations_conversation_id`, and the `is_operator` RBAC column. Does not reflect the operator RBAC design or the task workspace schema. For current schema, consult `supabase/migrations/` and `docs/architecture/current-state.md`. |
+| `docs/backend/auth-strategy.md` | Historical reference only — stale | States "no operator dashboard" and does not reflect the current operator RBAC model. The `account_type` enum it describes (`homeowner`, `partner`) remains accurate, but operator elevation via the `is_operator` boolean flag is not documented in it. For the current auth and role model, consult `docs/architecture/rbac.md` and `docs/architecture/security-model.md`. |
+
+A backend agent must not contradict a decision already documented in the authoritative documents above without first flagging the conflict, explaining why it should be revisited, and receiving explicit approval to revise the document.
 
 ---
 
-## Database Model Constraints
+## 4. Database and Migration Safety
 
-When working on data models, apply these constraints without exception:
+Applied migrations in `supabase/migrations/` are immutable. The database is a live production system — mistakes here cannot be undone by reverting a file.
+
+Specific rules:
+- Never modify a migration that has already been applied to production
+- New schema changes require a new migration file in `supabase/migrations/` — never apply schema changes only in the SQL Editor without a corresponding migration file in the repository
+- Before any migration is applied to production (`supabase db push`), Security/Supabase review is required if the migration touches: Auth triggers, RLS policies, SECURITY DEFINER functions, storage policies, or database triggers
+- `service_role` credentials must never appear in browser-facing code — they bypass RLS entirely and belong only in Edge Functions and server-side administrative tooling
+- RLS must not be bypassed from frontend JavaScript — authorisation enforcement belongs at the database (RLS) or Edge Function layer
+
+These rules are stated in full in `CLAUDE.md` "Mandatory safety rules" and `docs/agent-ops/claude-code-master-rules.md` Rule 15. They are referenced here for context, not restated as the authoritative source.
+
+---
+
+## 5. Database Model Constraints
+
+When working on data models, apply these constraints without exception.
 
 **1. Visibility scoping is non-negotiable.**
 Every field must have a visibility scope assignment from the 4-scope model:
@@ -95,26 +131,39 @@ Do not add new sensitive fields without flagging them for encryption review.
 Guests have no accounts. Their identity on the platform is established solely by the phone number entered by the homeowner at reservation creation. Do not design authentication flows for guests.
 
 **5. Model renames require explicit approval.**
-The `Booking → Reservation` rename documented in `data-models.md` is the authoritative naming. Do not revert this. Do not rename models without flagging and approving the change.
+The `Booking → Reservation` rename documented in the data models is the authoritative naming. Do not revert this. Do not rename models without flagging and approving the change.
 
 ---
 
-## Authentication and Authorisation Constraints
+## 6. Authentication and Authorisation Constraints
 
-**Authentication model is defined.** See `docs/backend/auth-strategy.md` and `docs/architecture/security-model.md`. Do not propose alternative authentication approaches without reading these first.
+The authentication model uses Supabase GoTrue (email + password, JWT sessions, refresh token rotation). See `docs/architecture/security-model.md` Section 1 for the complete authentication specification and `docs/architecture/rbac.md` for the current role model. Do not propose alternative authentication approaches without reading these first.
 
-Key constraints to respect:
+Key constraints:
 - JWT access token (15-minute expiry) + refresh token (30-day expiry, rotated on use)
-- Operator accounts require MFA — this is non-negotiable
+- Operator accounts require MFA — this is non-negotiable per `docs/architecture/security-model.md` Section 1.2 (GoTrue MFA configuration is not yet wired up at MVP, per `docs/architecture/current-state.md`)
 - Guests have no accounts and no authentication tokens
 - API keys for internal services must be scoped to minimum permissions
 - The AI runtime API key is scoped to exactly 3 writable models: `WhatsAppSession`, `ServiceRequest`, `EscalationRecord`
+
+**Current role model (as of Sprint 030E — production-grade):**
+
+The platform has three user-facing account types and one internal service identity:
+
+| Role identity | How it is expressed | Notes |
+|---|---|---|
+| `homeowner` | `public.account_type` enum value; `public.users.account_type = 'homeowner'` | Property owner or manager |
+| `partner` | `public.account_type` enum value; `public.users.account_type = 'partner'` | Service partner |
+| operator | `public.users.is_operator = true` boolean flag (independent of `account_type`) | Nauxica staff — additive privilege, not a separate account type |
+| `ai_runtime` | Internal service API key — not a database user account | AI orchestration service |
+
+The `public.account_type` enum has exactly two values: `homeowner` and `partner`. Operator is a boolean flag (`is_operator`) added in Sprint 030E.1, not a third enum value. See `docs/architecture/rbac.md` for the full design rationale, self-promotion guard, helper function, and operator SELECT policy inventory.
 
 **Any proposed change to the auth model requires flagging the security model impact first.**
 
 ---
 
-## AI Runtime Constraints
+## 7. AI Runtime Constraints
 
 The AI runtime is not a general-purpose AI agent. It has a defined permission boundary documented in `docs/ai-runtime/ai-runtime-orchestration.md`.
 
@@ -129,7 +178,7 @@ The AI runtime's permission boundary is a security property, not a convenience s
 
 ---
 
-## Event System Constraints
+## 8. Event System Constraints
 
 The event system is defined in `docs/architecture/event-driven-architecture.md`. New events must:
 
@@ -156,7 +205,7 @@ Proposed new events must be added to the event catalogue in `event-driven-archit
 
 ---
 
-## API Design Constraints
+## 9. API Design Constraints
 
 API endpoints are documented in `docs/api/`. When designing new endpoints:
 
@@ -173,39 +222,42 @@ The data visibility model in `docs/architecture/data-visibility-model.md` is the
 
 ---
 
-## What Happens Before Writing Any Backend Code
-
-Before any backend code is written (which is not permitted at this phase anyway), the following must be complete and approved:
-
-1. Frontend prototype is stable (all navigation works, all major flows testable)
-2. All architecture documents in `docs/` are internally consistent
-3. A formal backend implementation plan has been approved
-4. The tech stack decision has been made and documented
-5. Database schema design is approved by a human reviewer
-6. Security model has been reviewed by legal counsel (specifically: GDPR data processor agreements)
-
-**Do not begin backend code until all of the above are confirmed in `phase-control-log.md`.**
-
----
-
-## Backend Agent Quick Reference
+## 10. Quick Reference
 
 ```
-PHASE STATUS: Design/Documentation only
-No backend code permitted.
+PLATFORM STATUS: Production-backed Supabase SaaS
+Applied migrations, live RLS, deployed Edge Functions.
 
-WHAT YOU CAN DO:
-✓ Read and extend architecture docs
-✓ Identify gaps and inconsistencies
-✓ Propose new architecture documents (pre-approval required)
-✓ Document data model fields and relationships
+ROLE PERMISSIONS AT THE BACKEND LAYER:
 
-WHAT YOU CANNOT DO:
-✗ Write server-side code of any kind
-✗ Write SQL or migration files
-✗ Contradict existing architecture without flagging
-✗ Add AI runtime write permissions beyond the 3 permitted models
-✗ Design guest authentication (guests have no accounts)
-✗ Rename localStorage keys or frontend data structures
-✗ Touch any HTML, CSS, or JavaScript files
+  Architect         Read all files, produce sprint plan and migration content.
+                    Does not write files. Does not deploy.
+
+  Implementer       Read all files.
+                    Write new migration files in supabase/migrations/ (approved sprint only).
+                    Write Edge Function files (approved sprint only).
+                    Does not modify applied migrations.
+                    Does not run supabase db push or supabase functions deploy.
+
+  Reviewer          Read all files.
+                    Does not write files. Does not deploy.
+                    Findings go to handoff report — not silently fixed.
+
+  Security/Supabase Read migrations, Edge Functions, architecture docs.
+                    Does not write files. Does not deploy.
+                    Required review gate before any migration or Edge Function
+                    touching Auth triggers, RLS policies, SECURITY DEFINER
+                    functions, storage policies, or database triggers is
+                    applied to production.
+
+ALWAYS FORBIDDEN (any role, any sprint):
+  - Modify an applied migration
+  - Expose service_role credentials in browser-facing code
+  - Bypass RLS from frontend JavaScript
+  - Run supabase db push without explicit human instruction
+  - Run supabase functions deploy without explicit human instruction
+  - Run git commit or git push without explicit human instruction
+  - Design guest authentication (guests have no accounts)
+  - Give the AI runtime write access beyond the 3 permitted models
+  - Add AI read access to models not in the permitted list
 ```
